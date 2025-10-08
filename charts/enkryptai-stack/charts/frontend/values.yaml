@@ -1,0 +1,92 @@
+replicaCount: 1
+
+image:
+  repository: ""
+  pullPolicy: ""
+  tag: "vpc"
+
+nameOverride: ""
+fullnameOverride: "frontend"
+
+serviceAccount:
+  create: false
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+  instrumentation.opentelemetry.io/inject-nodejs: "true"
+
+podLabels:
+  app: frontend
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+  name: http
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+  hosts:
+    - host: app.dev.enkryptai.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: frontend-tls
+      hosts:
+        - app.dev.enkryptai.com
+
+resources:
+  limits:
+    cpu: 1700m
+    memory: 4Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+
+livenessProbe:
+  enabled: false
+  httpGet:
+    path: /api/health
+    port: 3000
+  initialDelaySeconds: 120
+  timeoutSeconds: 10
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /api/health
+    port: 3000
+    scheme: HTTP
+  failureThreshold: 3
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+configMap:
+  NEXT_PUBLIC_URL: "https://app.dev.enkryptai.com"
+
+externalSecret:
+  enabled: true
+  secretName: frontend-env-secret
+  secretStoreRefName: enkryptai-clustersecret-store
+  repoName: enkryptai/frontend
+  databaseSecretName: onprem
+  databaseSecretRepoName: enkryptaivpc/on-prem

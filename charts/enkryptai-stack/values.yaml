@@ -1,0 +1,372 @@
+global:
+  imagePullSecrets: 
+    - core-app-pullsecret
+  storageClass: ""
+  imagePullPolicy: "IfNotPresent"
+  externalSecret: true
+
+
+frontend:
+  enabled: true
+  image:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/frontend
+    pullPolicy: IfNotPresent
+    tag: "91d6764"
+
+  serviceAccount:
+    create: false
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+
+  podLabels:
+    app: frontend
+
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+    name: http
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    hosts:
+      - host: test.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: frontend-tls
+        hosts:
+          - test.example.com
+
+  resources:
+    limits:
+      cpu: 1700m
+      memory: 4Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+  livenessProbe:
+    enabled: false
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 120
+    timeoutSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /api/health
+      port: 3000
+      scheme: HTTP
+    failureThreshold: 3
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  configMap:
+    NEXT_PUBLIC_URL: "test.example.com"
+
+  externalSecret:
+    enabled: true
+    secretName: frontend-env-secret
+    secretStoreRefName: enkryptai-clustersecret-store
+    repoName: enkryptaivpc/frontend
+
+################GATEWAY_KONG########################### 
+gateway-kong: 
+  enabled: true
+  replicaCount: 2
+  image:
+    gateway:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
+      tag: "19a0eb3"
+      pullPolicy: IfNotPresent
+    sync:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
+      tag: "19a0eb3"
+      pullPolicy: IfNotPresent
+    fluentBit:
+      repository: fluent/fluent-bit
+      tag: "3.2.1"
+      pullPolicy: IfNotPresent
+
+  nameOverride: ""
+  fullnameOverride: "gateway-kong"
+
+  service:
+    type: ClusterIP
+    ports:
+      http:
+        port: 80
+        targetPort: 8000
+      https:
+        port: 443
+        targetPort: 8443
+      admin:
+        port: 8001
+        targetPort: 8001
+      adminGui:
+        port: 8002
+        targetPort: 8002
+      fluentBitMetrics:
+        port: 2020
+        targetPort: 2020
+      fluentBitAdmin:
+        port: 5043
+        targetPort: 5043
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    hosts:
+      - host: example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: gateway-kong-tls
+        hosts:
+          - example.com
+
+  resources:
+    gateway:
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+      requests:
+        cpu: "0.5"
+        memory: "1.5Gi"
+    sync:
+      limits:
+        cpu: "0.5"
+        memory: "256Mi"
+      requests:
+        cpu: "0.1"
+        memory: "64Mi"
+    fluentBit:
+      limits:
+        cpu: "0.5"
+        memory: "256Gi"
+      requests:
+        cpu: "0.1"
+        memory: "64Mi"
+
+  livenessProbe:
+    enabled: true
+    exec:
+      command:
+        - kong
+        - health
+    failureThreshold: 10
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 10
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+
+  externalSecrets:
+    enabled: true
+    secretStoreRefName: enkryptai-clustersecret-store
+  externalSecret:
+    repoName: enkryptaivpc/kong-gateway
+
+  configMaps:
+    kongConfig:
+      enabled: true
+      name: gateway-kong-temp-config
+    fluentBit:
+      enabled: true
+      name: fluent-bit-config
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  
+
+################REDTEAMING###########################
+redteam-proxy: 
+  enabled: false
+  replicaCount: 2
+
+  image:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-proxy
+    pullPolicy: IfNotPresent
+    tag: "da62bf6"
+
+  nameOverride: ""
+  fullnameOverride: "redteam-proxy"
+
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+
+  podLabels:
+    app: redteam-proxy
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+
+  service:
+    type: ClusterIP
+    port: 9091
+    targetPort: 9091
+    name: http
+
+  env:
+    - name: NATS_URL
+      value: "nats://nats:4222"
+    - name: IS_PROXY_MODE
+      value: "true"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 300Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 9091
+    initialDelaySeconds: 90
+    timeoutSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 9091
+    initialDelaySeconds: 30
+    timeoutSeconds: 10
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+  externalSecret:
+    enabled: true
+    secretName: redteam-proxy-env-secret
+    secretStoreRefName: enkryptai-clustersecret-store
+    repoName: enkryptaivpc/redteam-proxy
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+################GUARDRAILS###########################
+guardrails: 
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrails
+    pullPolicy: IfNotPresent
+    tag: "aa2fdfb"
+
+  nameOverride: ""
+  fullnameOverride: "guardrails"
+
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+
+  podLabels:
+    app: guardrails
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+    name: http
+
+  resources:
+    requests:
+      cpu: 4
+      memory: 16Gi
+    limits:
+      nvidia.com/gpu: 1
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 90
+    timeoutSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 120
+    timeoutSeconds: 30
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+
+  externalSecret:
+    enabled: true
+    secretName: guardrails-env-secret
+    secretStoreRefName: enkryptai-clustersecret-store
+    repoName: enkryptaivpc/guardrails
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+platform:
+  opensearch:
+    enabled: true
+    opensearch-operator:
+      nameOverride: "opensearch"
+      fullnameOverride: "opensearch" 

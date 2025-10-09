@@ -3,7 +3,7 @@ entries:
   enkryptai-stack:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-10-09T18:38:24.32399493+05:30"
+    created: "2025-10-09T18:56:28.782032834+05:30"
     dependencies:
     - alias: supabase
       name: supabase
@@ -23,7 +23,7 @@ entries:
   platform-stack:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-09T18:38:24.347238167+05:30"
+    created: "2025-10-09T18:56:28.835833038+05:30"
     dependencies:
     - alias: argo-workflow
       condition: argo-workflow.enabled
@@ -91,9 +91,9 @@ entries:
       repository: https://nats-io.github.io/k8s/helm/charts/
       version: 0.29.2
     description: Complete platform infrastructure stack
-    digest: 4b7e9485a21254ea906b9bf34026d5712a9a65db08ab7630898738b0212c9c3e
+    digest: 62ece586dc7668fea0bf4e1eac31024fae8cbcbbc8f9484472d91c766398fa94
     name: platform-stack
     urls:
-    - https://enkryptai.github.io/helm-charts/platform-stack-1.0.0.tgz
-    version: 1.0.0
-generated: "2025-10-09T18:38:24.313574109+05:30"
+    - https://enkryptai.github.io/helm-charts/platform-stack-1.0.1.tgz
+    version: 1.0.1
+generated: "2025-10-09T18:56:28.751269734+05:30"

@@ -1,4 +1,3 @@
 old-platform/
-charts/*.tgz 
 *.lock
 Chart.lock

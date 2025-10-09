@@ -7,13 +7,13 @@ dependencies:
   - name: argo-workflow
     version: 1.0.0
     alias: argo-workflow
-    repository: "https://enkryptai.github.io/helm-charts/charts/platform/charts/argo-workflow"
+    repository: "file://./charts/argo-workflow"
     condition: argo-workflow.enabled
 
   - name: argocd-events
     version: 1.0.0
     alias: argocd-events
-    repository: "https://enkryptai.github.io/helm-charts/charts/platform/charts/argocd-events"
+    repository: "file://./charts/argocd-events"
     condition: argocd-events.enabled
   
   - name: cert-manager
@@ -25,7 +25,7 @@ dependencies:
   - name: cluster-autoscaler
     version: 1.0.0
     alias: cluster-autoscaler
-    repository: "https://enkryptai.github.io/helm-charts/charts/platform/charts/cluster-autoscaler"
+    repository: "file://./charts/cluster-autoscaler"
     condition: cluster-autoscaler.enabled
 
   - name: cloudnative-pg
@@ -46,11 +46,11 @@ dependencies:
     repository: "https://helm.ngc.nvidia.com/nvidia"
     condition: gpu-operator.enabled
 
-  # - name: ingress-nginx
-  #   version: 4.13.0
-  #   alias: ingress-nginx
-  #   repository: "https://kubernetes.github.io/ingress-nginx"
-  #   condition: ingress-nginx.enabled
+  - name: ingress-nginx
+    version: 4.13.0
+    alias: ingress-nginx
+    repository: "https://kubernetes.github.io/ingress-nginx"
+    condition: ingress-nginx.enabled
 
   - name: keydb
     version: 0.48.0
@@ -67,7 +67,7 @@ dependencies:
   - name: storage-class
     version: 1.0.0
     alias: storage-class
-    repository: "https://enkryptai.github.io/helm-charts/charts/platform/charts/storage-class"
+    repository: "file://./charts/storage-class"
     condition: storage-class.enabled
 
   - name: nats

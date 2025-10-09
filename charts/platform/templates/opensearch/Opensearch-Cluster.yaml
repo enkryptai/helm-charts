@@ -2,6 +2,9 @@ apiVersion: opensearch.opster.io/v1
 kind: OpenSearchCluster
 metadata:
   name: enkryptai-opensearch
+  annotations:
+    "helm.sh/hook-weight": "-7"
+    "helm.sh/hook": post-install,post-upgrade
 spec:
   security:
     tls:
@@ -10,6 +13,8 @@ spec:
       http:  
         generate: true  
     config:
+      securityConfigSecret:
+        name: "opensearch-securityconfig"
       adminCredentialsSecret:
         name: "opensearch-cred"
   general:
@@ -40,6 +45,7 @@ spec:
           storageClass: gp3-encrypted
           accessModes:
           - ReadWriteOnce
+      NodeSelector:
       resources:
          requests:
             memory: "2Gi"

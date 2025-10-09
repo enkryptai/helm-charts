@@ -1,12 +1,24 @@
 # We need Values for it
-
-
+aws: 
+  region: "us-west-2"
+  ClusterSecretStoreName: "enkryptai-clustersecret-store" 
 backup: 
   openfgsS3Bucket: "s3://vpc-enkryptai-openfga-backup"
   supabaseS3Bucket: "s3://vpc-enkryptai-supabase-backup"
-aws: 
-    region: "us-west-2"
-    ClusterSecretStoreName: "enkryptai-clustersecret-store" 
+openfgaconfig:
+  externalSecret:
+    name: openfga-env-secret
+    refreshInterval: "15m"
+    secretStoreName: enkryptai-clustersecret-store
+    secretStoreKind: ClusterSecretStore
+    remoteSecretKey: enkryptaivpc/openfga
+    keys:
+      - secretKey: uri
+        property: uri
+      - secretKey: username 
+        property: username 
+      - secretKey: password 
+        property: password
 
 cluster-autoscaler:
   enabled: false

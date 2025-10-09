@@ -2,6 +2,9 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: supabase-cluster
+  annotations:
+    "helm.sh/hook-weight": "-7"
+    "helm.sh/hook": post-install,post-upgrade
 spec:
   # backup: NOTE: Access via pod identity pending
   #   barmanObjectStore:

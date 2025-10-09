@@ -1,11 +1,12 @@
-{{- if (.Capabilities.APIVersions.Has "opensearch.opster.io/v1") }}
-
 ---
 # Admin User
 apiVersion: opensearch.opster.io/v1
 kind: OpensearchUser
 metadata:
   name: admin
+  annotations:
+    "helm.sh/hook-weight": "-9"
+    "helm.sh/hook": post-install,post-upgrade
 spec:
   passwordFrom:
     name: opensearch-cred
@@ -21,6 +22,9 @@ apiVersion: opensearch.opster.io/v1
 kind: OpensearchUser
 metadata:
   name: dashboarduser
+  annotations:
+    "helm.sh/hook-weight": "-9"
+    "helm.sh/hook": post-install,post-upgrade
 spec:
   passwordFrom:
     name: opensearch-cred
@@ -34,6 +38,9 @@ apiVersion: opensearch.opster.io/v1
 kind: OpensearchUser
 metadata:
   name: kong-logs-plugin
+  annotations:
+    "helm.sh/hook-weight": "-9"
+    "helm.sh/hook": post-install,post-upgrade
 spec:
   passwordFrom:
     name: opensearch-cred
@@ -49,6 +56,9 @@ apiVersion: opensearch.opster.io/v1
 kind: OpensearchUser
 metadata:
   name: kibana-read-only
+  annotations:
+    "helm.sh/hook-weight": "-9"
+    "helm.sh/hook": post-install,post-upgrade
 spec:
   passwordFrom:
     name: opensearch-cred
@@ -56,5 +66,4 @@ spec:
   backendRoles:
     - readall
   opensearchCluster:
-    name: enkryptai-opensearch 
-{{- end }}
+    name: enkryptai-opensearch

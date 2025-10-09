@@ -4,25 +4,8 @@ global:
   storageClass: ""
   imagePullPolicy: "IfNotPresent"
   externalSecret: true
-  domain: "djj.enkryptai.com" #Subdomain will be created at this level
-external-secret: 
-  aws: 
-    region: "us-west-2"
-    ClusterSecretStoreName: "enkryptai-clustersecret-store" 
-  openfgaconfig:
-    externalSecret:
-      name: openfga-env-secret
-      refreshInterval: "15m"
-      secretStoreName: enkryptai-clustersecret-store
-      secretStoreKind: ClusterSecretStore
-      remoteSecretKey: enkryptaivpc/openfga
-      keys:
-        - secretKey: uri
-          property: uri
-        - secretKey: username 
-          property: username 
-        - secretKey: password 
-          property: password
+  domain: "djj.enkryptai.com"
+
 
 frontend:
   enabled: true
@@ -52,17 +35,15 @@ frontend:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: app.djj.enkryptai.com
+      - host: test.example.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: frontend-tls
         hosts:
-          - app.djj.enkryptai.com
+          - test.example.com
 
-  configMap:
-    NEXT_PUBLIC_URL: "app.djj.enkryptai.com"
   resources:
     limits:
       cpu: 1700m
@@ -103,7 +84,8 @@ frontend:
 
   affinity: {}
 
-  
+  configMap:
+    NEXT_PUBLIC_URL: "test.example.com"
 
   externalSecret:
     enabled: true
@@ -161,14 +143,14 @@ gateway-kong:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: api.djj.enkryptai.com
+      - host: example.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: gateway-kong-tls
         hosts:
-          - api.djj.enkryptai.com
+          - example.com
 
   resources:
     gateway:

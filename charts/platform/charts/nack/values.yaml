@@ -1,0 +1,3 @@
+jetstream:
+  nats:
+    url: nats://enkryptai-app:4222

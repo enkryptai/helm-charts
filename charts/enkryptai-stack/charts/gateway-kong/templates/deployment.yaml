@@ -1,0 +1,171 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gateway-kong.fullname" . }}
+  labels:
+    {{- include "gateway-kong.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "gateway-kong.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "gateway-kong.labels" . | nindent 8 }}
+    spec:
+      {{- include "gateway-kong.imagePullSecrets" . | nindent 6 }}
+      initContainers:
+        - name: gateway-migrations
+          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          command:
+            - kong
+            - migrations
+            - bootstrap
+          envFrom:
+            - secretRef:
+                name: gateway-migration-env-secret
+        - name: gateway-migrations-up
+          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          command:
+            - /bin/sh
+            - -c
+            - kong migrations up && kong migrations finish
+          envFrom:
+            - secretRef:
+                name: gateway-migration-env-secret
+      containers:
+        - name: gateway
+          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.gateway.pullPolicy }}
+          envFrom:
+            - secretRef:
+                name: gateway-env-secret
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe:
+            exec:
+              command:
+                {{- toYaml .Values.livenessProbe.exec.command | nindent 16 }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          {{- end }}
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+            - containerPort: 8001
+              protocol: TCP
+            - containerPort: 8002
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources.gateway | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - mountPath: /var/run/kong
+              name: kong-prefix-vol
+            - mountPath: /tmp
+              name: kong-tmp-vol
+        - name: gateway-deck-sync
+          image: "{{ .Values.image.sync.repository }}:{{ .Values.image.sync.tag | default .Chart.AppVersion }}"
+          envFrom:
+            - secretRef:
+                name: gateway-env-secret
+          command:
+            - /bin/sh
+          args:
+            - -c
+            - |
+              echo "Start Waiting for Kong Admin API to be ready.."
+              until curl -s http://localhost:8001/status > /dev/null; do
+                echo "Waiting for Kong Admin API to be ready..."
+                sleep 5
+              done
+
+              /mnt/deck/kong-deck.sh
+
+              # Keep the container running after sync
+              while true; do
+                sleep 3600  # Sleep for 1 hour
+                #  we can add periodic sync here
+                /mnt/deck/kong-deck.sh
+              done
+          resources:
+            {{- toYaml .Values.resources.sync | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: true
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /mnt/deck
+              name: gateway-kong-temp-config
+        - name: fluent-bit
+          image: "{{ .Values.image.fluentBit.repository }}:{{ .Values.image.fluentBit.tag }}"
+          envFrom:
+            - secretRef:
+                name: elastic-env-secret
+          ports:
+            - containerPort: 2020
+              protocol: TCP
+            - containerPort: 5043
+              protocol: TCP
+            - containerPort: 5044
+              protocol: TCP
+            - containerPort: 5045
+              protocol: TCP
+            - containerPort: 5046
+              protocol: TCP
+            - containerPort: 5047
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /fluent-bit/etc/
+              name: fluent-bit-config
+            - mountPath: /tmp/storage
+              name: fluent-bit-storage
+            - mountPath: /var/log
+              name: varlog
+            - mountPath: /var/lib/docker/containers
+              name: varlibdockercontainers
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources.fluentBit | nindent 12 }}
+      volumes:
+        - configMap:
+            defaultMode: 511
+            name: {{ .Values.configMaps.kongConfig.name }}
+          name: gateway-kong-temp-config
+        - name: kong-prefix-vol
+          emptyDir: {}
+        - name: kong-tmp-vol
+          emptyDir: {}
+        - configMap:
+            defaultMode: 420
+            name: {{ .Values.configMaps.fluentBit.name }}
+          name: fluent-bit-config
+        - emptyDir: {}
+          name: fluent-bit-storage
+        - hostPath:
+            path: /var/log
+            type: ""
+          name: varlog
+        - hostPath:
+            path: /var/lib/docker/containers
+            type: ""
+          name: varlibdockercontainers
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

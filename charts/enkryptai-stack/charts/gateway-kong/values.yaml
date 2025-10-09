@@ -1,0 +1,116 @@
+replicaCount: 2
+
+image:
+  gateway:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway
+    tag: "dev"
+    pullPolicy: IfNotPresent
+  sync:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway-sync
+    tag: "dev"
+    pullPolicy: IfNotPresent
+  fluentBit:
+    repository: fluent/fluent-bit
+    tag: "3.2.1"
+    pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: "gateway-kong"
+
+service:
+  type: ClusterIP
+  ports:
+    http:
+      port: 80
+      targetPort: 8000
+    https:
+      port: 443
+      targetPort: 8443
+    admin:
+      port: 8001
+      targetPort: 8001
+    adminGui:
+      port: 8002
+      targetPort: 8002
+    fluentBitMetrics:
+      port: 2020
+      targetPort: 2020
+    fluentBitAdmin:
+      port: 5043
+      targetPort: 5043
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+  hosts:
+    - host: api.dev.enkryptai.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: gateway-kong-tls
+      hosts:
+        - api.dev.enkryptai.com
+
+resources:
+  gateway:
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+    requests:
+      cpu: "0.5"
+      memory: "1.5Gi"
+  sync:
+    limits:
+      cpu: "0.5"
+      memory: "256Mi"
+    requests:
+      cpu: "0.1"
+      memory: "64Mi"
+  fluentBit:
+    limits:
+      cpu: "0.5"
+      memory: "256Gi"
+    requests:
+      cpu: "0.1"
+      memory: "64Mi"
+
+livenessProbe:
+  enabled: true
+  exec:
+    command:
+      - kong
+      - health
+  failureThreshold: 10
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 10
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 80
+
+externalSecrets:
+  enabled: true
+  secretStoreRefName: enkryptai-clustersecret-store 
+  repoName: enkryptai/gateway
+
+configMaps:
+  kongConfig:
+    enabled: true
+    name: gateway-kong-temp-config
+  fluentBit:
+    enabled: true
+    name: fluent-bit-config
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

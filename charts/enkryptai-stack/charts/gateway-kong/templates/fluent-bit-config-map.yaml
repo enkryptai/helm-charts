@@ -1,0 +1,188 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+      flush        1
+      daemon       Off
+      log_level    Off
+      parsers_file parsers.conf
+      plugins_file plugins.conf
+      http_server  On
+      http_listen  0.0.0.0
+      http_port    2020
+      Hot_Reload   On
+      Health_Check On
+      HC_Errors_Count 5
+      HC_Retry_Failure_Count 5
+      HC_Period 5
+      storage.metrics on
+      storage.path /tmp/storage
+      storage.sync full
+      storage.checksum on
+      storage.max_chunks_up 128
+      storage.backlog.mem_limit 100M
+      storage.delete_irrecoverable_chunks On
+
+    [INPUT]
+      name http
+      Alias input-admin
+      storage.type filesystem
+      listen 0.0.0.0
+      port 5043
+      Buffer_Max_Size 500MB
+      buffer_chunk_size 5MB
+      successful_response_code 201
+      tag admin
+
+    [INPUT]
+      name http
+      Alias input-guardrails
+      storage.type filesystem
+      listen 0.0.0.0
+      port 5044
+      Buffer_Max_Size 500MB
+      buffer_chunk_size 5MB
+      successful_response_code 201
+      tag guardrails
+
+    [INPUT]
+      name http
+      Alias input-red-teaming
+      storage.type filesystem
+      listen 0.0.0.0
+      port 5045
+      Buffer_Max_Size 500MB
+      buffer_chunk_size 5MB
+      successful_response_code 201
+      tag red-teaming
+
+    [INPUT]
+      name http
+      Alias input-leaderboard
+      storage.type filesystem
+      listen 0.0.0.0
+      port 5046
+      Buffer_Max_Size 500MB
+      buffer_chunk_size 5MB
+      successful_response_code 201
+      tag leaderboard
+
+    [INPUT]
+      name http
+      Alias input-ai-proxy
+      storage.type filesystem
+      listen 0.0.0.0
+      port 5047
+      Buffer_Max_Size 500MB
+      buffer_chunk_size 5MB
+      successful_response_code 201
+      tag ai-proxy
+
+
+    [OUTPUT]
+      Name  es
+      Alias output-admin
+      Match admin
+      Host  ${ELASTIC_HOST}
+      Port  ${ELASTIC_PORT}
+      HTTP_User ${ELASTIC_USERNAME}
+      HTTP_Passwd ${ELASTIC_PASSWORD}
+      Index admin
+      Buffer_Size 100M
+      Retry_Limit  3
+      Suppress_Type_Name On
+      # Logstash_Format true
+      # Logstash_Prefix admin
+      Generate_ID on
+      tls On
+      tls.verify  off
+      # tls.ca_file /opt/certs/root-ca.pem
+
+    [OUTPUT]
+      Name  es
+      Alias output-guardrails
+      Match guardrails
+      Host  ${ELASTIC_HOST}
+      Port  ${ELASTIC_PORT}
+      HTTP_User ${ELASTIC_USERNAME}
+      HTTP_Passwd ${ELASTIC_PASSWORD}
+      Index guardrails
+      Buffer_Size 100M
+      Retry_Limit  3
+      Suppress_Type_Name On
+      # Logstash_Format true
+      # Logstash_Prefix guardrails
+      Generate_ID on
+      tls On
+      tls.verify  off
+      # tls.ca_file /opt/certs/root-ca.pem
+
+    [OUTPUT]
+      Name  es
+      Alias output-red-teaming
+      Match red-teaming
+      Host  ${ELASTIC_HOST}
+      Port  ${ELASTIC_PORT}
+      HTTP_User ${ELASTIC_USERNAME}
+      HTTP_Passwd ${ELASTIC_PASSWORD}
+      Index red_teaming
+      Buffer_Size 100M
+      Retry_Limit  3
+      Suppress_Type_Name On
+      # Logstash_Format true
+      # Logstash_Prefix red_teaming
+      Generate_ID on
+      tls On
+      tls.verify  off
+      # tls.ca_file /opt/certs/root-ca.pem
+
+    [OUTPUT]
+      Name  es
+      Alias output-leaderboard
+      Match leaderboard
+      Host  ${ELASTIC_HOST}
+      Port  ${ELASTIC_PORT}
+      HTTP_User ${ELASTIC_USERNAME}
+      HTTP_Passwd ${ELASTIC_PASSWORD}
+      Index leaderboard
+      Buffer_Size 100M
+      Retry_Limit  3
+      Suppress_Type_Name On
+      # Logstash_Format true
+      # Logstash_Prefix leaderboard
+      Generate_ID on
+      tls On
+      tls.verify  off
+      # tls.ca_file /opt/certs/root-ca.pem
+
+    [OUTPUT]
+      Name  es
+      Alias output-ai-proxy
+      Match ai-proxy
+      Host  ${ELASTIC_HOST}
+      Port  ${ELASTIC_PORT}
+      HTTP_User ${ELASTIC_USERNAME}
+      HTTP_Passwd ${ELASTIC_PASSWORD}
+      Index ai-proxy
+      Buffer_Size 100M
+      Retry_Limit  3
+      Suppress_Type_Name On
+      # Logstash_Format true
+      # Logstash_Prefix ai-proxy
+      Generate_ID on
+      tls On
+      tls.verify  off
+      # tls.ca_file /opt/certs/root-ca.pem
+
+  parsers.conf: |
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+
+

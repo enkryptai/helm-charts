@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gateway-kong.fullname" . }}
+  labels:
+    {{- include "gateway-kong.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "gateway-kong.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.ports.http.port }}
+      targetPort: {{ .Values.service.ports.http.targetPort }}
+    - name: https
+      port: {{ .Values.service.ports.https.port }}
+      targetPort: {{ .Values.service.ports.https.targetPort }}
+    - name: admin
+      port: {{ .Values.service.ports.admin.port }}
+      targetPort: {{ .Values.service.ports.admin.targetPort }}
+    - name: admin-gui
+      port: {{ .Values.service.ports.adminGui.port }}
+      targetPort: {{ .Values.service.ports.adminGui.targetPort }}
+    - name: fluent-bit-metrics
+      port: {{ .Values.service.ports.fluentBitMetrics.port }}
+      targetPort: {{ .Values.service.ports.fluentBitMetrics.targetPort }}
+    - name: fluent-bit-admin
+      port: {{ .Values.service.ports.fluentBitAdmin.port }}
+      targetPort: {{ .Values.service.ports.fluentBitAdmin.targetPort }}

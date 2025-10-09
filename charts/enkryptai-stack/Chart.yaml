@@ -9,4 +9,8 @@ dependencies:
     version: 0.1.3 
     alias: "supabase"
     repository: "file://./charts/supabase"
+  - name: openfga
+    version: 0.2.26
+    alias: openfga
+    repository: "https://openfga.github.io/helm-charts"
 

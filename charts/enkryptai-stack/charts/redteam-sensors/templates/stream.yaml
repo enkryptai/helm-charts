@@ -1,0 +1,37 @@
+apiVersion: jetstream.nats.io/v1beta2
+kind: Stream
+metadata:
+  name: workflows
+spec:
+  name: REDTEAM
+  subjects:
+    - "redteamworkflows.*"
+    - "attack.*"
+    - "add-task.*"
+    - "custom-task.*"
+    - "generate-data.*"
+    - "alignment-data.*"
+  storage: file
+  maxAge: 48h  
+  maxMsgs: 10000
+  maxBytes: 5242880
+  duplicateWindow: 5m
+  retention: workqueue
+  description: "Workflow events for creating redteam job"
+---
+apiVersion: jetstream.nats.io/v1beta2
+kind: Stream
+metadata:
+  name: workflows-logs
+spec:
+  name: REDTEAM-LOGS
+  subjects:
+    - "logs.*" 
+  storage: file
+  maxAge: 48h  
+  maxMsgs: 10000
+  maxBytes: 5242880
+  duplicateWindow: 5m
+  retention: workqueue
+  description: "Workflow events for job logs served via redteam-proxy"
+

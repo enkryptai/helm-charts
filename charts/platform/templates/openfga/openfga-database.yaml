@@ -1,0 +1,49 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cluster-openfga
+  annotations:
+    "helm.sh/hook-weight": "-7"
+    "helm.sh/hook": post-install,post-upgrade
+spec:
+  # backup: NOTE : Access via pod Identity Pending. And SuperUserSecret Pending/Openfga db creation pending
+  #   barmanObjectStore:
+  #     destinationPath: "s3://dev-new-openfga"
+  #     s3Credentials:
+  #       accessKeyId:
+  #         name: openfga-env-secret
+  #         key: ACCESS_KEY
+  #       secretAccessKey:
+  #         name: openfga-env-secret
+  #         key: SECRET_KEY
+  #   retentionPolicy: "15d"
+  imageName:  ghcr.io/cloudnative-pg/postgresql:17.4-8 
+  imagePullSecrets: 
+    - name: core-app-pullsecret
+  postgresGID: 26
+  postgresUID: 26
+  superuserSecret:
+    name: postgres-superuser-secret
+  bootstrap:
+    initdb:
+      secret:
+        name: openfga-env-secret
+      database: openfga
+      owner: openfga
+      encoding: UTF8
+      localeCType: C
+      localeCollate: C
+  enableSuperuserAccess: true
+  instances: 2
+  storage:
+     size: 15Gi
+---
+# apiVersion: postgresql.cnpg.io/v1
+# kind: ScheduledBackup
+# metadata:
+#   name: backup-dev-openfga
+# spec:
+#   schedule: "0 10 * * *"
+#   backupOwnerReference: self
+#   cluster:
+#     name: dev-cluster-openfga

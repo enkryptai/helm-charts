@@ -1,0 +1,10 @@
+apiVersion: v2
+name: cluster-autoscaler
+description: Complete platform infrastructure stack
+version: 1.0.0
+appVersion: "1.33.0"
+dependencies:
+  - name: cluster-autoscaler
+    version: 9.48.0
+    alias: cluster-autoscaler
+    repository: "https://kubernetes.github.io/autoscaler"

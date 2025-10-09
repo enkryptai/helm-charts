@@ -1,5 +1,5 @@
 apiVersion: v2
-name: nack
+name: nacks
 description: Complete platform infrastructure stack
 version: "1.0.0"
 appVersion: "1.0.0"

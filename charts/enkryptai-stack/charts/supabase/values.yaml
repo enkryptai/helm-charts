@@ -2,7 +2,7 @@ externalSecret:
   databaseSecretName: onprem
   databaseSecretRepoName: enkryptaivpc/on-prem
   secretStoreRefName: enkryptai-clustersecret-store
-  domain: "djj.enkryptai.com"
+  
 secret:
   onprem: 
     name: onprem

@@ -1,0 +1,9 @@
+dependencies:
+- name: supabase
+  repository: file://./charts/supabase
+  version: 0.1.3
+- name: openfga
+  repository: https://openfga.github.io/helm-charts
+  version: 0.2.26
+digest: sha256:3d66f201a4a0d7e87aa438ddd8d5d565fd930c8c48e3020c60480a3645c5fe47
+generated: "2025-10-09T18:04:03.821666751+05:30"

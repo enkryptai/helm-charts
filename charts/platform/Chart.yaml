@@ -7,13 +7,13 @@ dependencies:
   - name: argo-workflow
     version: 1.0.0
     alias: argo-workflow
-    repository: "https://enkryptai.github.io/helm-charts/charts/platform"
+    repository: "file://./charts/argo-workflow"
     condition: argo-workflow.enabled
 
   - name: argocd-events
     version: 1.0.0
     alias: argocd-events
-    repository: "https://enkryptai.github.io/helm-charts/charts/platform"
+    repository: "file://./charts/argocd-events"
     condition: argocd-events.enabled
   
   - name: cert-manager
@@ -25,7 +25,7 @@ dependencies:
   - name: cluster-autoscaler
     version: 1.0.0
     alias: cluster-autoscaler
-    repository: "https://enkryptai.github.io/helm-charts/charts/platform"
+    repository: "file://./charts/cluster-autoscaler"
     condition: cluster-autoscaler.enabled
 
   - name: cloudnative-pg
@@ -67,7 +67,7 @@ dependencies:
   - name: storage-class
     version: 1.0.0
     alias: storage-class
-    repository: "https://enkryptai.github.io/helm-charts/charts/platform"
+    repository: "file://./charts/storage-class"
     condition: storage-class.enabled
 
   - name: nats

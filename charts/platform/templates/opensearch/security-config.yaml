@@ -13,23 +13,23 @@ stringData:
           type: "internalusers"
           config_version: 2
         admin:
-          hash: "$"
+          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQ"
           reserved: true
           backend_roles:
           - "admin"
           description: "admin user"
         dashboarduser:
-          hash: "$2y$12"
+          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQ"
           reserved: true
           description: "Dashboards user"
         kong_logs_plugin: 
-          hash: "$2y$1"
+          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQj3yVbsCT"
           reserved: true 
           backend_roles: 
           - "readall"
           description: "Kong plugin readall"
         kibana_read_only: 
-          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQj3yVbsCT4/7tKPMiucEJa.Tr33n2"
+          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQj3yVb"
           reserved: true 
           backend_roles: 
           - "readall"

@@ -1,0 +1,60 @@
+{{- if (.Capabilities.APIVersions.Has "opensearch.opster.io/v1") }}
+
+---
+# Admin User
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUser
+metadata:
+  name: admin
+spec:
+  passwordFrom:
+    name: opensearch-cred
+    key: password
+  backendRoles:
+    - admin
+  opensearchCluster:
+    name: enkryptai-opensearch
+
+---
+# Dashboard User
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUser
+metadata:
+  name: dashboarduser
+spec:
+  passwordFrom:
+    name: opensearch-cred
+    key: password
+  opensearchCluster:
+    name: enkryptai-opensearch
+
+---
+# Kong Logs Plugin User
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUser
+metadata:
+  name: kong-logs-plugin
+spec:
+  passwordFrom:
+    name: opensearch-cred
+    key: password
+  backendRoles:
+    - readall
+  opensearchCluster:
+    name: enkryptai-opensearch
+
+---
+# Kibana Read Only User
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUser
+metadata:
+  name: kibana-read-only
+spec:
+  passwordFrom:
+    name: opensearch-cred
+    key: password
+  backendRoles:
+    - readall
+  opensearchCluster:
+    name: enkryptai-opensearch 
+{{- end }}

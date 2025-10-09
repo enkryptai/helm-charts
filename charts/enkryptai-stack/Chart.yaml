@@ -4,9 +4,30 @@ description: A Helm chart for Kubernetes
 type: application
 version: 1.0.0
 appVersion: "1.16.0"
+
 dependencies:
-  - name: supabase 
-    version: 0.1.3 
-    alias: "supabase"
+  - name: supabase
+    version: 0.1.3
+    alias: supabase
     repository: "file://./charts/supabase"
+
+  - name: database
+    version: 1.0.0
+    alias: database
+    repository: "file://./charts/database"
+
+  - name: external-secret
+    version: 1.0.0
+    alias: external-secret
+    repository: "file://./charts/external-secret"
+
+  - name: opensearch-cluster
+    version: 1.0.0
+    alias: opensearch-cluster
+    repository: "file://./charts/opensearch-cluster"
+
+  - name: openfga
+    version: 0.2.26
+    alias: openfga
+    repository: "https://openfga.github.io/helm-charts"
 

@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  generation: 1
+  name: supabase-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: auth.{{ .Values.global.domain }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: enkryptai-supabase-kong 
+            port:
+              number: 8000
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - auth.{{ .Values.global.domain }}
+    secretName: supabase-tls
+

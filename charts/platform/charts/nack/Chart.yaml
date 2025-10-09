@@ -1,0 +1,9 @@
+apiVersion: v2
+name: nacks
+description: Complete platform infrastructure stack
+version: "1.0.0"
+appVersion: "1.0.0"
+dependencies:
+  - name: nack
+    version: 0.29.2
+    repository: "https://nats-io.github.io/k8s/helm/charts/"

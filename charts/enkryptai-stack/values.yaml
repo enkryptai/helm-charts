@@ -4,7 +4,25 @@ global:
   storageClass: ""
   imagePullPolicy: "IfNotPresent"
   externalSecret: true
-
+  domain: "djj.enkryptai.com" #Subdomain will be created at this level
+external-secret: 
+  aws: 
+    region: "us-west-2"
+    ClusterSecretStoreName: "enkryptai-clustersecret-store" 
+  openfgaconfig:
+    externalSecret:
+      name: openfga-env-secret
+      refreshInterval: "15m"
+      secretStoreName: enkryptai-clustersecret-store
+      secretStoreKind: ClusterSecretStore
+      remoteSecretKey: enkryptaivpc/openfga
+      keys:
+        - secretKey: uri
+          property: uri
+        - secretKey: username 
+          property: username 
+        - secretKey: password 
+          property: password
 
 frontend:
   enabled: true
@@ -34,15 +52,17 @@ frontend:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: test.example.com
+      - host: app.djj.enkryptai.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: frontend-tls
         hosts:
-          - test.example.com
+          - app.djj.enkryptai.com
 
+  configMap:
+    NEXT_PUBLIC_URL: "app.djj.enkryptai.com"
   resources:
     limits:
       cpu: 1700m
@@ -83,8 +103,7 @@ frontend:
 
   affinity: {}
 
-  configMap:
-    NEXT_PUBLIC_URL: "test.example.com"
+  
 
   externalSecret:
     enabled: true
@@ -142,14 +161,14 @@ gateway-kong:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: example.com
+      - host: api.djj.enkryptai.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: gateway-kong-tls
         hosts:
-          - example.com
+          - api.djj.enkryptai.com
 
   resources:
     gateway:
@@ -363,6 +382,283 @@ guardrails:
   tolerations: []
 
   affinity: {}
+
+openfgaconfig:
+  externalSecret:
+    name: openfga-env-secret
+    refreshInterval: "15m"
+    secretStoreName: enkryptai-clustersecret-store
+    secretStoreKind: ClusterSecretStore
+    remoteSecretKey: enkryptaivpc/openfga
+    keys:
+      - secretKey: uri
+        property: uri
+      - secretKey: username 
+        property: username 
+      - secretKey: password 
+        property: password
+openfga:
+  replicaCount: 1 
+  image:
+    repository: openfga/openfga
+    pullPolicy: Always
+    tag: ""
+
+  imagePullSecrets: []
+  nameOverride: "openfga"
+  fullnameOverride: "openfga"
+
+  commonLabels: {}
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  annotations: {} 
+
+  podAnnotations: {} 
+  podExtraLabels: {}
+
+  extraEnvVars:
+    - name: OPENFGA_HTTP_TLS_ENABLED
+      value: "false"
+    - name: OPENFGA_REQUEST_TIMEOUT
+      value: "3s"
+    - name: OPENFGA_DATASTORE_METRICS_ENABLED
+      value: "true"
+    - name: OPENFGA_CHECK_CACHE_LIMIT
+      value: "10000"
+    - name: OPENFGA_CHECK_ITERATOR_CACHE_ENABLED
+      value: "true"
+    - name: OPENFGA_CHECK_ITERATOR_CACHE_MAX_RESULTS
+      value: "10000"
+    - name: OPENFGA_CHECK_ITERATOR_CACHE_TTL
+      value: "1m"
+    - name: OPENFGA_CACHE_CONTROLLER_ENABLED
+      value: "true"
+    - name: OPENFGA_CACHE_CONTROLLER_TTL
+      value: "30s"
+    - name: OPENFGA_CHECK_DISPATCH_THROTTLING_ENABLED
+      value: "false"
+    - name: OPENFGA_LIST_OBJECTS_DISPATCH_THROTTLING_ENABLED
+      value: "false"
+    - name: OPENFGA_LIST_USERS_DISPATCH_THROTTLING_ENABLED
+      value: "false"
+    - name: OPENFGA_TRACING_ENABLED
+      value: "false"
+    - name: OPENFGA_TRACE_SERVICE_NAME
+      value: "openfga"
+    - name: OPENFGA_ACCESS_CONTROL_ENABLED
+      value: "false"
+
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraInitContainers: []
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  initContainer:
+    repository: groundnuty/k8s-wait-for
+    tag: "v2.0"
+    pullPolicy: IfNotPresent
+
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 12
+    successThreshold: 1
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+    successThreshold: 1
+
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  customStartupProbe: {}
+
+  service:
+    annotations: {}
+    type: ClusterIP
+    port: 8080
+
+  telemetry:
+    trace:
+      enabled: false
+      otlp:
+        endpoint:
+        tls:
+          enabled: false
+      sampleRatio: 0.3
+
+    metrics:
+      enabled: true
+
+      serviceMonitor:
+        enabled: false
+        additionalLabels: {}
+        annotations: {}
+        jobLabel: "app.kubernetes.io/name"
+        namespace: ""
+        namespaceSelector: {}
+        scrapeInterval: 30s
+        scrapeTimeout: 10s
+        targetLabels: []
+        relabelings: []
+        metricRelabelings: []
+
+      addr: 0.0.0.0:2112
+      enableRPCHistograms:
+      podAnnotations:
+        prometheus.io/scrape: "true"
+  datastore:
+    engine: postgres
+    uri:
+    uriSecret: openfga-env-secret
+    maxCacheSize: 100000
+    maxOpenConns: 70
+    maxIdleConns: 30
+    connMaxIdleTime: 1m
+    connMaxLifetime: 1h
+    applyMigrations: true
+    waitForMigrations: true
+    migrationType: job
+    migrations:
+      resources: {}
+      image:
+        repository: groundnuty/k8s-wait-for
+        pullPolicy: Always
+        tag: "v2.0"
+
+  postgresql:
+    enabled: false
+
+  mysql:
+    enabled: false
+
+  grpc:
+    addr: 0.0.0.0:8081
+    tls:
+      enabled: false
+      cert:
+      key:
+      ca:
+
+  http:
+    enabled: true
+    addr: 0.0.0.0:8080
+    tls:
+      enabled: false
+      cert:
+      key:
+    upstreamTimeout:
+    corsAllowedOrigins: ["*"]
+    corsAllowedHeaders: ["*"]
+
+  authn:
+    method: none
+    preshared:
+      keys: []
+    oidc:
+      audience:
+      issuer:
+
+  playground:
+    enabled: false
+    port: 3000
+
+  profiler:
+    enabled: false
+    addr: 0.0.0.0:3001
+
+  log:
+    level: info
+    format: json
+    timestampFormat: Unix
+
+  checkQueryCache:
+    enabled: true
+    limit: 10000
+    ttl: 1m
+
+  experimentals: []
+
+  maxTuplesPerWrite:
+  maxTypesPerAuthorizationModel:
+  maxAuthorizationModelSizeInBytes:
+  maxConcurrentReadsForCheck:
+  maxConcurrentReadsForListObjects:
+  maxConcurrentReadsForListUsers:
+  changelogHorizonOffset:
+  resolveNodeLimit:
+  resolveNodeBreadthLimit:
+  listObjectsDeadline: 3s
+  listObjectsMaxResults: 1000
+  listUsersDeadline: 3s
+  listUsersMaxResults: 1000
+  requestDurationDatastoreQueryCountBuckets: [50, 200]
+  allowWriting1_0Models:
+  allowEvaluating1_0Models:
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+
+  resources: {}
+
+  lifecycle: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  affinity: {}
+  sidecars: []
+
+  migrate:
+    extraVolumes: []
+    extraVolumeMounts: []
+    extraInitContainers: []
+    sidecars: []
+    annotations:
+      helm.sh/hook: "post-install, post-upgrade"
+      helm.sh/hook-weight: "-15"
+      helm.sh/hook-delete-policy: "before-hook-creation"
+    labels: {}
+    timeout:
+
+  testPodSpec: {}
+  testContainerSpec: {}
+  extraObjects: []
 
 platform:
   opensearch:

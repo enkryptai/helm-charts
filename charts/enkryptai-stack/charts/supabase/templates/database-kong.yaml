@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-check-and-grant
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: db-check
+          image: postgres:16
+          env:
+            - name: DB_NAME
+              value: "postgres"
+            - name: DB_HOST
+              value: "supabase-cluster-rw"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: superuser-secret
+                  key: DB_PASSWORD
+            - name: GRANT_SQL
+              valueFrom:
+                secretKeyRef:
+                  name: superuser-secret
+                  key: kong.sql
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "🔍 Checking if database is up..."
+              RETRIES=20
+
+              until pg_isready -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" || [ $RETRIES -eq 0 ]; do
+                echo "⏳ Waiting for DB... ($RETRIES retries left)"
+                RETRIES=$((RETRIES-1))
+                sleep 5
+              done
+
+              if [ $RETRIES -eq 0 ]; then
+                echo "❌ Database is not reachable."
+                exit 1
+              fi
+
+              echo "✅ Database is up. Applying GRANT SQL..."
+              echo "$GRANT_SQL" | PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1
+              echo "🎯 Grant applied successfully."
+

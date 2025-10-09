@@ -1,0 +1,18 @@
+dependencies:
+- name: supabase
+  repository: file://./charts/supabase
+  version: 0.1.3
+- name: database
+  repository: file://./charts/database
+  version: 1.0.0
+- name: external-secret
+  repository: file://./charts/external-secret
+  version: 1.0.0
+- name: opensearch-cluster
+  repository: file://./charts/opensearch-cluster
+  version: 1.0.0
+- name: openfga
+  repository: https://openfga.github.io/helm-charts
+  version: 0.2.26
+digest: sha256:664fe3b1b0379be23b7c252958a17f203ec11d36bf579c862bfeef1e07887241
+generated: "2025-10-09T16:55:29.509459678+05:30"

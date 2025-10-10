@@ -1,0 +1,131 @@
+---
+#For attack.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-attack
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: nats://nats:4222
+      jsonBody: true
+      subject: attack.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+
+---
+#For add-task.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-add-task
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: nats://nats:4222
+      jsonBody: true
+      subject: add-task.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+
+---
+#For custom-task.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-custom-task
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: nats://nats:4222
+      jsonBody: true
+      subject: custom-task.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+---
+#For generate-data.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-generate-data
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: nats://nats:4222
+      jsonBody: true
+      subject: generate-data.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+---
+# For alignment-data.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-alignment-data
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: nats://nats:4222
+      jsonBody: true
+      subject: alignment-data.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+
+---
+# For logs.attack
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-logs
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: nats://nats:4222
+      jsonBody: true
+      subject: logs.attack
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+---
+

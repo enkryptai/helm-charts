@@ -1,0 +1,857 @@
+global: 
+  platform: aws # validate options aws, cloud, and baremetal
+
+#### APPLICATIONS
+guardrails: 
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrails
+    pullPolicy: IfNotPresent
+    tag: "aa2fdfb"
+
+  nameOverride: ""
+  fullnameOverride: "guardrails"
+  
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    hosts:
+      - host: app.dev.enkryptai.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: frontend-tls
+        hosts:
+          - app.dev.enkryptai.com
+
+
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+
+  podLabels:
+    app: guardrails
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+    name: http
+
+  resources:
+    requests:
+      cpu: 4
+      memory: 16Gi
+    limits:
+      nvidia.com/gpu: 1
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 90
+    timeoutSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 120
+    timeoutSeconds: 30
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+
+  externalSecret:
+    enabled: false
+    secretName: guardrails-env-secret
+    secretStoreRefName: enkryptai-clustersecret-store
+    repoName: enkryptaivpc/guardrails
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+redteam-proxy: 
+  enabled: false
+  replicaCount: 2
+
+  image:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-proxy
+    pullPolicy: IfNotPresent
+    tag: "da62bf6"
+
+  nameOverride: ""
+  fullnameOverride: "redteam-proxy"
+  ingress:
+    enabled: true
+    name: redteam 
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    hosts:
+      - host: app.dev.enkryptai.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: frontend-tls
+        hosts:
+          - app.dev.enkryptai.com
+  
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+
+  podLabels:
+    app: redteam-proxy
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+
+  service:
+    type: ClusterIP
+    port: 9091
+    targetPort: 9091
+    name: http
+
+  env:
+    - name: NATS_URL
+      value: "nats://nats:4222"
+    - name: IS_PROXY_MODE
+      value: "true"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 300Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 9091
+    initialDelaySeconds: 90
+    timeoutSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 9091
+    initialDelaySeconds: 30
+    timeoutSeconds: 10
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+  externalSecret:
+    enabled: false
+    secretName: redteam-proxy-env-secret
+    secretStoreRefName: enkryptai-clustersecret-store
+    repoName: enkryptaivpc/redteam-proxy
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+#### Dependencies
+gpu-operator:
+  toolkit:
+    version: v1.13.1-ubi8-test
+  enabled: true
+
+keydb:
+  enabled: true
+  nameOverride: "keydb"
+  fullnameOverride: "keydb"
+  imageRepository: eqalpha/keydb
+  imageTag: x86_64_v6.3.2
+  imagePullPolicy: IfNotPresent
+  nodes: 3
+  password: ""
+  existingSecret: ""
+  existingSecretPasswordKey: "password"
+  port: 6379
+  portName: server
+  internalPort: 6379
+  internalPortName: keydb
+  threads: 2
+  multiMaster: "yes"
+  activeReplicas: "yes"
+  protectedMode: "no"
+  appendonly: "no"
+  annotations: {}
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 100
+  livenessProbe:
+    enabled: true
+    custom: {}
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  readinessProbe:
+    enabled: true
+    custom: {}
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 5
+  readinessProbeRandomUuid: "90f717dd-0e68-43b8-9363-fddaad00d6c9"
+  startupProbe:
+    enabled: true
+    custom: {}
+    periodSeconds: 5
+    timeoutSeconds: 1
+    failureThreshold: 24
+  lifecycle:
+    {}
+  persistentVolume:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    selector:
+      {}
+    size: 1Gi
+    emptyDir: {}
+  resources: {}
+  securityContext:
+    {}
+  keydb:
+    securityContext: {}
+  service:
+    annotations: {}
+    appProtocol:
+      enabled: false
+  serviceAccount:
+    enabled: false
+    create: true
+    name: ""
+    extraSpec: {}
+  loadBalancer:
+    enabled: false
+    annotations: {}
+    extraSpec: {}
+  serviceMonitor:
+    enabled: false
+    labels:
+    annotations:
+    interval: 30s
+  # Redis exporter
+  exporter:
+    enabled: false
+    imageRepository: oliver006/redis_exporter
+    imageTag: v1.48.0-alpine
+    pullPolicy: IfNotPresent
+
+    # Prometheus port & scrape path
+    port: 9121
+    portName: redis-exporter
+    scrapePath: /metrics
+
+    # Liveness Probe
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: redis-exporter
+
+    # Readiness Probe
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: redis-exporter
+
+    # Startup Probe
+    startupProbe:
+      httpGet:
+        path: /health
+        port: redis-exporter
+      failureThreshold: 24
+      periodSeconds: 5
+
+    resources: {}
+
+    securityContext: {}
+
+    extraArgs:
+      []
+
+  scripts:
+    enabled: false
+    resources: {}
+    securityContext: {}
+    cleanupCoredumps:
+      enabled: false
+      minutes: 1440
+    cleanupTempfiles:
+      enabled: true
+      minutes: 90
+
+### Ingress nginx 
+ingress-nginx: 
+  enabled: true
+### Nats
+nats: 
+  enabled: true
+  global:
+    image:
+      pullPolicy:
+      pullSecretNames: []
+      registry:
+    labels: {}
+  nameOverride: "nats"
+  fullnameOverride: "nats"
+  namespaceOverride:
+  tlsCA:
+    enabled: false
+    configMapName:
+    secretName:
+    dir: /etc/nats-ca-cert
+    key: ca.crt
+  config:
+    cluster:
+      enabled: false
+      port: 6222
+      replicas: 3
+      routeURLs:
+        user:
+        password:
+        useFQDN: false
+        k8sClusterDomain: cluster.local
+      tls:
+        enabled: false
+        secretName:
+        dir: /etc/nats-certs/cluster
+        cert: tls.crt
+        key: tls.key
+        merge: {}
+        patch: []
+      merge: {}
+      patch: []
+    jetstream:
+      enabled: true
+      fileStore:
+        enabled: true
+        dir: /data
+        pvc:
+          enabled: true
+          size: 20Gi
+          storageClassName:
+          merge: {}
+          patch: []
+          name:
+        maxSize:
+      memoryStore:
+        enabled: false
+        maxSize: 1Gi
+      merge: {}
+      patch: []
+    nats:
+      port: 4222
+      tls:
+        enabled: false
+        secretName:
+        dir: /etc/nats-certs/nats
+        cert: tls.crt
+        key: tls.key
+        merge: {}
+        patch: []
+
+    leafnodes:
+      enabled: false
+      port: 7422
+      tls:
+        enabled: false
+        secretName:
+        dir: /etc/nats-certs/leafnodes
+        cert: tls.crt
+        key: tls.key
+        # merge or patch the tls config
+        # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/tls
+        merge: {}
+        patch: []
+
+      # merge or patch the leafnodes config
+      # https://docs.nats.io/running-a-nats-service/configuration/leafnodes/leafnode_conf
+      merge: {}
+      patch: []
+
+    websocket:
+      enabled: false
+      port: 8080
+      tls:
+        enabled: false
+        # set secretName in order to mount an existing secret to dir
+        secretName:
+        dir: /etc/nats-certs/websocket
+        cert: tls.crt
+        key: tls.key
+        # merge or patch the tls config
+        # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/tls
+        merge: {}
+        patch: []
+
+      ############################################################
+      # ingress
+      ############################################################
+      # service must be enabled also
+      ingress:
+        enabled: false
+        # must contain at least 1 host otherwise ingress will not be created
+        hosts: []
+        path: /
+        pathType: Exact
+        # sets to the ingress class name
+        className:
+        # set to an existing secret name to enable TLS on the ingress; applies to all hosts
+        tlsSecretName:
+
+        # merge or patch the ingress
+        # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#ingress-v1-networking-k8s-io
+        merge: {}
+        patch: []
+        # defaults to "{{ include "nats.fullname" $ }}-ws"
+        name:
+
+      # merge or patch the websocket config
+      # https://docs.nats.io/running-a-nats-service/configuration/websocket/websocket_conf
+      merge: {}
+      patch: []
+
+    mqtt:
+      enabled: false
+      port: 1883
+      tls:
+        enabled: false
+        # set secretName in order to mount an existing secret to dir
+        secretName:
+        dir: /etc/nats-certs/mqtt
+        cert: tls.crt
+        key: tls.key
+        # merge or patch the tls config
+        # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/tls
+        merge: {}
+        patch: []
+
+      # merge or patch the mqtt config
+      # https://docs.nats.io/running-a-nats-service/configuration/mqtt/mqtt_config
+      merge: {}
+      patch: []
+
+    gateway:
+      enabled: false
+      port: 7222
+      tls:
+        enabled: false
+        # set secretName in order to mount an existing secret to dir
+        secretName:
+        dir: /etc/nats-certs/gateway
+        cert: tls.crt
+        key: tls.key
+        # merge or patch the tls config
+        # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/tls
+        merge: {}
+        patch: []
+
+      # merge or patch the gateway config
+      # https://docs.nats.io/running-a-nats-service/configuration/gateways/gateway#gateway-configuration-block
+      merge: {}
+      patch: []
+
+    monitor:
+      enabled: true
+      port: 8222
+      tls:
+        # config.nats.tls must be enabled also
+        # when enabled, monitoring port will use HTTPS with the options from config.nats.tls
+        # if promExporter is also enabled, consider setting promExporter.monitorDomain
+        enabled: false
+
+    profiling:
+      enabled: false
+      port: 65432
+
+    resolver:
+      enabled: false
+      dir: /data/resolver
+
+      ############################################################
+      # stateful set -> volume claim templates -> resolver pvc
+      ############################################################
+      pvc:
+        enabled: true
+        size: 1Gi
+        storageClassName:
+
+        # merge or patch the pvc
+        # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#persistentvolumeclaim-v1-core
+        merge: {}
+        patch: []
+        # defaults to "{{ include "nats.fullname" $ }}-resolver"
+        name:
+
+      # merge or patch the resolver
+      # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/auth_intro/jwt/resolver
+      merge: {}
+      patch: []
+
+    # adds a prefix to the server name, which defaults to the pod name
+    # helpful for ensuring server name is unique in a super cluster
+    serverNamePrefix: ""
+
+    # merge or patch the nats config
+    # https://docs.nats.io/running-a-nats-service/configuration
+    # following special rules apply
+    #  1. strings that start with << and end with >> will be unquoted
+    #     use this for variables and numbers with units
+    #  2. keys ending in $include will be switched to include directives
+    #     keys are sorted alphabetically, use prefix before $includes to control includes ordering
+    #     paths should be relative to /etc/nats-config/nats.conf
+    # example:
+    #
+    #   merge:
+    #     $include: ./my-config.conf
+    #     zzz$include: ./my-config-last.conf
+    #     server_name: nats
+    #     authorization:
+    #       token: << $TOKEN >>
+    #     jetstream:
+    #       max_memory_store: << 1GB >>
+    #
+    # will yield the config:
+    # {
+    #   include ./my-config.conf;
+    #   "authorization": {
+    #     "token": $TOKEN
+    #   },
+    #   "jetstream": {
+    #     "max_memory_store": 1GB
+    #   },
+    #   "server_name": "nats",
+    #   include ./my-config-last.conf;
+    # }
+    merge: {}
+    patch: []
+
+  ############################################################
+  # stateful set -> pod template -> nats container
+  ############################################################
+  container:
+    image:
+      repository: nats
+      tag: 2.11.8-alpine
+      pullPolicy:
+      registry:
+      # if digest is provided, it overrides tag (example: "sha256:abcdef1234567890")
+      digest:
+      # if fullImageName is provided, it overrides registry, repository, tag, and digest
+      fullImageName:
+
+    # container port options
+    # must be enabled in the config section also
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#containerport-v1-core
+    ports:
+      nats: {}
+      leafnodes: {}
+      websocket: {}
+      mqtt: {}
+      cluster: {}
+      gateway: {}
+      monitor: {}
+      profiling: {}
+
+    # map with key as env var name, value can be string or map
+    # example:
+    #
+    #   env:
+    #     GOMEMLIMIT: 7GiB
+    #     TOKEN:
+    #       valueFrom:
+    #         secretKeyRef:
+    #           name: nats-auth
+    #           key: token
+    env: {}
+
+    # merge or patch the container
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core
+    merge: {}
+    patch: []
+
+  ############################################################
+  # stateful set -> pod template -> reloader container
+  ############################################################
+  reloader:
+    enabled: true
+    image:
+      repository: natsio/nats-server-config-reloader
+      tag: 0.19.1
+      pullPolicy:
+      registry:
+      digest:
+      fullImageName:
+
+    # env var map, see nats.env for an example
+    env: {}
+
+    # all nats container volume mounts with the following prefixes
+    # will be mounted into the reloader container
+    natsVolumeMountPrefixes:
+      - /etc/
+
+    # merge or patch the container
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core
+    merge: {}
+    patch: []
+
+  ############################################################
+  # stateful set -> pod template -> prom-exporter container
+  ############################################################
+  # config.monitor must be enabled
+  promExporter:
+    enabled: true
+    image:
+      repository: natsio/prometheus-nats-exporter
+      tag: 0.17.3
+      pullPolicy:
+      registry:
+      digest:
+      fullImageName:
+
+    port: 7777
+    # if config.monitor.tls.enabled is set to true, monitorDomain must be set to the common name
+    # or a SAN used in the tls certificate
+    monitorDomain: localhost
+    # env var map, see nats.env for an example
+    env: {}
+
+    # merge or patch the container
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#container-v1-core
+    merge: {}
+    patch: []
+
+    ############################################################
+    # prometheus pod monitor
+    ############################################################
+    podMonitor:
+      enabled: false
+
+      # merge or patch the pod monitor
+      # https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1.PodMonitor
+      merge: {}
+      patch: []
+      # defaults to "{{ include "nats.fullname" $ }}"
+      name:
+
+  ############################################################
+  # service
+  ############################################################
+  service:
+    enabled: true
+
+    # service port options
+    # additional boolean field enable to control whether port is exposed in the service
+    # must be enabled in the config section also
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#serviceport-v1-core
+    ports:
+      nats:
+        enabled: true
+      leafnodes:
+        enabled: true
+      websocket:
+        enabled: true
+      mqtt:
+        enabled: true
+      cluster:
+        enabled: false
+      gateway:
+        enabled: false
+      monitor:
+        enabled: false
+      profiling:
+        enabled: false
+
+    # merge or patch the service
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#service-v1-core
+    merge: {}
+    patch: []
+    # defaults to "{{ include "nats.fullname" $ }}"
+    name:
+
+  ############################################################
+  # other nats extension points
+  ############################################################
+
+  # stateful set
+  statefulSet:
+    # merge or patch the stateful set
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#statefulset-v1-apps
+    merge: {}
+    patch: []
+    # defaults to "{{ include "nats.fullname" $ }}"
+    name:
+
+  # stateful set -> pod template
+  podTemplate:
+    # adds a hash of the ConfigMap as a pod annotation
+    # this will cause the StatefulSet to roll when the ConfigMap is updated
+    configChecksumAnnotation: true
+
+    # map of topologyKey: topologySpreadConstraint
+    # labelSelector will be added to match StatefulSet pods
+    #
+    # topologySpreadConstraints:
+    #   kubernetes.io/hostname:
+    #     maxSkew: 1
+    #
+    topologySpreadConstraints: {}
+
+    # merge or patch the pod template
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#pod-v1-core
+    merge: {}
+    patch: []
+
+  # headless service
+  headlessService:
+    # merge or patch the headless service
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#service-v1-core
+    merge: {}
+    patch: []
+    # defaults to "{{ include "nats.fullname" $ }}-headless"
+    name:
+
+  # config map
+  configMap:
+    # merge or patch the config map
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#configmap-v1-core
+    merge: {}
+    patch: []
+    # defaults to "{{ include "nats.fullname" $ }}-config"
+    name:
+
+  # pod disruption budget
+  podDisruptionBudget:
+    enabled: true
+    # merge or patch the pod disruption budget
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#poddisruptionbudget-v1-policy
+    merge: {}
+    patch: []
+    # defaults to "{{ include "nats.fullname" $ }}"
+    name:
+
+  # service account
+  serviceAccount:
+    enabled: false
+    # merge or patch the service account
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#serviceaccount-v1-core
+    merge: {}
+    patch: []
+    # defaults to "{{ include "nats.fullname" $ }}"
+    name:
+
+  ############################################################
+  # natsBox
+  #
+  # NATS Box Deployment and associated resources
+  ############################################################
+  natsBox:
+    enabled: true
+
+    ############################################################
+    # NATS contexts
+    ############################################################
+    contexts:
+      default:
+        creds:
+          # set contents in order to create a secret with the creds file contents
+          contents:
+          # set secretName in order to mount an existing secret to dir
+          secretName:
+          # defaults to /etc/nats-creds/<context-name>
+          dir:
+          key: nats.creds
+        nkey:
+          # set contents in order to create a secret with the nkey file contents
+          contents:
+          # set secretName in order to mount an existing secret to dir
+          secretName:
+          # defaults to /etc/nats-nkeys/<context-name>
+          dir:
+          key: nats.nk
+        # used to connect with client certificates
+        tls:
+          # set secretName in order to mount an existing secret to dir
+          secretName:
+          # defaults to /etc/nats-certs/<context-name>
+          dir:
+          cert: tls.crt
+          key: tls.key
+
+        # merge or patch the context
+        # https://docs.nats.io/using-nats/nats-tools/nats_cli#nats-contexts
+        merge: {}
+        patch: []
+
+    defaultContextName: default
+    container:
+      image:
+        repository: natsio/nats-box
+        tag: 0.18.0
+        pullPolicy:
+        registry:
+        digest:
+        fullImageName:
+      env: {}
+      merge: {}
+      patch: []
+
+  extraResources: []
+
+nack:
+  enabled: true
+  jetstream:
+    tls:
+      enabled: false
+  nats:
+    url: nats://nats:4222
+
+minio: 
+  enabled: true
+  nameOverride: "minio"
+  fullnameOverride: "minio"
+  #existingSecret: "minio"
+  replicas: 3
+  persistence: 
+    enabled: true 
+    size: 20Gi

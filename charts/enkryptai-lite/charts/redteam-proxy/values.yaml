@@ -1,0 +1,91 @@
+replicaCount: 2
+
+image:
+  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy
+  pullPolicy: IfNotPresent
+  tag: "dev"
+
+nameOverride: ""
+fullnameOverride: "redteam-proxy"
+ingress:
+  enabled: true
+  name: redteam 
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+  hosts:
+    - host: app.dev.enkryptai.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: frontend-tls
+      hosts:
+        - app.dev.enkryptai.com
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+
+podLabels:
+  app: redteam-proxy
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 50%
+    maxUnavailable: 50%
+
+service:
+  type: ClusterIP
+  port: 9091
+  targetPort: 9091
+  name: http
+
+env:
+  - name: NATS_URL
+    value: "nats://nats:4222"
+  - name: IS_PROXY_MODE
+    value: "true"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 300Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: 9091
+  initialDelaySeconds: 90
+  timeoutSeconds: 10
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: 9091
+  initialDelaySeconds: 30
+  timeoutSeconds: 10
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+externalSecret:
+  enabled: true
+  secretName: redteam-proxy-env-secret
+  secretStoreRefName: enkryptai-clustersecret-store
+  repoName: enkryptai/redteam-proxy
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

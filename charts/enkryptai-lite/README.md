@@ -11,6 +11,7 @@ This guide walks you through installing **EnkryptAI Lite** using Helm and applyi
 - Kubernetes cluster (v1.20+ recommended)
 - Helm 3 installed
 - `kubectl` configured to access your cluster
+- This chart requires you to have Kubernetes secret for keys/bucket. Kindly check ../../test-enkrytai-lite-secret.yaml for example
 
 ---
 
@@ -19,13 +20,15 @@ This guide walks you through installing **EnkryptAI Lite** using Helm and applyi
 Add the Helm repository (replace `<repo_name>` and `<repo_url>` with the actual values):
 
 ```bash
-helm repo add <repo_name> <repo_url>
+helm repo add enkryptai https://enkryptai.github.io/helm-charts/
 helm repo update
+helm search repo enkryptai
+kubectl create ns enkryptai-stack
 ````
 
 ---
 
-## Step 2: Apply Custom Resource Definitions (CRDs)
+## Step 2: Apply Custom Resource Definitions (CRDs) (Optional)
 
 Before installing EnkryptAI Lite, apply the required CRDs:
 
@@ -40,7 +43,7 @@ kubectl apply -f crds/
 Install or upgrade the Helm release:
 
 ```bash
-helm upgrade --install enkryptai-lite -n enkryptai-stack . --debug
+helm upgrade --install enkryptai-lite enkryptai/enkryptai-lite -n enkryptai-stack  --debug --version 1.0.2 -f values.yaml
 ```
 
 * `enkryptai-lite`: Name of the Helm release

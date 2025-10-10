@@ -5,6 +5,8 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: create-s3-folders
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
 spec:
   template:
     spec:

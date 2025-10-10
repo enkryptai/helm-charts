@@ -6,9 +6,9 @@
 git clone https://github.com/enkryptai/helm-charts.git
 ```
 
-**Kindly run Cloudformation stack first to create a cluster with the provided parameter.json file. `Parameter.json`  will be provided to you by Enkryptai team* *
+Kindly run Cloudformation stack first to create a cluster with the provided parameter.json file. `Parameter.json`  will be provided to you by Enkryptai team
 
-**1. CloudFormation stack.
+1. CloudFormation stack.
 
 For Cloudformation installation below file are needed. For initial Setup(POC Enkryptai will provide this)
 

@@ -20,8 +20,5 @@ dependencies:
 - name: ingress-nginx
   repository: file://./charts/ingress-nginx
   version: 1.0.0
-- name: minio
-  repository: https://charts.min.io
-  version: 5.4.0
-digest: sha256:3c04a7d252fe8d7b276105472d47320459efb7e7f348cdf20d0ae2cd04b2e7e1
-generated: "2025-10-10T16:08:41.845138304+05:30"
+digest: sha256:9f7bc42a33f1d2714cfda5f99488bde42694c447e975281f678a6924d0ddf72e
+generated: "2025-10-10T18:29:52.218535123+05:30"

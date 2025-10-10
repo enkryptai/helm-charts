@@ -1,5 +1,11 @@
 global: 
   platform: aws # validate options aws, cloud, and baremetal
+  bucketName: "test-bck]t-tp-redte"
+  bucketSecret: "s3-cred"
+#   Below env var are required in bucketSecret  
+#   AWS_ACCESS_KEY_ID: your-access-key
+#   AWS_SECRET_ACCESS_KEY: your-secret-key
+#   AWS_DEFAULT_REGION: us-east-1
 
 #### APPLICATIONS
 guardrails: 
@@ -846,12 +852,5 @@ nack:
   nats:
     url: nats://nats:4222
 
-minio: 
-  enabled: true
-  nameOverride: "minio"
-  fullnameOverride: "minio"
-  #existingSecret: "minio"
-  replicas: 3
-  persistence: 
-    enabled: true 
-    size: 20Gi
+
+

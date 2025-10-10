@@ -1,0 +1,37 @@
+#   AWS_ACCESS_KEY_ID: your-access-key
+#   AWS_SECRET_ACCESS_KEY: your-secret-key
+#   AWS_DEFAULT_REGION: ap-south-1
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-s3-folders
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      restartPolicy: Never
+      containers:
+        - name: s3-folder-init
+          image: amazon/aws-cli:2.17.18
+          env:
+            - name: BUCKET_NAME
+              value: {{ .Values.global.bucketName }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.global.bucketSecret }} 
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              echo "Creating folders in S3 bucket: $BUCKET_NAME ..."
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "redteam/"
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "red_teaming/"
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "playground/"
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "datasets/"
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "dataset_red_teaming/"
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "red_teaming/"
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "leaderboard/"
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "code-of-conduct/"
+              aws s3api put-object --bucket "$BUCKET_NAME" --key "redteam_reports/"
+              echo "✅ Folders created successfully."
+

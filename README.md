@@ -17,6 +17,8 @@ Don’t forget to change DomainName and resend config in parameter.json
 1. parameter.json: Consist of all environment variables and secrets.  
 2. main.yaml:  Consist of Cloudformation infrastructure code which will create EKS, S3, Secret manager, IAM roles and policies.
 
+## Note: `ENKRYPTAI_LITE_MODE: "true"` will install enkryptai-lite chart. If you want to install enkryptai-stack kindly pass `ENKRYPTAI_LITE_MODE: "false"` in parameter.json 
+
 ```sh
 
 # Create stack using below command

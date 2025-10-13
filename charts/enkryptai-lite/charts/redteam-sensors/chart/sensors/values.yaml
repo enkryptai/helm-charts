@@ -5,4 +5,4 @@ redteam-jobs:
   prod: 
     version: "prod-v1.0.3"
   dev:
-    version: "dev-v1.1.26"
+    version: "dev-v1.1.76"

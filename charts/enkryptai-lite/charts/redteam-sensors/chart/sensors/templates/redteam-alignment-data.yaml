@@ -60,7 +60,7 @@ spec:
                   envFrom:
                   - secretRef:
                       name: redteam-proxy-env-secret
-                  image: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-job:{{ index .Values "redteam-jobs" "prod" "version" }}
+                  image: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-job:{{ index .Values "redteam-jobs" "dev" "version" }}
                   imagePullPolicy: Always
                 inputs:
                   parameters:

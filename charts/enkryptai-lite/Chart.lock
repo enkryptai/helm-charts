@@ -4,7 +4,7 @@ dependencies:
   version: 1.0.0
 - name: gpu-operator
   repository: https://helm.ngc.nvidia.com/nvidia
-  version: v25.3.1
+  version: v24.9.0
 - name: keydb
   repository: https://enapter.github.io/charts/
   version: 0.48.0
@@ -17,5 +17,5 @@ dependencies:
 - name: ingress-nginx
   repository: file://./charts/ingress-nginx
   version: 1.0.0
-digest: sha256:73ef311c31243c8658152ce1c035398474451bccea0848d2f97a0b89fde60cd3
-generated: "2025-10-13T14:08:21.038723861+05:30"
+digest: sha256:5c1fd368e38db0196fc28c6a4d16012aca57191339ae2e42d66dc7053b08e471
+generated: "2025-10-13T19:31:28.062391915+05:30"

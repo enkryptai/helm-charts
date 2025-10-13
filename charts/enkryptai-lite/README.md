@@ -49,6 +49,8 @@ Install or upgrade the Helm release:
 
 Don't forget to pass `ENKRYPTAI_LITE_MODE: "true"` in `redteam-proxy-env-secret` to enabled EnkryptAI-LITE 
 
+Please ensure there is no trailing whitespace or Newline in secret
+
 Kindly update values file before applying
 
 ```bash

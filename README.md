@@ -1,8 +1,3 @@
-Nice — that’s a solid README draft, but let’s make it **clean, professional, and GitHub-ready** while keeping the instructions crystal clear.
-Here’s a polished version with better structure, readable formatting, and developer-friendly language 👇
-
----
-
 #  EnkryptAI Helm Charts
 
 This repository contains Helm charts for deploying the **EnkryptAI stack** — including the core platform and supporting services — on AWS using **CloudFormation** and **Amazon EKS**.

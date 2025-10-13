@@ -1,8 +1,11 @@
 # Use this values file to do release on both dev and prod. 
 # Just update the tag with the latest release 
 
+natsURL: "nats://nats.enkryptai-stack:4222"
+
 redteam-jobs: 
   prod: 
     version: "prod-v1.0.3"
   dev:
     version: "dev-v1.1.76"
+    natsURL: "nats://nats.enkryptai-stack:4222"

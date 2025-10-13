@@ -1,14 +1,16 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
-  name: redteam-alignment-data-sensor
+  name: redteam-attack-sensor
+  namespace: argo-events
   annotations:
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-weight": "10"
 spec:
   dependencies:
   - eventName: redteam
-    eventSourceName: redteam-alignment-data
-    name: redteam-alignment-data
+    eventSourceName: redteam-attack
+    name: redteam-attack
   eventBusName: redteam-eventbus
   template:
     serviceAccountName: argo-events-sa
@@ -20,13 +22,13 @@ spec:
         - dest: spec.arguments.parameters.0.value
           src:
             dataKey: body
-            dependencyName: redteam-alignment-data
+            dependencyName: redteam-attack
         source:
           resource:
             apiVersion: argoproj.io/v1alpha1
             kind: Workflow
             metadata:
-              generateName: redteam-alignment-data-job-
+              generateName: redteam-attack-job-
               namespace: redteam-jobs
             spec:
               tolerations:
@@ -50,11 +52,14 @@ spec:
               entrypoint: process-order
               templates:
               - container:
+                  command:
+                    - python
+                    - job/job_service_sync_all.py
                   env:
                   - name: WORKER_TYPE 
                     value: "combined"
                   - name: NATS_URL
-                    value: nats://nats.nats:4222
+                    value: {{ index .Values "redteam-jobs" "dev" "natsURL" }}
                   - name: IS_PROXY_MODE
                     value: "true"
                   - name: RT_NATS_PAYLOAD
@@ -62,7 +67,7 @@ spec:
                   envFrom:
                   - secretRef:
                       name: redteam-proxy-env-secret
-                  image: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-job:{{ index .Values "redteam-jobs" "dev" "version" }}
+                  image: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-job:{{ index .Values "redteam-jobs" "dev" "version" }}
                   imagePullPolicy: Always
                 inputs:
                   parameters:

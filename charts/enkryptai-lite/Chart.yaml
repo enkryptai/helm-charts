@@ -2,8 +2,8 @@ apiVersion: v2
 name: enkryptai-lite
 description: Enkryptai redteaming and guardrails
 type: application
-version: 1.0.4
-appVersion: "1.0.4"
+version: 1.0.5
+appVersion: "1.0.5"
 dependencies:
   
   - name: argo-workflow
@@ -11,12 +11,6 @@ dependencies:
     alias: argo-workflow
     repository: "file://./charts/argo-workflow"
     condition: argo-workflow.enabled
-
-  - name: argocd-events
-    version: 1.0.0
-    alias: argocd-events
-    repository: "file://./charts/argocd-events"
-    condition: argocd-events.enabled
 
   - name: gpu-operator
     version: v25.3.1

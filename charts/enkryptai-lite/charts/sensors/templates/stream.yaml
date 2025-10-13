@@ -2,6 +2,7 @@ apiVersion: jetstream.nats.io/v1beta2
 kind: Stream
 metadata:
   name: workflows
+  namespace: argo-events
   annotations:
     "helm.sh/hook": post-install
 spec:
@@ -17,7 +18,7 @@ spec:
   maxAge: 48h  
   maxMsgs: 10000
   servers:
-    - nats://nats:4222
+    - {{ .Values.natsURL }}
   maxBytes: 5242880
   duplicateWindow: 5m
   retention: workqueue
@@ -27,6 +28,7 @@ apiVersion: jetstream.nats.io/v1beta2
 kind: Stream
 metadata:
   name: workflows-logs
+  namespace: argo-events
   annotations:
     "helm.sh/hook": post-install
 spec:
@@ -35,7 +37,7 @@ spec:
     - "logs.*" 
   storage: file
   servers:
-    - nats://nats:4222
+    - {{ .Values.natsURL }}
   maxAge: 48h  
   maxMsgs: 10000
   maxBytes: 5242880

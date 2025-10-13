@@ -42,8 +42,15 @@ kubectl apply -f crds/
 
 Install or upgrade the Helm release:
 
+**NOTE: Kindly use the latest release. Before apply ensure below secrets are present** 
+1. Name: `s3-cred` in Namespace: `enkryptai-stack`
+2. Name: `guardrails-env-secret` in Namespace: `enkryptai-stack`
+3. Name: `redteam-proxy-env-secret` in Namespace: `enkryptai-stack` and `redteam-jobs`
+
+Kindly update values file before applying
+
 ```bash
-helm upgrade --install enkryptai-lite enkryptai/enkryptai-lite -n enkryptai-stack  --debug --version 1.0.2 -f values.yaml
+helm upgrade --install enkryptai-lite enkryptai/enkryptai-lite -n enkryptai-stack  --debug -f values.yaml
 ```
 
 * `enkryptai-lite`: Name of the Helm release

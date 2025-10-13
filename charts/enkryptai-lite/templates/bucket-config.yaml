@@ -25,15 +25,26 @@ spec:
           args:
             - |
               set -e
-              echo "Creating folders in S3 bucket: $BUCKET_NAME ..."
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "redteam/"
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "red_teaming/"
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "playground/"
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "datasets/"
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "dataset_red_teaming/"
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "red_teaming/"
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "leaderboard/"
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "code-of-conduct/"
-              aws s3api put-object --bucket "$BUCKET_NAME" --key "redteam_reports/"
+              echo "🔍 Checking and creating folders in S3 bucket: $BUCKET_NAME ..."
+              FOLDERS=(
+                "redteam/"
+                "red_teaming/"
+                "playground/"
+                "datasets/"
+                "dataset_red_teaming/"
+                "leaderboard/"
+                "code-of-conduct/"
+                "redteam_reports/"
+              )
+
+              for folder in "${FOLDERS[@]}"; do
+                echo "➡️ Checking if $folder exists..."
+                if aws s3api list-objects-v2 --bucket "$BUCKET_NAME" --prefix "$folder" --max-items 1 | grep -q '"Key"'; then
+                  echo " $folder already exists. Skipping."
+                else
+                  echo " Creating $folder..."
+                  aws s3api put-object --bucket "$BUCKET_NAME" --key "$folder"
+                fi
+              done
               echo "✅ Folders created successfully."
 

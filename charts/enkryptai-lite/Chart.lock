@@ -2,9 +2,6 @@ dependencies:
 - name: argo-workflow
   repository: file://./charts/argo-workflow
   version: 1.0.0
-- name: argocd-events
-  repository: file://./charts/argocd-events
-  version: 1.0.0
 - name: gpu-operator
   repository: https://helm.ngc.nvidia.com/nvidia
   version: v25.3.1
@@ -20,5 +17,5 @@ dependencies:
 - name: ingress-nginx
   repository: file://./charts/ingress-nginx
   version: 1.0.0
-digest: sha256:9f7bc42a33f1d2714cfda5f99488bde42694c447e975281f678a6924d0ddf72e
-generated: "2025-10-10T18:29:52.218535123+05:30"
+digest: sha256:73ef311c31243c8658152ce1c035398474451bccea0848d2f97a0b89fde60cd3
+generated: "2025-10-13T14:08:21.038723861+05:30"

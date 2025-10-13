@@ -1,6 +1,6 @@
 global: 
   platform: aws # validate options aws, cloud, and baremetal
-  bucketName: "test-bck]t-tp-redte"
+  bucketName: "test-buct-tmp"
   bucketSecret: "s3-cred"
 #   Below env var are required in bucketSecret  
 #   AWS_ACCESS_KEY_ID: your-access-key
@@ -12,9 +12,9 @@ guardrails:
   enabled: false
   replicaCount: 1
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrails
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/guardrails
     pullPolicy: IfNotPresent
-    tag: "aa2fdfb"
+    tag: "1754290105"
 
   nameOverride: ""
   fullnameOverride: "guardrails"
@@ -100,9 +100,9 @@ redteam-proxy:
   replicaCount: 2
 
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-proxy
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "da62bf6"
+    tag: "fbab688"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"

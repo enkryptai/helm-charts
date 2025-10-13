@@ -2,8 +2,8 @@ apiVersion: v1
 entries:
   enkryptai-lite:
   - apiVersion: v2
-    appVersion: 1.0.3
-    created: "2025-10-13T11:48:01.576379927+05:30"
+    appVersion: 1.0.4
+    created: "2025-10-13T12:04:06.553273688+05:30"
     dependencies:
     - alias: argo-workflow
       condition: argo-workflow.enabled
@@ -41,10 +41,10 @@ entries:
       repository: file://./charts/ingress-nginx
       version: 1.0.0
     description: Enkryptai redteaming and guardrails
-    digest: fd1af0f630c368b89d2ec200b5b5f682eb8f86ff7528a2fd1bc312935621e2fa
+    digest: 3e09f4b56782d8fc657c81052804e9629d7a14d679f7f2fddc5f0b4e87363901
     name: enkryptai-lite
     type: application
     urls:
-    - https://enkryptai.github.io/helm-charts/helm-release/enkryptai-lite-1.0.3.tgz
-    version: 1.0.3
-generated: "2025-10-13T11:48:01.556959963+05:30"
+    - https://enkryptai.github.io/helm-charts/helm-release/enkryptai-lite-1.0.4.tgz
+    version: 1.0.4
+generated: "2025-10-13T12:04:06.544510588+05:30"

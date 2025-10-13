@@ -2,6 +2,8 @@ apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
   name: redteam-attack-sensor
+  annotations:
+    "helm.sh/hook": post-install
 spec:
   dependencies:
   - eventName: redteam

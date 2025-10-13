@@ -1,6 +1,6 @@
 global: 
   platform: aws # validate options aws, cloud, and baremetal
-  bucketName: "test-buct-tmp"
+  bucketName: "test-bucket-red"
   bucketSecret: "s3-cred"
 #   Below env var are required in bucketSecret  
 #   AWS_ACCESS_KEY_ID: your-access-key
@@ -56,8 +56,7 @@ guardrails:
 
   resources:
     requests:
-      cpu: 4
-      memory: 16Gi
+      nvidia.com/gpu: 1
     limits:
       nvidia.com/gpu: 1
 

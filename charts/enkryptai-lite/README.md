@@ -30,7 +30,7 @@ kubectl create ns enkryptai-stack
 
 ## Step 2: Apply Custom Resource Definitions (CRDs) (Optional)
 
-Before installing EnkryptAI Lite, apply the required CRDs:
+Apply the required CRDs only if you get error when installing below helm chart:
 
 ```bash
 kubectl apply -f crds/
@@ -46,6 +46,8 @@ Install or upgrade the Helm release:
 1. Name: `s3-cred` in Namespace: `enkryptai-stack`
 2. Name: `guardrails-env-secret` in Namespace: `enkryptai-stack`
 3. Name: `redteam-proxy-env-secret` in Namespace: `enkryptai-stack` and `redteam-jobs`
+
+Don't forget to pass `ENKRYPTAI_LITE_MODE: "true"` in `redteam-proxy-env-secret` to enabled EnkryptAI-LITE 
 
 Kindly update values file before applying
 

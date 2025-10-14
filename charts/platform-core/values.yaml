@@ -1,0 +1,398 @@
+global: 
+  platform: aws
+aws: 
+  region: "us-west-2"
+  ClusterSecretStoreName: "enkryptai-clustersecret-store" 
+
+storage-class: 
+  enabled: true
+
+cluster-autoscaler: 
+  enabled: false
+
+cloudnative-pg:
+  enabled: true
+  config:
+    clusterWide: false
+
+opensearch-operator:
+  enabled: true
+  nameOverride: "opensearch"
+  fullnameOverride: "opensearch" 
+
+
+gpu-operator:
+  toolkit:
+    version: v1.13.1-ubi8
+  enabled: true
+
+keydb:
+  enabled: true
+  nameOverride: "keydb"
+  fullnameOverride: "keydb"
+  imageRepository: eqalpha/keydb
+  imageTag: x86_64_v6.3.2
+  imagePullPolicy: IfNotPresent
+  nodes: 3
+  password: ""
+  existingSecret: ""
+  existingSecretPasswordKey: "password"
+  port: 6379
+  portName: server
+  internalPort: 6379
+  internalPortName: keydb
+  threads: 2
+  multiMaster: "yes"
+  activeReplicas: "yes"
+  protectedMode: "no"
+  appendonly: "no"
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 100
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 5
+  readinessProbe:
+    enabled: true
+    custom: {}
+    initialDelaySeconds: 20
+    periodSeconds: 5
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 5
+  readinessProbeRandomUuid: "90f717dd-0e68-43b8-9363-fddaad00d6c9"
+  startupProbe:
+    enabled: true
+    periodSeconds: 5
+    timeoutSeconds: 1
+    failureThreshold: 24
+  persistentVolume:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+  keydb:
+    securityContext: {}
+  service:
+    annotations: {}
+    appProtocol:
+      enabled: false
+  serviceAccount:
+    enabled: false
+    create: true
+    name: ""
+    extraSpec: {}
+  loadBalancer:
+    enabled: false
+    annotations: {}
+    extraSpec: {}
+  serviceMonitor:
+    enabled: false
+  exporter:
+    enabled: false
+  scripts:
+    enabled: false
+
+cert-manager:
+  enabled: false
+  crds:
+    enabled: true 
+    keep: true
+  serviceAccount: 
+    create: true 
+    name: "platform-cert-manager"
+
+external-secrets:
+  enabled: true
+  replicaCount: 1
+  bitwarden-sdk-server:
+    enabled: false
+  installCRDs: true
+  webhook:
+    annotations:
+      "helm.sh/hook-weight": "-15"
+  crds:
+    createClusterExternalSecret: true
+    createClusterSecretStore: true
+    createClusterGenerator: true
+    createPushSecret: true
+    annotations:
+      "helm.sh/hook-weight": "-15"
+  nameOverride: "external-secrets"
+  fullnameOverride: "external-secrets"
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+  hostNetwork: false
+  serviceAccount:
+    create: true
+    automount: true
+    name: "platform-external-secrets"
+
+nats: 
+  enabled: true
+  nameOverride: "nats"
+  fullnameOverride: "nats"
+  namespaceOverride:
+  tlsCA:
+    enabled: false
+    configMapName:
+    secretName:
+    dir: /etc/nats-ca-cert
+    key: ca.crt
+  config:
+    cluster:
+      enabled: false
+      port: 6222
+      replicas: 3
+      routeURLs:
+        user:
+        password:
+        useFQDN: false
+        k8sClusterDomain: cluster.local
+      tls:
+        enabled: false
+        secretName:
+        dir: /etc/nats-certs/cluster
+        cert: tls.crt
+        key: tls.key
+        merge: {}
+        patch: []
+      merge: {}
+      patch: []
+    jetstream:
+      enabled: true
+      fileStore:
+        enabled: true
+        dir: /data
+        pvc:
+          enabled: true
+          size: 20Gi
+          storageClassName:
+          merge: {}
+          patch: []
+          name:
+        maxSize:
+      memoryStore:
+        enabled: false
+        maxSize: 1Gi
+      merge: {}
+      patch: []
+    nats:
+      port: 4222
+      tls:
+        enabled: false
+        secretName:
+        dir: /etc/nats-certs/nats
+        cert: tls.crt
+        key: tls.key
+        merge: {}
+        patch: []
+
+    leafnodes:
+      enabled: false
+      port: 7422
+      tls:
+        enabled: false
+        secretName:
+        dir: /etc/nats-certs/leafnodes
+        cert: tls.crt
+        key: tls.key
+        # merge or patch the tls config
+        # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/tls
+        merge: {}
+        patch: []
+
+      # merge or patch the leafnodes config
+      # https://docs.nats.io/running-a-nats-service/configuration/leafnodes/leafnode_conf
+      merge: {}
+      patch: []
+
+    websocket:
+      enabled: false
+      port: 8080
+      tls:
+        enabled: false
+        # set secretName in order to mount an existing secret to dir
+        secretName:
+        dir: /etc/nats-certs/websocket
+        cert: tls.crt
+        key: tls.key
+        # merge or patch the tls config
+        # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/tls
+        merge: {}
+        patch: []
+
+      ############################################################
+      # ingress
+      ############################################################
+      # service must be enabled also
+      ingress:
+        enabled: false
+
+    mqtt:
+      enabled: false
+
+    gateway:
+      enabled: false
+    monitor:
+      enabled: true
+      port: 8222
+      tls:
+        enabled: false
+    profiling:
+      enabled: false
+    resolver:
+      enabled: false
+  container:
+    image:
+      repository: nats
+      tag: 2.11.8-alpine
+      pullPolicy:
+      registry:
+      digest:
+      fullImageName:
+    ports:
+      nats: {}
+      leafnodes: {}
+      websocket: {}
+      mqtt: {}
+      cluster: {}
+      gateway: {}
+      monitor: {}
+      profiling: {}
+    env: {}
+  reloader:
+    enabled: true
+    image:
+      repository: natsio/nats-server-config-reloader
+      tag: 0.19.1
+      pullPolicy:
+      registry:
+      digest:
+      fullImageName:
+    env: {}
+    natsVolumeMountPrefixes:
+      - /etc/
+    merge: {}
+    patch: []
+  promExporter:
+    enabled: true
+    image:
+      repository: natsio/prometheus-nats-exporter
+      tag: 0.17.3
+      pullPolicy:
+      registry:
+      digest:
+      fullImageName:
+    port: 7777
+    monitorDomain: localhost
+    env: {}
+    merge: {}
+    patch: []
+    podMonitor:
+      enabled: false
+      merge: {}
+      patch: []
+      name:
+  service:
+    enabled: true
+    ports:
+      nats:
+        enabled: true
+      leafnodes:
+        enabled: true
+      websocket:
+        enabled: true
+      mqtt:
+        enabled: true
+      cluster:
+        enabled: false
+      gateway:
+        enabled: false
+      monitor:
+        enabled: false
+      profiling:
+        enabled: false
+  podTemplate:
+    configChecksumAnnotation: true
+  podDisruptionBudget:
+    enabled: true
+  serviceAccount:
+    enabled: false
+
+  # NATS Box Deployment and associated resources
+  natsBox:
+    enabled: true
+    contexts:
+      default:
+        creds:
+          contents:
+          secretName:
+          dir:
+          key: nats.creds
+        nkey:
+          contents:
+          secretName:
+          dir:
+          key: nats.nk
+        tls:
+          secretName:
+          dir:
+          cert: tls.crt
+          key: tls.key
+        merge: {}
+        patch: []
+    defaultContextName: default
+    container:
+      image:
+        repository: natsio/nats-box
+        tag: 0.18.0
+        pullPolicy:
+        registry:
+        digest:
+        fullImageName:
+      env: {}
+      merge: {}
+      patch: []
+    # deployment
+    deployment:
+      merge: {}
+      patch: []
+      name:
+
+    podTemplate:
+      merge: {}
+      patch: []
+
+    # contexts secret
+    contextsSecret:
+      merge: {}
+      patch: []
+      name:
+
+    contentsSecret:
+      merge: {}
+      patch: []
+      name:
+
+    # service account
+    serviceAccount:
+      enabled: false
+      merge: {}
+      patch: []
+      name:
+
+  extraResources: []
+
+nack:
+  enabled: true
+  jetstream:
+    tls:
+      enabled: false
+  nats:
+    url: nats://nats:4222

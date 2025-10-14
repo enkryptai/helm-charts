@@ -1,0 +1,4 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your application is now running in namespace: {{ .Release.Namespace }}
+

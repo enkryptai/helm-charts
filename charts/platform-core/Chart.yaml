@@ -2,8 +2,8 @@ apiVersion: v2
 name: platform-core
 description: Core dependency components for platform helm chart
 type: application
-version: 1.0.1
-appVersion: "1.0.1"
+version: 1.0.2
+appVersion: "1.0.2"
 dependencies:
   
   - name: argo-events

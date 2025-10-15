@@ -3,7 +3,7 @@ entries:
   enkryptai-lite:
   - apiVersion: v2
     appVersion: 1.0.6
-    created: "2025-10-15T14:37:35.598988653+05:30"
+    created: "2025-10-15T18:27:04.570635666+05:30"
     dependencies:
     - alias: argo-workflow
       condition: argo-workflow.enabled
@@ -44,8 +44,8 @@ entries:
     version: 1.0.6
   platform-core:
   - apiVersion: v2
-    appVersion: 1.0.1
-    created: "2025-10-15T14:37:35.621443556+05:30"
+    appVersion: 1.0.2
+    created: "2025-10-15T18:27:04.591153509+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -102,10 +102,10 @@ entries:
       repository: https://charts.jetstack.io
       version: 1.18.2
     description: Core dependency components for platform helm chart
-    digest: 7d345b05b57970d950b81cc710d11f065c6ce67e24946f8bc9aa0a9b2c7c29b1
+    digest: ab2f12c09ab0f2e31afa156d04fb7e56c6de10e2e5275ac47028a53e69956819
     name: platform-core
     type: application
     urls:
-    - https://enkryptai.github.io/helm-charts/helm-release/platform-core-1.0.1.tgz
-    version: 1.0.1
-generated: "2025-10-15T14:37:35.588163986+05:30"
+    - https://enkryptai.github.io/helm-charts/helm-release/platform-core-1.0.2.tgz
+    version: 1.0.2
+generated: "2025-10-15T18:27:04.560486057+05:30"

@@ -1,0 +1,3 @@
+adminpassword: 
+  secretName: "opensearch-cred"
+clustername: "enkryptai-opensearch"

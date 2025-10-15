@@ -1,0 +1,53 @@
+#DevCluster 
+apiVersion: opensearch.opster.io/v1
+kind: OpenSearchCluster
+metadata:
+  name: enkryptai-opensearch
+spec:
+  security:
+    tls:
+      transport:  
+        generate: true  
+      http:  
+        generate: true  
+    config:
+      securityConfigSecret:
+        name: "opensearch-securityconfig"
+      adminCredentialsSecret:
+        name: "opensearch-cred"
+  general:
+    serviceName: enkryptai-opensearch-cluster
+    version: 2.19.1
+    pluginsList: ["repository-s3"]
+    additionalConfig:
+      reindex.ssl.verification_mode: none
+  dashboards:
+    opensearchCredentialsSecret:
+      name: opensearch-cred
+    enable: true
+    tls:
+      enable: false 
+      generate: false
+    version: 2.19.1
+    replicas: 1
+  nodePools:
+    - component: masters
+      replicas: 3
+      diskSize: "40Gi"
+      persistence:
+        pvc:
+          storageClass: gp3-encrypted
+          accessModes:
+          - ReadWriteOnce
+      NodeSelector:
+      resources:
+         requests:
+            memory: "2Gi"
+            cpu: "500m"
+         limits:
+            memory: "3Gi"
+            cpu: "1000m"
+      roles:
+        - "data"
+        - "cluster_manager"
+        - "master"

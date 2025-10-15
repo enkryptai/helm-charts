@@ -1,0 +1,25 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchTenant
+metadata:
+  name: global
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchTenant
+metadata:
+  name: admin
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchTenant
+metadata:
+  name: kibanaserver
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}

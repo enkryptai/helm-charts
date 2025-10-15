@@ -1,0 +1,60 @@
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUser
+metadata:
+  name: kibana-read-only
+  namespace: {{ .Release.Namespace }}
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  passwordFrom:
+    name: {{ .Values.adminpassword.secretName }}
+    key: password
+  backendRoles:
+    - "readall"
+  attributes: {}
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUser
+metadata:
+  name: kong-logs-plugin
+  namespace: {{ .Release.Namespace }}
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  passwordFrom:
+    name: {{ .Values.adminpassword.secretName }}    
+    key: password
+  backendRoles:
+    - "readall"
+  attributes: {}
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUser
+metadata:
+  name: dashboarduser
+  namespace: {{ .Release.Namespace }}
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  passwordFrom:
+    name: {{ .Values.adminpassword.secretName }}
+    key: password
+  backendRoles:
+    - "kibanauser"
+  attributes: {}
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUser
+metadata:
+  name: admin-user
+  namespace: {{ .Release.Namespace }}
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  passwordFrom:
+    name: {{ .Values.adminpassword.secretName }}
+    key: password
+  backendRoles:
+    - "admin"
+  attributes: {}

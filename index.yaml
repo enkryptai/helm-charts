@@ -3,7 +3,7 @@ entries:
   enkryptai-lite:
   - apiVersion: v2
     appVersion: 1.0.6
-    created: "2025-10-14T14:02:39.072690604+05:30"
+    created: "2025-10-15T14:37:35.598988653+05:30"
     dependencies:
     - alias: argo-workflow
       condition: argo-workflow.enabled
@@ -44,8 +44,8 @@ entries:
     version: 1.0.6
   platform-core:
   - apiVersion: v2
-    appVersion: 1.0.0
-    created: "2025-10-14T14:02:39.112969961+05:30"
+    appVersion: 1.0.1
+    created: "2025-10-15T14:37:35.621443556+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -85,7 +85,7 @@ entries:
     - alias: opensearch-operator
       name: opensearch-operator
       repository: https://opensearch-project.github.io/opensearch-k8s-operator
-      version: 2.7.0
+      version: 2.8.0
     - alias: gpu-operator
       condition: gpu-operator.enabled
       name: gpu-operator
@@ -102,10 +102,10 @@ entries:
       repository: https://charts.jetstack.io
       version: 1.18.2
     description: Core dependency components for platform helm chart
-    digest: b02dd763c9bf1b651a10d625d33a0988160506c749e244e49f8ec5214e59cada
+    digest: 7d345b05b57970d950b81cc710d11f065c6ce67e24946f8bc9aa0a9b2c7c29b1
     name: platform-core
     type: application
     urls:
-    - https://enkryptai.github.io/helm-charts/helm-release/platform-core-1.0.0.tgz
-    version: 1.0.0
-generated: "2025-10-14T14:02:39.05895231+05:30"
+    - https://enkryptai.github.io/helm-charts/helm-release/platform-core-1.0.1.tgz
+    version: 1.0.1
+generated: "2025-10-15T14:37:35.588163986+05:30"

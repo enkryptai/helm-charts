@@ -13,23 +13,23 @@ stringData:
           type: "internalusers"
           config_version: 2
         admin:
-          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQj3yVbsCT4/7tKPMiucEJa.Tr33n2"
+          hash: "$2y$12$1nCoz7EKsCT4/7tKPMiucEJa.Tr33n2"
           reserved: true
           backend_roles:
           - "admin"
           description: "admin user"
         dashboarduser:
-          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQj3yVbsCT4/7tKPMiucEJa.Tr33n2"
+          hash: "$2y$12$1nCoz7EK/KBj3yVbsCT4/7tKPMiucEJa.Tr33n2"
           reserved: true
           description: "Dashboards user"
         kong_logs_plugin: 
-          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQj3yVbsCT4/7tKPMiucEJa.Tr33n2"
+          hash: "$2y$12$1nCIcdxe.UGQj3yVbsCT4/7tKPMiucEJa.Tr33n2"
           reserved: true 
           backend_roles: 
           - "readall"
           description: "Kong plugin readall"
         kibana_read_only: 
-          hash: "$2y$12$1nCoz7EK/KBLtu.PIcdxe.UGQj3yVbsCT4/7tKPMiucEJa.Tr33n2"
+          hash: "$2y$12$1nCoUGQj3yVbsCT4/7tKPMiucEJa.Tr33n2"
           reserved: true 
           backend_roles: 
           - "readall"
@@ -52,4 +52,5 @@ stringData:
                   challenge: true
                 authentication_backend:
                   type: intern
+
 

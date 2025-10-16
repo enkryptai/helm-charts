@@ -584,6 +584,2878 @@ data:
     END;
     $function$
 
+  016-public-schema-supabase.sql: | 
+    --
+    -- PostgreSQL database dump
+    --
+
+
+    SET statement_timeout = 0;
+    SET lock_timeout = 0;
+    SET idle_in_transaction_session_timeout = 0;
+    SET client_encoding = 'UTF8';
+    SET standard_conforming_strings = on;
+    SELECT pg_catalog.set_config('search_path', '', false);
+    SET check_function_bodies = false;
+    SET xmloption = content;
+    SET client_min_messages = warning;
+    SET row_security = off;
+
+    --
+    -- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+    --
+
+
+
+    ALTER SCHEMA public OWNER TO pg_database_owner;
+
+    --
+    -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
+    --
+
+    COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+    --
+    -- Name: DATASET_STATUS; Type: TYPE; Schema: public; Owner: postgres
+    --
+
+    CREATE TYPE public."DATASET_STATUS" AS ENUM (
+        'Queued',
+        'Running',
+        'Finished',
+        'Failed',
+        'Cancelled'
+    );
+
+
+    ALTER TYPE public."DATASET_STATUS" OWNER TO postgres;
+
+    --
+    -- Name: FRAMEWORKS; Type: TYPE; Schema: public; Owner: supabase_admin
+    --
+
+    CREATE TYPE public."FRAMEWORKS" AS ENUM (
+        'AIUC-1',
+        'EU AI Act',
+        'OWASP LLM Top 10',
+        'ISO',
+        'NIST AI 600',
+        'OWASP Agent Security'
+    );
+
+
+    ALTER TYPE public."FRAMEWORKS" OWNER TO supabase_admin;
+
+    --
+    -- Name: TYPE "FRAMEWORKS"; Type: COMMENT; Schema: public; Owner: supabase_admin
+    --
+
+    COMMENT ON TYPE public."FRAMEWORKS" IS 'red-teaming frameworks';
+
+
+    --
+    -- Name: INVITATION_STATUSES; Type: TYPE; Schema: public; Owner: postgres
+    --
+
+    CREATE TYPE public."INVITATION_STATUSES" AS ENUM (
+        'Accepted',
+        'Rejected',
+        'Pending',
+        'Removed'
+    );
+
+
+    ALTER TYPE public."INVITATION_STATUSES" OWNER TO postgres;
+
+    --
+    -- Name: TYPE "INVITATION_STATUSES"; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TYPE public."INVITATION_STATUSES" IS 'Status';
+
+
+    --
+    -- Name: MODALITY; Type: TYPE; Schema: public; Owner: postgres
+    --
+
+    CREATE TYPE public."MODALITY" AS ENUM (
+        'text',
+        'audio',
+        'image',
+        'video',
+        'code'
+    );
+
+
+    ALTER TYPE public."MODALITY" OWNER TO postgres;
+
+    --
+    -- Name: TYPE "MODALITY"; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TYPE public."MODALITY" IS 'Model or AI System modalities';
+
+
+    --
+    -- Name: MODEL_TESTING_FOR; Type: TYPE; Schema: public; Owner: postgres
+    --
+
+    CREATE TYPE public."MODEL_TESTING_FOR" AS ENUM (
+        'Copilot',
+        'LLM',
+        'Chatbot',
+        'foundationModels',
+        'chatbotsAndCopilots',
+        'agents',
+        'URL'
+    );
+
+
+    ALTER TYPE public."MODEL_TESTING_FOR" OWNER TO postgres;
+
+    --
+    -- Name: PLANS; Type: TYPE; Schema: public; Owner: postgres
+    --
+
+    CREATE TYPE public."PLANS" AS ENUM (
+        'free',
+        'professional',
+        'enterprise'
+    );
+
+
+    ALTER TYPE public."PLANS" OWNER TO postgres;
+
+    --
+    -- Name: TYPE "PLANS"; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TYPE public."PLANS" IS 'Subscriptions tiers';
+
+
+    --
+    -- Name: RATE_LIMIT_CONFIG; Type: TYPE; Schema: public; Owner: postgres
+    --
+
+    CREATE TYPE public."RATE_LIMIT_CONFIG" AS ENUM (
+        'default,common',
+        'custom,common',
+        'default,apikey',
+        'custom,apikey',
+        'default,ip',
+        'custom,ip'
+    );
+
+
+    ALTER TYPE public."RATE_LIMIT_CONFIG" OWNER TO postgres;
+
+    --
+    -- Name: TYPE "RATE_LIMIT_CONFIG"; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TYPE public."RATE_LIMIT_CONFIG" IS 'rate_limit_setting,rate_limit_identifier';
+
+
+    --
+    -- Name: bulk_decrypt_keys(text[], text); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+
+
+
+    ALTER FUNCTION public.bulk_decrypt_keys(encrypted_data text[], encryption_key text) OWNER TO postgres;
+
+    --
+    -- Name: create_user_on_signup(); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+
+
+
+    ALTER FUNCTION public.create_user_on_signup() OWNER TO postgres;
+
+    --
+    -- Name: custom_access_token_hook(jsonb); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+
+
+    ALTER FUNCTION public.custom_access_token_hook(event jsonb) OWNER TO postgres;
+
+    --
+    -- Name: decrypt_key(text, text); Type: FUNCTION; Schema: public; Owner: postgres
+
+
+
+    ALTER FUNCTION public.decrypt_key(encrypted_data text, key text) OWNER TO postgres;
+
+    --
+    -- Name: encrypt_api_key(); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+
+
+
+    ALTER FUNCTION public.encrypt_api_key() OWNER TO postgres;
+
+    --
+    -- Name: encrypt_key(text, text); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+
+
+
+    ALTER FUNCTION public.encrypt_key(data text, key text) OWNER TO postgres;
+
+    --
+    -- Name: fetch_test_names(); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+
+
+
+    ALTER FUNCTION public.fetch_test_names() OWNER TO postgres;
+
+    SET default_tablespace = '';
+
+    SET default_table_access_method = heap;
+
+    --
+    -- Name: invitations; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.invitations (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        invitation_id_hash bigint,
+        updated_by uuid,
+        created_by uuid,
+        config jsonb,
+        status public."INVITATION_STATUSES" DEFAULT 'Pending'::public."INVITATION_STATUSES",
+        expires_at timestamp without time zone,
+        invitation_id bigint NOT NULL,
+        invitee text,
+        inviter text
+    );
+
+
+    ALTER TABLE public.invitations OWNER TO postgres;
+
+    --
+    -- Name: TABLE invitations; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.invitations IS 'Organization Invitations';
+
+
+    --
+    -- Name: COLUMN invitations.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.invitations.id IS 'Supabase user_id or org_id if this belongs to an Org';
+
+
+    --
+    -- Name: COLUMN invitations.invitation_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.invitations.invitation_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: filter_invitations_by_project(text[]); Type: FUNCTION; Schema: public; Owner: supabase_admin
+    --
+
+    CREATE FUNCTION public.filter_invitations_by_project(projects text[]) RETURNS SETOF public.invitations
+        LANGUAGE sql
+        AS $$
+      select *
+      from invitations
+      where exists (
+        select 1 from jsonb_array_elements(config->'roles') as elem
+        where elem->>'project' = any (projects)
+      );
+    $$;
+
+
+    ALTER FUNCTION public.filter_invitations_by_project(projects text[]) OWNER TO supabase_admin;
+
+    --
+    -- Name: log_test_names(); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+
+
+    ALTER FUNCTION public.log_test_names() OWNER TO postgres;
+
+    --
+    -- Name: rename_test_names(); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+
+
+    ALTER FUNCTION public.rename_test_names() OWNER TO postgres;
+
+    --
+    -- Name: models; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.models (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        model_saved_name text NOT NULL,
+        model_config jsonb NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        testing_for public."MODEL_TESTING_FOR" DEFAULT 'foundationModels'::public."MODEL_TESTING_FOR" NOT NULL,
+        model_id bigint NOT NULL,
+        model_id_hash bigint,
+        model_name text,
+        certifications text[],
+        created_by uuid,
+        updated_by uuid,
+        project_name text DEFAULT 'default'::text NOT NULL,
+        is_sample boolean DEFAULT false,
+        model_version text DEFAULT 'v1'::text NOT NULL,
+        is_deleted boolean DEFAULT false NOT NULL,
+        CONSTRAINT models_model_saved_name_check CHECK ((length(model_saved_name) < 33))
+    );
+
+
+    ALTER TABLE public.models OWNER TO postgres;
+
+    --
+    -- Name: TABLE models; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.models IS 'Models Collection';
+
+
+    --
+    -- Name: COLUMN models.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models.id IS 'Supabase user_id';
+
+
+    --
+    -- Name: COLUMN models.model_saved_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models.model_saved_name IS 'Unique Saved Name given by User';
+
+
+    --
+    -- Name: COLUMN models.model_config; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models.model_config IS 'All target_model_configuration without the system_prompt';
+
+
+    --
+    -- Name: COLUMN models.model_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models.model_id IS 'Model ID';
+
+
+    --
+    -- Name: COLUMN models.model_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models.model_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: COLUMN models.model_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models.model_name IS 'Name of the actual Model';
+
+
+    --
+    -- Name: search_models_by_testing_for(uuid, text); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+    CREATE FUNCTION public.search_models_by_testing_for(user_id uuid, search_pattern text) RETURNS SETOF public.models
+        LANGUAGE plpgsql
+        AS $$
+    BEGIN
+      -- Fetch and return the query results, which will be an empty set if no rows match
+      RETURN QUERY
+      SELECT *
+      FROM models
+      WHERE id = user_id
+      AND testing_for::text ILIKE search_pattern;
+    END;
+    $$;
+
+
+    ALTER FUNCTION public.search_models_by_testing_for(user_id uuid, search_pattern text) OWNER TO postgres;
+
+    --
+    -- Name: user_search(text); Type: FUNCTION; Schema: public; Owner: postgres
+    --
+
+    CREATE FUNCTION public.user_search(uname text) RETURNS TABLE(usename name, passwd text)
+        LANGUAGE sql SECURITY DEFINER
+        AS $_$SELECT usename, passwd FROM pg_catalog.pg_shadow WHERE usename=$1;$_$;
+
+
+    ALTER FUNCTION public.user_search(uname text) OWNER TO postgres;
+
+    --
+    -- Name: alignment_data; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.alignment_data (
+        id uuid DEFAULT gen_random_uuid() NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        job_id text,
+        dataset_name text,
+        prompt text,
+        accepted_response text,
+        rejected_response text,
+        category text,
+        success text
+    );
+
+
+    ALTER TABLE public.alignment_data OWNER TO postgres;
+
+    --
+    -- Name: alignment_task; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.alignment_task (
+        id uuid DEFAULT gen_random_uuid() NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        test_name text,
+        metadata jsonb,
+        status public."DATASET_STATUS",
+        location text,
+        "error.json" jsonb,
+        job_id text NOT NULL,
+        dataset_name text,
+        created_by uuid
+    );
+
+
+    ALTER TABLE public.alignment_task OWNER TO postgres;
+
+    --
+    -- Name: api_keys; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.api_keys (
+        id uuid DEFAULT gen_random_uuid() NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        consumer_id uuid NOT NULL,
+        name text DEFAULT 'secret_key'::text NOT NULL,
+        key text NOT NULL,
+        custom_rate_limit text
+    );
+
+
+    ALTER TABLE public.api_keys OWNER TO postgres;
+
+    --
+    -- Name: COLUMN api_keys.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.api_keys.id IS 'Consumer API Key ID in Kong';
+
+
+    --
+    -- Name: COLUMN api_keys.custom_rate_limit; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.api_keys.custom_rate_limit IS 'Overrides the default plan rate limits (per_sec,per_min) for apikey based limits. See subscription table for common, IP based limits. However, can''t go beyond Global Hard Limits (20,100). Example: "15,75|2,5|15,75"';
+
+
+    --
+    -- Name: code_of_conduct; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.code_of_conduct (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        name text NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        policy_id bigint NOT NULL,
+        policy_id_hash bigint,
+        project_name text DEFAULT 'default'::text NOT NULL,
+        updated_by uuid,
+        created_by uuid,
+        pdf_name text,
+        policy_rules text,
+        policy_text text,
+        total_rules smallint,
+        is_sample boolean DEFAULT false,
+        is_deleted boolean DEFAULT false NOT NULL,
+        CONSTRAINT policies_name_check CHECK ((length(name) < 33))
+    );
+
+
+    ALTER TABLE public.code_of_conduct OWNER TO postgres;
+
+    --
+    -- Name: TABLE code_of_conduct; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.code_of_conduct IS 'Atomized policy rules from PDF/Text';
+
+
+    --
+    -- Name: COLUMN code_of_conduct.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.code_of_conduct.id IS 'Supabase user_id or org_id if this belongs to an Org';
+
+
+    --
+    -- Name: COLUMN code_of_conduct.name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.code_of_conduct.name IS 'Name of the custom Guardrails Policy given by the user';
+
+
+    --
+    -- Name: COLUMN code_of_conduct.policy_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.code_of_conduct.policy_id IS 'Policy ID';
+
+
+    --
+    -- Name: COLUMN code_of_conduct.policy_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.code_of_conduct.policy_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: atomized_policies_policy_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.code_of_conduct ALTER COLUMN policy_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.atomized_policies_policy_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: audit_logs; Type: TABLE; Schema: public; Owner: supabase_admin
+    --
+
+    CREATE TABLE public.audit_logs (
+        actioner uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        type text NOT NULL,
+        log jsonb NOT NULL,
+        audit_log_id bigint NOT NULL,
+        org_or_user_id uuid
+    );
+
+
+    ALTER TABLE public.audit_logs OWNER TO supabase_admin;
+
+    --
+    -- Name: TABLE audit_logs; Type: COMMENT; Schema: public; Owner: supabase_admin
+    --
+
+    COMMENT ON TABLE public.audit_logs IS 'logs for all kinds of permission changes';
+
+
+    --
+    -- Name: audit_logs_audit_log_id_seq; Type: SEQUENCE; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER TABLE public.audit_logs ALTER COLUMN audit_log_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.audit_logs_audit_log_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: datasets; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.datasets (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        dataset_name text NOT NULL,
+        system_description text NOT NULL,
+        policy_description text,
+        scenarios smallint NOT NULL,
+        categories smallint NOT NULL,
+        depth smallint NOT NULL,
+        status public."DATASET_STATUS" DEFAULT 'Queued'::public."DATASET_STATUS",
+        metadata jsonb,
+        job_id text NOT NULL,
+        ended_at timestamp with time zone,
+        location text,
+        info_pdf_url text,
+        tools text,
+        "error.json" jsonb,
+        started_at timestamp with time zone,
+        summary jsonb,
+        created_by uuid,
+        project_name text DEFAULT 'default'::text
+    );
+
+
+    ALTER TABLE public.datasets OWNER TO postgres;
+
+    --
+    -- Name: COLUMN datasets.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.datasets.id IS 'User ID';
+
+
+    --
+    -- Name: COLUMN datasets.dataset_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.datasets.dataset_name IS 'User defined Dataset name';
+
+
+    --
+    -- Name: COLUMN datasets.job_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.datasets.job_id IS 'Dataset job ID';
+
+
+    --
+    -- Name: COLUMN datasets.summary; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.datasets.summary IS 'Dataset Job Summary';
+
+
+    --
+    -- Name: datasets_generated; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.datasets_generated (
+        id uuid NOT NULL,
+        dataset_name text NOT NULL,
+        test_type text,
+        scenario text,
+        category text,
+        prompt text,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        source text,
+        prompt_id text,
+        sub_category text,
+        target text,
+        prompt_type text,
+        scope text,
+        owasp_agentic_risk text,
+        eu_ai_act text,
+        mitre_atlas text,
+        nist_ai_rmf text,
+        iso_ai_safety_standard text,
+        competitor text
+    );
+
+
+    ALTER TABLE public.datasets_generated OWNER TO postgres;
+
+    --
+    -- Name: TABLE datasets_generated; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.datasets_generated IS 'Generated prompts etc.. of a Dataset by Red Team';
+
+
+    --
+    -- Name: COLUMN datasets_generated.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.datasets_generated.id IS 'User ID';
+
+
+    --
+    -- Name: COLUMN datasets_generated.dataset_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.datasets_generated.dataset_name IS 'User defined Dataset name';
+
+
+    --
+    -- Name: datasets_red_team_results; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.datasets_red_team_results (
+        id uuid NOT NULL,
+        dataset_name text NOT NULL,
+        test_type text,
+        scenario text,
+        category text,
+        prompt text,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        jailbreak_prompt text,
+        response text,
+        success text,
+        attack_method text,
+        test_name text NOT NULL,
+        nist_category text,
+        source text,
+        reasoning text,
+        detected_language text,
+        eval_latency text,
+        eval_tokens jsonb,
+        created_at timestamp with time zone,
+        model_name text,
+        confidence text,
+        modality public."MODALITY" DEFAULT 'text'::public."MODALITY",
+        prompt_id text,
+        subject text,
+        "Prompt_ID" text,
+        "Task Format" text,
+        image text,
+        img_path text,
+        mask text,
+        original_prompt text,
+        target text,
+        sub_category text,
+        response_classification text,
+        prompt_type text,
+        prefiltered text,
+        scope text,
+        owasp_agentic_risk text,
+        eu_ai_act text,
+        mitre_atlas text,
+        nist_ai_rmf text,
+        iso_ai_safety_standard text,
+        competitor text,
+        aiuc_1 text,
+        figstep_image jsonb,
+        figstep_images jsonb,
+        masked_content text,
+        paraphrased_statement text,
+        masking_image jsonb,
+        subcategory text,
+        evaluation_time text,
+        owasp_category text,
+        iteration text,
+        conversation jsonb,
+        figstep_image_path text,
+        figstep_image_paths text,
+        masking_image_path text
+    );
+
+
+    ALTER TABLE public.datasets_red_team_results OWNER TO postgres;
+
+    --
+    -- Name: TABLE datasets_red_team_results; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.datasets_red_team_results IS 'Responses and results of a Red team job against a Dataset';
+
+
+    --
+    -- Name: COLUMN datasets_red_team_results.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.datasets_red_team_results.id IS 'User ID';
+
+
+    --
+    -- Name: COLUMN datasets_red_team_results.dataset_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.datasets_red_team_results.dataset_name IS 'User defined Dataset name';
+
+
+    --
+    -- Name: deployments; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.deployments (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        name text NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        deployment_id bigint NOT NULL,
+        deployment_id_hash bigint,
+        model_saved_name text NOT NULL,
+        input_guardrails_policy jsonb,
+        output_guardrails_policy jsonb,
+        project_name text DEFAULT 'default'::text,
+        created_by uuid,
+        updated_by uuid,
+        model_version text DEFAULT 'v1'::text NOT NULL,
+        is_deleted boolean DEFAULT false NOT NULL,
+        CONSTRAINT policies_name_check CHECK ((length(name) < 33))
+    );
+
+
+    ALTER TABLE public.deployments OWNER TO postgres;
+
+    --
+    -- Name: TABLE deployments; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.deployments IS 'Deployments';
+
+
+    --
+    -- Name: COLUMN deployments.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.deployments.id IS 'Supabase user_id';
+
+
+    --
+    -- Name: COLUMN deployments.name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.deployments.name IS 'Name of the custom Guardrails Policy given by the user';
+
+
+    --
+    -- Name: COLUMN deployments.deployment_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.deployments.deployment_id IS 'Policy ID';
+
+
+    --
+    -- Name: COLUMN deployments.deployment_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.deployments.deployment_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: deployments_duplicate; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.deployments_duplicate (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        name text NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        deployment_id bigint NOT NULL,
+        deployment_id_hash bigint,
+        model_saved_name text NOT NULL,
+        input_guardrails_policy jsonb,
+        output_guardrails_policy jsonb,
+        project_name text DEFAULT 'default'::text,
+        created_by uuid,
+        updated_by uuid,
+        model_version text DEFAULT 'v1'::text NOT NULL,
+        CONSTRAINT policies_name_check CHECK ((length(name) < 33))
+    );
+
+
+    ALTER TABLE public.deployments_duplicate OWNER TO postgres;
+
+    --
+    -- Name: TABLE deployments_duplicate; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.deployments_duplicate IS 'This is a duplicate of deployments';
+
+
+    --
+    -- Name: COLUMN deployments_duplicate.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.deployments_duplicate.id IS 'Supabase user_id';
+
+
+    --
+    -- Name: COLUMN deployments_duplicate.name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.deployments_duplicate.name IS 'Name of the custom Guardrails Policy given by the user';
+
+
+    --
+    -- Name: COLUMN deployments_duplicate.deployment_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.deployments_duplicate.deployment_id IS 'Policy ID';
+
+
+    --
+    -- Name: COLUMN deployments_duplicate.deployment_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.deployments_duplicate.deployment_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: deployments_duplicate_deployment_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.deployments_duplicate ALTER COLUMN deployment_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.deployments_duplicate_deployment_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: deployments_policy_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.deployments ALTER COLUMN deployment_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.deployments_policy_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: guardrails; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.guardrails (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        name text NOT NULL,
+        detectors jsonb NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        description text,
+        policy_id bigint NOT NULL,
+        policy_id_hash bigint,
+        project_name text DEFAULT 'default'::text NOT NULL,
+        updated_by uuid,
+        created_by uuid,
+        is_sample boolean DEFAULT false,
+        is_deleted boolean DEFAULT false NOT NULL,
+        CONSTRAINT policies_description_check CHECK ((length(description) < 129)),
+        CONSTRAINT policies_name_check CHECK ((length(name) < 33))
+    );
+
+
+    ALTER TABLE public.guardrails OWNER TO postgres;
+
+    --
+    -- Name: TABLE guardrails; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.guardrails IS 'Guardrails Policies';
+
+
+    --
+    -- Name: COLUMN guardrails.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.guardrails.id IS 'Supabase user_id or org_id if this belongs to an Org';
+
+
+    --
+    -- Name: COLUMN guardrails.name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.guardrails.name IS 'Name of the custom Guardrails Policy given by the user';
+
+
+    --
+    -- Name: COLUMN guardrails.detectors; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.guardrails.detectors IS 'All detectors config';
+
+
+    --
+    -- Name: COLUMN guardrails.policy_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.guardrails.policy_id IS 'Policy ID';
+
+
+    --
+    -- Name: COLUMN guardrails.policy_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.guardrails.policy_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: invitations_invitation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.invitations ALTER COLUMN invitation_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.invitations_invitation_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: models_bkp; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.models_bkp (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        model_saved_name text NOT NULL,
+        model_config jsonb NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        testing_for public."MODEL_TESTING_FOR" DEFAULT 'LLM'::public."MODEL_TESTING_FOR" NOT NULL,
+        model_id bigint NOT NULL,
+        model_id_hash bigint,
+        model_name text,
+        certifications text[],
+        created_by uuid,
+        updated_by uuid,
+        project_name text DEFAULT 'default'::text,
+        is_sample boolean DEFAULT false,
+        CONSTRAINT models_model_saved_name_check CHECK ((length(model_saved_name) < 33))
+    );
+
+
+    ALTER TABLE public.models_bkp OWNER TO postgres;
+
+    --
+    -- Name: TABLE models_bkp; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.models_bkp IS 'This is a duplicate of models';
+
+
+    --
+    -- Name: COLUMN models_bkp.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_bkp.id IS 'Supabase user_id';
+
+
+    --
+    -- Name: COLUMN models_bkp.model_saved_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_bkp.model_saved_name IS 'Unique Saved Name given by User';
+
+
+    --
+    -- Name: COLUMN models_bkp.model_config; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_bkp.model_config IS 'All target_model_configuration without the system_prompt';
+
+
+    --
+    -- Name: COLUMN models_bkp.model_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_bkp.model_id IS 'Model ID';
+
+
+    --
+    -- Name: COLUMN models_bkp.model_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_bkp.model_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: COLUMN models_bkp.model_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_bkp.model_name IS 'Name of the actual Model';
+
+
+    --
+    -- Name: models_bkp_model_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.models_bkp ALTER COLUMN model_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.models_bkp_model_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: models_duplicate; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.models_duplicate (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        model_saved_name text NOT NULL,
+        model_config jsonb NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        testing_for public."MODEL_TESTING_FOR" DEFAULT 'foundationModels'::public."MODEL_TESTING_FOR" NOT NULL,
+        model_id bigint NOT NULL,
+        model_id_hash bigint,
+        model_name text,
+        certifications text[],
+        created_by uuid,
+        updated_by uuid,
+        project_name text DEFAULT 'default'::text,
+        is_sample boolean DEFAULT false,
+        model_version text DEFAULT 'v1'::text NOT NULL,
+        CONSTRAINT models_model_saved_name_check CHECK ((length(model_saved_name) < 33))
+    );
+
+
+    ALTER TABLE public.models_duplicate OWNER TO postgres;
+
+    --
+    -- Name: TABLE models_duplicate; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.models_duplicate IS 'This is a duplicate of models';
+
+
+    --
+    -- Name: COLUMN models_duplicate.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_duplicate.id IS 'Supabase user_id';
+
+
+    --
+    -- Name: COLUMN models_duplicate.model_saved_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_duplicate.model_saved_name IS 'Unique Saved Name given by User';
+
+
+    --
+    -- Name: COLUMN models_duplicate.model_config; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_duplicate.model_config IS 'All target_model_configuration without the system_prompt';
+
+
+    --
+    -- Name: COLUMN models_duplicate.model_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_duplicate.model_id IS 'Model ID';
+
+
+    --
+    -- Name: COLUMN models_duplicate.model_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_duplicate.model_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: COLUMN models_duplicate.model_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.models_duplicate.model_name IS 'Name of the actual Model';
+
+
+    --
+    -- Name: models_duplicate_model_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.models_duplicate ALTER COLUMN model_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.models_duplicate_model_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: models_model_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.models ALTER COLUMN model_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.models_model_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: policies_policy_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.guardrails ALTER COLUMN policy_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.policies_policy_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: profiles; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.profiles (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now(),
+        first_name text,
+        last_name text,
+        email text,
+        purpose text,
+        country text,
+        company text
+    );
+
+
+    ALTER TABLE public.profiles OWNER TO postgres;
+
+    --
+    -- Name: project_api_keys; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.project_api_keys (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        consumer_id uuid NOT NULL,
+        name text DEFAULT 'secret_key'::text NOT NULL,
+        key text NOT NULL,
+        custom_rate_limit text,
+        user_id uuid,
+        project_name text,
+        org_id uuid
+    );
+
+
+    ALTER TABLE public.project_api_keys OWNER TO postgres;
+
+    --
+    -- Name: TABLE project_api_keys; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.project_api_keys IS 'Project Consumer API Keys';
+
+
+    --
+    -- Name: COLUMN project_api_keys.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.project_api_keys.id IS 'Project Consumer API Key ID in Kong';
+
+
+    --
+    -- Name: COLUMN project_api_keys.custom_rate_limit; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.project_api_keys.custom_rate_limit IS 'Overrides the default plan rate limits (per_sec,per_min) for apikey based limits. See subscription table for common, IP based limits. However, can''t go beyond Global Hard Limits (20,100). Example: "15,75|2,5|15,75"';
+
+
+    --
+    -- Name: project_consumers; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.project_consumers (
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        consumer_id uuid NOT NULL,
+        user_id uuid,
+        project_name text,
+        org_id uuid
+    );
+
+
+    ALTER TABLE public.project_consumers OWNER TO postgres;
+
+    --
+    -- Name: TABLE project_consumers; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.project_consumers IS 'Project Consumers in Kong (Not used rn)';
+
+
+    --
+    -- Name: projects; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.projects (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        name text NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        description text,
+        project_id bigint NOT NULL,
+        project_id_hash bigint,
+        updated_by uuid,
+        created_by uuid,
+        config jsonb,
+        display_name text,
+        guardrails_req_used bigint DEFAULT '0'::bigint,
+        CONSTRAINT policies_description_check CHECK ((length(description) < 129)),
+        CONSTRAINT policies_name_check CHECK ((length(name) < 33))
+    );
+
+
+    ALTER TABLE public.projects OWNER TO postgres;
+
+    --
+    -- Name: TABLE projects; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.projects IS 'Projects of Organizations';
+
+
+    --
+    -- Name: COLUMN projects.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.projects.id IS 'Supabase user_id or org_id if this belongs to an Org';
+
+
+    --
+    -- Name: COLUMN projects.name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.projects.name IS 'Name of the custom Guardrails Policy given by the user';
+
+
+    --
+    -- Name: COLUMN projects.project_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.projects.project_id IS 'Policy ID';
+
+
+    --
+    -- Name: COLUMN projects.project_id_hash; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.projects.project_id_hash IS 'Hash of the ID';
+
+
+    --
+    -- Name: projects_policy_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.projects ALTER COLUMN project_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.projects_policy_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
+
+
+    --
+    -- Name: prompts; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.prompts (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        prompt_name text NOT NULL,
+        prompt_string text NOT NULL
+    );
+
+
+    ALTER TABLE public.prompts OWNER TO postgres;
+
+    --
+    -- Name: red_teaming; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.red_teaming (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        job_id text NOT NULL,
+        "redteam_config.json" jsonb NOT NULL,
+        status text,
+        "summary.json" jsonb,
+        ended_at timestamp with time zone,
+        model_name text,
+        "model_config.json" jsonb NOT NULL,
+        risk_score real,
+        jailbreak_score real,
+        bias_score real,
+        toxicity_score real,
+        malware_score real,
+        "error.json" jsonb,
+        logs text,
+        location text,
+        started_at timestamp with time zone,
+        project_name text DEFAULT '''default''::text'::text NOT NULL,
+        run_name text,
+        test_name text NOT NULL,
+        dataset_name text,
+        total_evaluation_time double precision,
+        total_generation_time double precision,
+        created_by uuid,
+        actioner_email text,
+        dataset_config jsonb,
+        test_version real DEFAULT '2'::real NOT NULL,
+        model_saved_name text,
+        coc_policy_name text,
+        model_version text,
+        report_status text,
+        report_generated_at timestamp with time zone,
+        report_url text,
+        deployment_name text,
+        is_deleted boolean DEFAULT false,
+        frameworks text[] DEFAULT '{}'::text[]
+    );
+
+
+    ALTER TABLE public.red_teaming OWNER TO postgres;
+
+    --
+    -- Name: TABLE red_teaming; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.red_teaming IS 'Red Teaming User Data';
+
+
+    --
+    -- Name: sample_datasets; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.sample_datasets (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        dataset_name text NOT NULL,
+        system_description text NOT NULL,
+        policy_description text,
+        scenarios smallint NOT NULL,
+        categories smallint NOT NULL,
+        depth smallint NOT NULL,
+        status public."DATASET_STATUS" DEFAULT 'Queued'::public."DATASET_STATUS",
+        metadata jsonb,
+        job_id text NOT NULL,
+        ended_at timestamp with time zone,
+        location text,
+        info_pdf_url text,
+        tools text,
+        "error.json" jsonb,
+        started_at timestamp with time zone,
+        summary jsonb,
+        created_by uuid,
+        updated_by uuid,
+        project_name text DEFAULT 'default'::text
+    );
+
+
+    ALTER TABLE public.sample_datasets OWNER TO postgres;
+
+    --
+    -- Name: TABLE sample_datasets; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.sample_datasets IS 'Sample datasets table';
+
+
+    --
+    -- Name: COLUMN sample_datasets.id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.sample_datasets.id IS 'User ID';
+
+
+    --
+    -- Name: COLUMN sample_datasets.dataset_name; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.sample_datasets.dataset_name IS 'User defined Dataset name';
+
+
+    --
+    -- Name: COLUMN sample_datasets.job_id; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.sample_datasets.job_id IS 'Dataset job ID';
+
+
+    --
+    -- Name: COLUMN sample_datasets.summary; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.sample_datasets.summary IS 'Dataset Job Summary';
+
+
+    --
+    -- Name: sample_redteaming_tasks; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.sample_redteaming_tasks (
+        id uuid NOT NULL,
+        created_at timestamp with time zone NOT NULL,
+        job_id uuid NOT NULL,
+        started_at timestamp with time zone,
+        status text,
+        "redteam_config.json" jsonb,
+        "model_config.json" jsonb,
+        model_name text,
+        ended_at timestamp with time zone,
+        risk_score real,
+        jailbreak_score real,
+        bias_score real,
+        toxicity_score real,
+        malware_score real,
+        "error.json" jsonb,
+        "summary.json" jsonb,
+        location text,
+        project_name text DEFAULT '''default''::text'::text,
+        run_name text,
+        actioner_email text
+    );
+
+
+    ALTER TABLE public.sample_redteaming_tasks OWNER TO postgres;
+
+    --
+    -- Name: sample_redteaming_tasks_v2; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.sample_redteaming_tasks_v2 (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        job_id text NOT NULL,
+        "redteam_config.json" jsonb NOT NULL,
+        status text,
+        "summary.json" jsonb,
+        ended_at timestamp with time zone,
+        model_name text,
+        "model_config.json" jsonb NOT NULL,
+        risk_score real,
+        jailbreak_score real,
+        bias_score real,
+        toxicity_score real,
+        malware_score real,
+        "error.json" jsonb,
+        logs text,
+        location text,
+        started_at timestamp with time zone,
+        project_name text DEFAULT '''default''::text'::text,
+        run_name text,
+        test_name text NOT NULL,
+        dataset_name text,
+        total_evaluation_time double precision,
+        total_generation_time double precision,
+        created_by uuid,
+        updated_by uuid,
+        actioner_email text
+    );
+
+
+    ALTER TABLE public.sample_redteaming_tasks_v2 OWNER TO postgres;
+
+    --
+    -- Name: TABLE sample_redteaming_tasks_v2; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.sample_redteaming_tasks_v2 IS 'Sample Redteaming Tasks';
+
+
+    --
+    -- Name: subscription; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.subscription (
+        email text DEFAULT ''::text NOT NULL,
+        starts_at timestamp with time zone DEFAULT now() NOT NULL,
+        customer_id text,
+        subscription_id text,
+        expires_at timestamp with time zone,
+        plan_name text DEFAULT ''::text,
+        id uuid NOT NULL,
+        plan_id text,
+        red_team_usage_remaining smallint DEFAULT '5'::smallint,
+        guardrails_request_limit integer,
+        guardrails_requests_used integer,
+        consumer_id uuid,
+        old_plan_expires_at timestamp with time zone,
+        old_guardrails_request_limit integer,
+        old_plan_id text,
+        old_plan_name text,
+        guardrails_usage_updated_at timestamp with time zone,
+        old_guardrails_requests_used integer,
+        old_plan_starts_at timestamp with time zone,
+        red_team_plan text DEFAULT 'free'::text,
+        leaderboard_plan text DEFAULT 'free'::text,
+        custom_rate_limit text,
+        rate_limit_config public."RATE_LIMIT_CONFIG" DEFAULT 'default,common'::public."RATE_LIMIT_CONFIG" NOT NULL,
+        is_org boolean DEFAULT false,
+        org_id uuid,
+        is_manually_created boolean DEFAULT false,
+        are_samples_created boolean NOT NULL
+    );
+
+
+    ALTER TABLE public.subscription OWNER TO postgres;
+
+    --
+    -- Name: TABLE subscription; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON TABLE public.subscription IS 'User Subscription details';
+
+
+    --
+    -- Name: COLUMN subscription.leaderboard_plan; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.subscription.leaderboard_plan IS 'Leaderboard plan';
+
+
+    --
+    -- Name: COLUMN subscription.custom_rate_limit; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.subscription.custom_rate_limit IS 'Overrides the default rate limits for common, IP based. See api_keys table for apikey custom limits. Can''t go beyond Global Hard Limits (20,100). Example: "15,75|2,5|15,75"';
+
+
+    --
+    -- Name: COLUMN subscription.rate_limit_config; Type: COMMENT; Schema: public; Owner: postgres
+    --
+
+    COMMENT ON COLUMN public.subscription.rate_limit_config IS 'rate_limit_setting,rate_limit_identifier';
+
+
+    --
+    -- Name: alignment_task alignment_task_job_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.alignment_task
+        ADD CONSTRAINT alignment_task_job_id_key UNIQUE (job_id);
+
+
+    --
+    -- Name: alignment_task alignment_task_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.alignment_task
+        ADD CONSTRAINT alignment_task_pkey PRIMARY KEY (id);
+
+
+    --
+    -- Name: api_keys api_keys_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.api_keys
+        ADD CONSTRAINT api_keys_id_key UNIQUE (id);
+
+
+    --
+    -- Name: api_keys api_keys_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.api_keys
+        ADD CONSTRAINT api_keys_key_key UNIQUE (key);
+
+
+    --
+    -- Name: api_keys api_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.api_keys
+        ADD CONSTRAINT api_keys_pkey PRIMARY KEY (id);
+
+
+    --
+    -- Name: code_of_conduct atomized_policies_policy_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.code_of_conduct
+        ADD CONSTRAINT atomized_policies_policy_id_key UNIQUE (policy_id);
+
+
+    --
+    -- Name: audit_logs audit_logs_audit_log_id_key; Type: CONSTRAINT; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER TABLE ONLY public.audit_logs
+        ADD CONSTRAINT audit_logs_audit_log_id_key UNIQUE (audit_log_id);
+
+
+    --
+    -- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER TABLE ONLY public.audit_logs
+        ADD CONSTRAINT audit_logs_pkey PRIMARY KEY (audit_log_id);
+
+
+    --
+    -- Name: code_of_conduct code_of_conduct_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.code_of_conduct
+        ADD CONSTRAINT code_of_conduct_pkey PRIMARY KEY (id, name, project_name);
+
+
+    --
+    -- Name: sample_redteaming_tasks common_results_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.sample_redteaming_tasks
+        ADD CONSTRAINT common_results_pkey PRIMARY KEY (job_id);
+
+
+    --
+    -- Name: datasets datasets_job_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.datasets
+        ADD CONSTRAINT datasets_job_id_key UNIQUE (job_id);
+
+
+    --
+    -- Name: datasets datasets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.datasets
+        ADD CONSTRAINT datasets_pkey PRIMARY KEY (id, dataset_name);
+
+
+    --
+    -- Name: deployments_duplicate deployments_duplicate_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.deployments_duplicate
+        ADD CONSTRAINT deployments_duplicate_pkey PRIMARY KEY (id, name);
+
+
+    --
+    -- Name: deployments_duplicate deployments_duplicate_policy_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.deployments_duplicate
+        ADD CONSTRAINT deployments_duplicate_policy_id_key UNIQUE (deployment_id);
+
+
+    --
+    -- Name: deployments deployments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.deployments
+        ADD CONSTRAINT deployments_pkey PRIMARY KEY (id, name);
+
+
+    --
+    -- Name: deployments deployments_policy_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.deployments
+        ADD CONSTRAINT deployments_policy_id_key UNIQUE (deployment_id);
+
+
+    --
+    -- Name: guardrails guardrails_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.guardrails
+        ADD CONSTRAINT guardrails_pkey PRIMARY KEY (id, name, project_name);
+
+
+    --
+    -- Name: invitations invitations_invitation_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.invitations
+        ADD CONSTRAINT invitations_invitation_id_key UNIQUE (invitation_id);
+
+
+    --
+    -- Name: invitations invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.invitations
+        ADD CONSTRAINT invitations_pkey PRIMARY KEY (invitation_id);
+
+
+    --
+    -- Name: models_bkp models_bkp_model_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models_bkp
+        ADD CONSTRAINT models_bkp_model_id_key UNIQUE (model_id);
+
+
+    --
+    -- Name: models_bkp models_bkp_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models_bkp
+        ADD CONSTRAINT models_bkp_pkey PRIMARY KEY (id, model_saved_name);
+
+
+    --
+    -- Name: models_duplicate models_duplicate_model_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models_duplicate
+        ADD CONSTRAINT models_duplicate_model_id_key UNIQUE (model_id);
+
+
+    --
+    -- Name: models_duplicate models_duplicate_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models_duplicate
+        ADD CONSTRAINT models_duplicate_pkey PRIMARY KEY (id, model_saved_name);
+
+
+    --
+    -- Name: models models_model_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models
+        ADD CONSTRAINT models_model_id_key UNIQUE (model_id);
+
+
+    --
+    -- Name: models models_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models
+        ADD CONSTRAINT models_pkey PRIMARY KEY (id, model_saved_name, model_version, project_name);
+
+
+    --
+    -- Name: guardrails policies_policy_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.guardrails
+        ADD CONSTRAINT policies_policy_id_key UNIQUE (policy_id);
+
+
+    --
+    -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.profiles
+        ADD CONSTRAINT profiles_pkey PRIMARY KEY (id);
+
+
+    --
+    -- Name: project_api_keys project_api_keys_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.project_api_keys
+        ADD CONSTRAINT project_api_keys_id_key UNIQUE (id);
+
+
+    --
+    -- Name: project_api_keys project_api_keys_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.project_api_keys
+        ADD CONSTRAINT project_api_keys_key_key UNIQUE (key);
+
+
+    --
+    -- Name: project_api_keys project_api_keys_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.project_api_keys
+        ADD CONSTRAINT project_api_keys_pkey PRIMARY KEY (id);
+
+
+    --
+    -- Name: project_consumers project_consumers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.project_consumers
+        ADD CONSTRAINT project_consumers_pkey PRIMARY KEY (consumer_id);
+
+
+    --
+    -- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.projects
+        ADD CONSTRAINT projects_pkey PRIMARY KEY (id, name);
+
+
+    --
+    -- Name: projects projects_policy_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.projects
+        ADD CONSTRAINT projects_policy_id_key UNIQUE (project_id);
+
+
+    --
+    -- Name: prompts prompts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.prompts
+        ADD CONSTRAINT prompts_pkey PRIMARY KEY (id, prompt_name);
+
+
+    --
+    -- Name: red_teaming red_teaming_job_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.red_teaming
+        ADD CONSTRAINT red_teaming_job_id_key UNIQUE (job_id);
+
+
+    --
+    -- Name: red_teaming red_teaming_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.red_teaming
+        ADD CONSTRAINT red_teaming_pkey PRIMARY KEY (id, test_name, project_name);
+
+
+    --
+    -- Name: sample_datasets sample_datasets_job_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.sample_datasets
+        ADD CONSTRAINT sample_datasets_job_id_key UNIQUE (job_id);
+
+
+    --
+    -- Name: sample_datasets sample_datasets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.sample_datasets
+        ADD CONSTRAINT sample_datasets_pkey PRIMARY KEY (id, dataset_name);
+
+
+    --
+    -- Name: sample_redteaming_tasks_v2 sample_redteaming_table_v2_job_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.sample_redteaming_tasks_v2
+        ADD CONSTRAINT sample_redteaming_table_v2_job_id_key UNIQUE (job_id);
+
+
+    --
+    -- Name: sample_redteaming_tasks_v2 sample_redteaming_table_v2_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.sample_redteaming_tasks_v2
+        ADD CONSTRAINT sample_redteaming_table_v2_pkey PRIMARY KEY (id, test_name);
+
+
+    --
+    -- Name: subscription subscription_consumer_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.subscription
+        ADD CONSTRAINT subscription_consumer_id_key UNIQUE (consumer_id);
+
+
+    --
+    -- Name: subscription subscription_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.subscription
+        ADD CONSTRAINT subscription_email_key UNIQUE (email);
+
+
+    --
+    -- Name: subscription subscription_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.subscription
+        ADD CONSTRAINT subscription_id_key UNIQUE (id);
+
+
+    --
+    -- Name: subscription subscription_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.subscription
+        ADD CONSTRAINT subscription_pkey PRIMARY KEY (id);
+
+
+    --
+    -- Name: code_of_conduct atomized_policies_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.code_of_conduct
+        ADD CONSTRAINT atomized_policies_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: code_of_conduct code_of_conduct_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.code_of_conduct
+        ADD CONSTRAINT code_of_conduct_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+
+
+    --
+    -- Name: datasets_generated datasets_details_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.datasets_generated
+        ADD CONSTRAINT datasets_details_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: datasets datasets_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.datasets
+        ADD CONSTRAINT datasets_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: datasets_red_team_results datasets_red_team_results_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.datasets_red_team_results
+        ADD CONSTRAINT datasets_red_team_results_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: deployments deployments_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.deployments
+        ADD CONSTRAINT deployments_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+
+
+    --
+    -- Name: deployments_duplicate deployments_duplicate_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.deployments_duplicate
+        ADD CONSTRAINT deployments_duplicate_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: deployments deployments_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.deployments
+        ADD CONSTRAINT deployments_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: guardrails guardrails_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.guardrails
+        ADD CONSTRAINT guardrails_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+
+
+    --
+    -- Name: invitations invitations_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.invitations
+        ADD CONSTRAINT invitations_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: models_bkp models_bkp_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models_bkp
+        ADD CONSTRAINT models_bkp_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: models models_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models
+        ADD CONSTRAINT models_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+
+
+    --
+    -- Name: models_duplicate models_duplicate_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models_duplicate
+        ADD CONSTRAINT models_duplicate_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: models models_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.models
+        ADD CONSTRAINT models_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: guardrails policies_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.guardrails
+        ADD CONSTRAINT policies_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: profiles profiles_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.profiles
+        ADD CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: project_api_keys project_api_keys_org_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.project_api_keys
+        ADD CONSTRAINT project_api_keys_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.subscription(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: project_api_keys project_api_keys_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.project_api_keys
+        ADD CONSTRAINT project_api_keys_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.subscription(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: project_consumers project_consumers_org_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.project_consumers
+        ADD CONSTRAINT project_consumers_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.subscription(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: project_consumers project_consumers_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.project_consumers
+        ADD CONSTRAINT project_consumers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.subscription(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: projects projects_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.projects
+        ADD CONSTRAINT projects_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: prompts prompts_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.prompts
+        ADD CONSTRAINT prompts_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: api_keys public_api_keys_consumer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.api_keys
+        ADD CONSTRAINT public_api_keys_consumer_id_fkey FOREIGN KEY (consumer_id) REFERENCES public.subscription(consumer_id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: audit_logs public_audit_logs_actioner_fkey; Type: FK CONSTRAINT; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER TABLE ONLY public.audit_logs
+        ADD CONSTRAINT public_audit_logs_actioner_fkey FOREIGN KEY (actioner) REFERENCES public.subscription(id) ON UPDATE CASCADE;
+
+
+    --
+    -- Name: audit_logs public_audit_logs_org_or_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER TABLE ONLY public.audit_logs
+        ADD CONSTRAINT public_audit_logs_org_or_user_id_fkey FOREIGN KEY (org_or_user_id) REFERENCES public.subscription(id) ON UPDATE CASCADE;
+
+
+    --
+    -- Name: red_teaming red_teaming_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.red_teaming
+        ADD CONSTRAINT red_teaming_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+
+
+    --
+    -- Name: red_teaming red_teaming_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.red_teaming
+        ADD CONSTRAINT red_teaming_id_fkey FOREIGN KEY (id) REFERENCES public.subscription(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: sample_datasets sample_datasets_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.sample_datasets
+        ADD CONSTRAINT sample_datasets_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: sample_redteaming_tasks_v2 sample_redteaming_table_v2_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.sample_redteaming_tasks_v2
+        ADD CONSTRAINT sample_redteaming_table_v2_id_fkey FOREIGN KEY (id) REFERENCES public.subscription(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: sample_redteaming_tasks sample_redteaming_tasks_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.sample_redteaming_tasks
+        ADD CONSTRAINT sample_redteaming_tasks_id_fkey FOREIGN KEY (id) REFERENCES public.subscription(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: subscription subscription_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.subscription
+        ADD CONSTRAINT subscription_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+    --
+    -- Name: profiles Allow auth admin to read; Type: POLICY; Schema: public; Owner: postgres
+    --
+
+    CREATE POLICY "Allow auth admin to read" ON public.profiles FOR SELECT TO supabase_auth_admin USING (true);
+
+
+    --
+    -- Name: red_teaming Allow auth admin to read; Type: POLICY; Schema: public; Owner: postgres
+    --
+
+    CREATE POLICY "Allow auth admin to read" ON public.red_teaming FOR SELECT TO supabase_auth_admin USING (true);
+
+
+    --
+    -- Name: subscription Allow auth admin to read; Type: POLICY; Schema: public; Owner: postgres
+    --
+
+    CREATE POLICY "Allow auth admin to read" ON public.subscription FOR SELECT TO supabase_auth_admin USING (true);
+
+
+    --
+    -- Name: alignment_data; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.alignment_data ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: alignment_task; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.alignment_task ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: api_keys; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: audit_logs; Type: ROW SECURITY; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: code_of_conduct; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.code_of_conduct ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: datasets; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.datasets ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: datasets_generated; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.datasets_generated ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: datasets_red_team_results; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.datasets_red_team_results ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: deployments; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.deployments ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: deployments_duplicate; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.deployments_duplicate ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: guardrails; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.guardrails ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: invitations; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: models; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.models ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: models_bkp; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.models_bkp ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: models_duplicate; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.models_duplicate ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: project_api_keys; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.project_api_keys ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: project_consumers; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.project_consumers ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: projects; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: prompts; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.prompts ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: red_teaming; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.red_teaming ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: sample_datasets; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.sample_datasets ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: sample_redteaming_tasks; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.sample_redteaming_tasks ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: sample_redteaming_tasks_v2; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.sample_redteaming_tasks_v2 ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: subscription; Type: ROW SECURITY; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE public.subscription ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
+    --
+
+    GRANT USAGE ON SCHEMA public TO postgres;
+    GRANT USAGE ON SCHEMA public TO anon;
+    GRANT USAGE ON SCHEMA public TO authenticated;
+    GRANT USAGE ON SCHEMA public TO service_role;
+
+
+    --
+    -- Name: FUNCTION bulk_decrypt_keys(encrypted_data text[], encryption_key text); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.bulk_decrypt_keys(encrypted_data text[], encryption_key text) TO anon;
+    GRANT ALL ON FUNCTION public.bulk_decrypt_keys(encrypted_data text[], encryption_key text) TO authenticated;
+    GRANT ALL ON FUNCTION public.bulk_decrypt_keys(encrypted_data text[], encryption_key text) TO service_role;
+
+
+    --
+    -- Name: FUNCTION create_user_on_signup(); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.create_user_on_signup() TO anon;
+    GRANT ALL ON FUNCTION public.create_user_on_signup() TO authenticated;
+    GRANT ALL ON FUNCTION public.create_user_on_signup() TO service_role;
+
+
+    --
+    -- Name: FUNCTION custom_access_token_hook(event jsonb); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.custom_access_token_hook(event jsonb) TO anon;
+    GRANT ALL ON FUNCTION public.custom_access_token_hook(event jsonb) TO authenticated;
+    GRANT ALL ON FUNCTION public.custom_access_token_hook(event jsonb) TO service_role;
+    GRANT ALL ON FUNCTION public.custom_access_token_hook(event jsonb) TO supabase_auth_admin;
+
+
+    --
+    -- Name: FUNCTION decrypt_key(encrypted_data text, key text); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.decrypt_key(encrypted_data text, key text) TO anon;
+    GRANT ALL ON FUNCTION public.decrypt_key(encrypted_data text, key text) TO authenticated;
+    GRANT ALL ON FUNCTION public.decrypt_key(encrypted_data text, key text) TO service_role;
+
+
+    --
+    -- Name: FUNCTION encrypt_api_key(); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.encrypt_api_key() TO anon;
+    GRANT ALL ON FUNCTION public.encrypt_api_key() TO authenticated;
+    GRANT ALL ON FUNCTION public.encrypt_api_key() TO service_role;
+
+
+    --
+    -- Name: FUNCTION encrypt_key(data text, key text); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.encrypt_key(data text, key text) TO anon;
+    GRANT ALL ON FUNCTION public.encrypt_key(data text, key text) TO authenticated;
+    GRANT ALL ON FUNCTION public.encrypt_key(data text, key text) TO service_role;
+
+
+    --
+    -- Name: FUNCTION fetch_test_names(); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.fetch_test_names() TO anon;
+    GRANT ALL ON FUNCTION public.fetch_test_names() TO authenticated;
+    GRANT ALL ON FUNCTION public.fetch_test_names() TO service_role;
+
+
+    --
+    -- Name: TABLE invitations; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.invitations TO anon;
+    GRANT ALL ON TABLE public.invitations TO authenticated;
+    GRANT ALL ON TABLE public.invitations TO service_role;
+
+
+    --
+    -- Name: FUNCTION filter_invitations_by_project(projects text[]); Type: ACL; Schema: public; Owner: supabase_admin
+    --
+
+    GRANT ALL ON FUNCTION public.filter_invitations_by_project(projects text[]) TO postgres;
+    GRANT ALL ON FUNCTION public.filter_invitations_by_project(projects text[]) TO anon;
+    GRANT ALL ON FUNCTION public.filter_invitations_by_project(projects text[]) TO authenticated;
+    GRANT ALL ON FUNCTION public.filter_invitations_by_project(projects text[]) TO service_role;
+
+
+    --
+    -- Name: FUNCTION log_test_names(); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.log_test_names() TO anon;
+    GRANT ALL ON FUNCTION public.log_test_names() TO authenticated;
+    GRANT ALL ON FUNCTION public.log_test_names() TO service_role;
+
+
+    --
+    -- Name: FUNCTION rename_test_names(); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.rename_test_names() TO anon;
+    GRANT ALL ON FUNCTION public.rename_test_names() TO authenticated;
+    GRANT ALL ON FUNCTION public.rename_test_names() TO service_role;
+
+
+    --
+    -- Name: TABLE models; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.models TO anon;
+    GRANT ALL ON TABLE public.models TO authenticated;
+    GRANT ALL ON TABLE public.models TO service_role;
+
+
+    --
+    -- Name: FUNCTION search_models_by_testing_for(user_id uuid, search_pattern text); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON FUNCTION public.search_models_by_testing_for(user_id uuid, search_pattern text) TO anon;
+    GRANT ALL ON FUNCTION public.search_models_by_testing_for(user_id uuid, search_pattern text) TO authenticated;
+    GRANT ALL ON FUNCTION public.search_models_by_testing_for(user_id uuid, search_pattern text) TO service_role;
+
+
+    --
+    -- Name: FUNCTION user_search(uname text); Type: ACL; Schema: public; Owner: postgres
+    --
+
+    REVOKE ALL ON FUNCTION public.user_search(uname text) FROM PUBLIC;
+    GRANT ALL ON FUNCTION public.user_search(uname text) TO anon;
+    GRANT ALL ON FUNCTION public.user_search(uname text) TO authenticated;
+    GRANT ALL ON FUNCTION public.user_search(uname text) TO service_role;
+
+
+
+    --
+    -- Name: TABLE alignment_data; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.alignment_data TO anon;
+    GRANT ALL ON TABLE public.alignment_data TO authenticated;
+    GRANT ALL ON TABLE public.alignment_data TO service_role;
+
+
+    --
+    -- Name: TABLE alignment_task; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.alignment_task TO anon;
+    GRANT ALL ON TABLE public.alignment_task TO authenticated;
+    GRANT ALL ON TABLE public.alignment_task TO service_role;
+
+
+    --
+    -- Name: TABLE api_keys; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.api_keys TO anon;
+    GRANT ALL ON TABLE public.api_keys TO authenticated;
+    GRANT ALL ON TABLE public.api_keys TO service_role;
+
+
+    --
+    -- Name: TABLE code_of_conduct; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.code_of_conduct TO anon;
+    GRANT ALL ON TABLE public.code_of_conduct TO authenticated;
+    GRANT ALL ON TABLE public.code_of_conduct TO service_role;
+
+
+    --
+    -- Name: TABLE audit_logs; Type: ACL; Schema: public; Owner: supabase_admin
+    --
+
+    GRANT ALL ON TABLE public.audit_logs TO postgres;
+    GRANT ALL ON TABLE public.audit_logs TO anon;
+    GRANT ALL ON TABLE public.audit_logs TO authenticated;
+    GRANT ALL ON TABLE public.audit_logs TO service_role;
+
+
+    --
+    -- Name: SEQUENCE audit_logs_audit_log_id_seq; Type: ACL; Schema: public; Owner: supabase_admin
+    --
+
+    GRANT ALL ON SEQUENCE public.audit_logs_audit_log_id_seq TO postgres;
+    GRANT ALL ON SEQUENCE public.audit_logs_audit_log_id_seq TO anon;
+    GRANT ALL ON SEQUENCE public.audit_logs_audit_log_id_seq TO authenticated;
+    GRANT ALL ON SEQUENCE public.audit_logs_audit_log_id_seq TO service_role;
+
+
+    --
+    -- Name: TABLE datasets; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.datasets TO anon;
+    GRANT ALL ON TABLE public.datasets TO authenticated;
+    GRANT ALL ON TABLE public.datasets TO service_role;
+
+
+    --
+    -- Name: TABLE datasets_generated; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.datasets_generated TO anon;
+    GRANT ALL ON TABLE public.datasets_generated TO authenticated;
+    GRANT ALL ON TABLE public.datasets_generated TO service_role;
+
+
+    --
+    -- Name: TABLE datasets_red_team_results; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.datasets_red_team_results TO anon;
+    GRANT ALL ON TABLE public.datasets_red_team_results TO authenticated;
+    GRANT ALL ON TABLE public.datasets_red_team_results TO service_role;
+
+
+    --
+    -- Name: TABLE deployments; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.deployments TO anon;
+    GRANT ALL ON TABLE public.deployments TO authenticated;
+    GRANT ALL ON TABLE public.deployments TO service_role;
+
+
+    --
+    -- Name: TABLE deployments_duplicate; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.deployments_duplicate TO anon;
+    GRANT ALL ON TABLE public.deployments_duplicate TO authenticated;
+    GRANT ALL ON TABLE public.deployments_duplicate TO service_role;
+
+
+    --
+    -- Name: SEQUENCE deployments_duplicate_deployment_id_seq; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON SEQUENCE public.deployments_duplicate_deployment_id_seq TO anon;
+    GRANT ALL ON SEQUENCE public.deployments_duplicate_deployment_id_seq TO authenticated;
+    GRANT ALL ON SEQUENCE public.deployments_duplicate_deployment_id_seq TO service_role;
+
+
+    --
+    -- Name: TABLE guardrails; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.guardrails TO anon;
+    GRANT ALL ON TABLE public.guardrails TO authenticated;
+    GRANT ALL ON TABLE public.guardrails TO service_role;
+
+
+    --
+    -- Name: TABLE models_bkp; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.models_bkp TO anon;
+    GRANT ALL ON TABLE public.models_bkp TO authenticated;
+    GRANT ALL ON TABLE public.models_bkp TO service_role;
+
+
+    --
+    -- Name: SEQUENCE models_bkp_model_id_seq; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON SEQUENCE public.models_bkp_model_id_seq TO anon;
+    GRANT ALL ON SEQUENCE public.models_bkp_model_id_seq TO authenticated;
+    GRANT ALL ON SEQUENCE public.models_bkp_model_id_seq TO service_role;
+
+
+    --
+    -- Name: TABLE models_duplicate; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.models_duplicate TO anon;
+    GRANT ALL ON TABLE public.models_duplicate TO authenticated;
+    GRANT ALL ON TABLE public.models_duplicate TO service_role;
+
+
+    --
+    -- Name: SEQUENCE models_duplicate_model_id_seq; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON SEQUENCE public.models_duplicate_model_id_seq TO anon;
+    GRANT ALL ON SEQUENCE public.models_duplicate_model_id_seq TO authenticated;
+    GRANT ALL ON SEQUENCE public.models_duplicate_model_id_seq TO service_role;
+
+
+    --
+    -- Name: TABLE profiles; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.profiles TO anon;
+    GRANT ALL ON TABLE public.profiles TO authenticated;
+    GRANT ALL ON TABLE public.profiles TO service_role;
+
+
+    --
+    -- Name: TABLE project_api_keys; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.project_api_keys TO anon;
+    GRANT ALL ON TABLE public.project_api_keys TO authenticated;
+    GRANT ALL ON TABLE public.project_api_keys TO service_role;
+
+
+    --
+    -- Name: TABLE project_consumers; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.project_consumers TO anon;
+    GRANT ALL ON TABLE public.project_consumers TO authenticated;
+    GRANT ALL ON TABLE public.project_consumers TO service_role;
+
+
+    --
+    -- Name: TABLE projects; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.projects TO anon;
+    GRANT ALL ON TABLE public.projects TO authenticated;
+    GRANT ALL ON TABLE public.projects TO service_role;
+
+
+    --
+    -- Name: TABLE prompts; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.prompts TO anon;
+    GRANT ALL ON TABLE public.prompts TO authenticated;
+    GRANT ALL ON TABLE public.prompts TO service_role;
+
+
+    --
+    -- Name: TABLE red_teaming; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.red_teaming TO anon;
+    GRANT ALL ON TABLE public.red_teaming TO authenticated;
+    GRANT ALL ON TABLE public.red_teaming TO service_role;
+
+
+    --
+    -- Name: TABLE sample_datasets; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.sample_datasets TO anon;
+    GRANT ALL ON TABLE public.sample_datasets TO authenticated;
+    GRANT ALL ON TABLE public.sample_datasets TO service_role;
+
+
+    --
+    -- Name: TABLE sample_redteaming_tasks; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.sample_redteaming_tasks TO anon;
+    GRANT ALL ON TABLE public.sample_redteaming_tasks TO authenticated;
+    GRANT ALL ON TABLE public.sample_redteaming_tasks TO service_role;
+
+
+    --
+    -- Name: TABLE sample_redteaming_tasks_v2; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.sample_redteaming_tasks_v2 TO anon;
+    GRANT ALL ON TABLE public.sample_redteaming_tasks_v2 TO authenticated;
+    GRANT ALL ON TABLE public.sample_redteaming_tasks_v2 TO service_role;
+
+
+    --
+    -- Name: TABLE subscription; Type: ACL; Schema: public; Owner: postgres
+    --
+
+    GRANT ALL ON TABLE public.subscription TO anon;
+    GRANT ALL ON TABLE public.subscription TO authenticated;
+    GRANT ALL ON TABLE public.subscription TO service_role;
+
+
+    --
+    -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO anon;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO authenticated;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
+
+    --
+    -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: postgres
+    --
+
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO anon;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO authenticated;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
+
+
+    --
+    -- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
+
+
+    --
+    -- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: postgres
+    --
+
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
+
+
+    --
+    -- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+    --
+
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO postgres;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO anon;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO authenticated;
+    ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON TABLES TO service_role;
+
+    --
+    -- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: postgres
+    --
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO postgres;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO anon;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO authenticated;
+    ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO service_role;
+
+
+
+
 kind: ConfigMap
 metadata:
   name: supabase-migration

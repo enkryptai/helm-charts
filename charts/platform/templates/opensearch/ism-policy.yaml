@@ -1,0 +1,41 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpenSearchISMPolicy
+metadata:
+  name: rollbar-policy
+  annotations:
+    "helm.sh/hook-weight": "7"
+    "helm.sh/hook": post-install
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }} 
+  description: "ISM policy equivalent to ES ILM"
+  defaultState: "hot"
+  ismTemplate:
+    indexPatterns:
+      - admin
+      - guardrails
+      - ai-proxy
+      - leaderboard
+      - red_teaming
+      - .ds-*
+    priority: 999
+  states:
+    - name: "hot"
+      actions:
+      - rollover:
+          minIndexAge: "0d"
+      transitions:
+        - stateName: warm
+          conditions:
+            minIndexAge: 15d
+    - name: warm
+      actions:
+        - readOnly: {}
+      transitions:
+        - stateName: delete
+          conditions:
+            minIndexAge: 30d
+    - name: delete
+      actions:
+        - delete: {}
+      transitions: []

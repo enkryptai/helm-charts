@@ -3,8 +3,8 @@ kind: OpenSearchCluster
 metadata:
   name: enkryptai-opensearch
   annotations:
-    "helm.sh/hook-weight": "-7"
-    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook": post-install
 spec:
   security:
     tls:
@@ -19,14 +19,10 @@ spec:
         name: "opensearch-cred"
   general:
     serviceName: enkryptai-opensearch-cluster
-    version: 2.19.1
+    version: 3.2.0
     pluginsList: ["repository-s3"]
     additionalConfig:
       reindex.ssl.verification_mode: none
-    keystore: 
-      - secret:
-          name: opensearch-cred
-    setVMMaxMapCount: true
   dashboards:
     opensearchCredentialsSecret:
       name: opensearch-cred
@@ -34,7 +30,7 @@ spec:
     tls:
       enable: false 
       generate: false
-    version: 2.19.1
+    version: 3.2.0
     replicas: 1
   nodePools:
     - component: masters

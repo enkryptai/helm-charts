@@ -1,0 +1,78 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUserRoleBinding
+metadata:
+  name: all-access
+  annotations:
+    "helm.sh/hook-weight": "7"
+    "helm.sh/hook": post-install
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  roles:
+    - all_access
+  backendRoles:
+    - admin
+
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUserRoleBinding
+metadata:
+  name: own-index
+  annotations:
+    "helm.sh/hook-weight": "7"
+    "helm.sh/hook": post-install
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  roles:
+    - own_index
+  users:
+    - "*"
+
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUserRoleBinding
+metadata:
+  name: readall
+  annotations:
+    "helm.sh/hook-weight": "7"
+    "helm.sh/hook": post-install
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  roles:
+    - readall
+  backendRoles:
+    - readall
+
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUserRoleBinding
+metadata:
+  name: manage-snapshots
+  annotations:
+    "helm.sh/hook-weight": "7"
+    "helm.sh/hook": post-install
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  roles:
+    - manage_snapshots
+  backendRoles:
+    - snapshotrestore
+
+---
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchUserRoleBinding
+metadata:
+  name: dashboard-server
+  annotations:
+    "helm.sh/hook-weight": "7"
+    "helm.sh/hook": post-install
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  roles:
+    - dashboard_server
+  users:
+    - dashboarduser

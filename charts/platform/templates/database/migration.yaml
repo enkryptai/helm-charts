@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    "helm.sh/hook-weight": "17"
+    "helm.sh/hook": post-install, post-upgrade
+  name: db-migration-supabase
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-db
+          image: postgres:15
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER"; do
+                echo "Waiting for DB at $DB_HOST:$DB_PORT...";
+                sleep 10;
+              done
+          envFrom:
+            - secretRef:
+                name: superuser-secret
+      containers:
+        - name: run-sql
+          image: postgres:15
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              export PGPASSWORD="$DB_PASSWORD"
+              for f in /sql-scripts/*.sql; do
+                echo "Running $f";
+                psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$f";
+              done
+          envFrom:
+            - secretRef:
+                name: superuser-secret
+          volumeMounts:
+            - name: supabase-migration
+              mountPath: /sql-scripts
+      volumes:
+        - name: supabase-migration
+          configMap:
+            name: supabase-migration
+

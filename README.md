@@ -1,11 +1,6 @@
-#  EnkryptAI Helm Charts
-
-This repository contains Helm charts for deploying the **EnkryptAI stack** — including the core platform and supporting services — on AWS using **CloudFormation** and **Amazon EKS**.
-
----
-
 # **EnkryptAI Stack Deployment Prerequisites**
-This document outlines the infrastructure and configuration requirements for deploying the **EnkryptAI stack** on an existing Kubernetes cluster.
+
+### This document outlines the infrastructure and configuration requirements for deploying the **EnkryptAI stack** on an existing Kubernetes cluster.
 ---
 
 ## 1. GPU Node Group (Guardrails)

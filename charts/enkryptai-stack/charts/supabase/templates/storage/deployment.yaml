@@ -64,12 +64,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secret.onprem.name }}
-                  key: s3-access-key
+                  key: S3_PROTOCOL_ACCESS_KEY_ID
             - name: S3_PROTOCOL_ACCESS_KEY_SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.secret.onprem.name }}
-                  key: s3-secret-key
+                  key: S3_PROTOCOL_ACCESS_KEY_SECRET
           name: init-bucket
           image: minio/mc
           imagePullPolicy: IfNotPresent
@@ -81,15 +81,10 @@ spec:
                 echo "Waiting for minio to start..."
                 sleep 2
               done
-              /usr/bin/mc mb --ignore-existing supa-minio/storage
-              # Create user and attach readwrite policy (skip if user exists)
-              if ! /usr/bin/mc admin user info supa-minio $S3_PROTOCOL_ACCESS_KEY_ID >/dev/null 2>&1; then
-                /usr/bin/mc admin user add supa-minio $S3_PROTOCOL_ACCESS_KEY_ID $S3_PROTOCOL_ACCESS_KEY_SECRET
-                /usr/bin/mc admin policy attach supa-minio readwrite --user=$S3_PROTOCOL_ACCESS_KEY_ID
-                echo "User $S3_PROTOCOL_ACCESS_KEY_ID created and readwrite policy attached."
-              else
-                echo "User $S3_PROTOCOL_ACCESS_KEY_ID already exists."
-              fi
+              /usr/bin/mc mb --ignore-existing supa-minio/stub
+              /usr/bin/mc admin user add supa-minio $S3_PROTOCOL_ACCESS_KEY_ID $S3_PROTOCOL_ACCESS_KEY_SECRET
+              /usr/bin/mc admin policy attach supa-minio readwrite --user=$S3_PROTOCOL_ACCESS_KEY_ID
+              echo "User $S3_PROTOCOL_ACCESS_KEY_ID created and readwrite policy attached."
         {{- end }}
       containers:
         - name: {{ include "supabase.storage.name" $ }}

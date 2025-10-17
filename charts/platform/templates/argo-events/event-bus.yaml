@@ -1,0 +1,11 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventBus
+metadata:
+  name: redteam-eventbus
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  jetstream:
+    version: 2.10.10 

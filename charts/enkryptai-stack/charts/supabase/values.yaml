@@ -56,7 +56,9 @@ db:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations:
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -87,10 +89,7 @@ db:
   config: {}
 
 
-# Studio Application
-# Secrets Done 
 studio:
-  # Enable studio provisioning
   enabled: true
   image:
     repository: supabase/studio
@@ -110,7 +109,9 @@ studio:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -121,7 +122,7 @@ studio:
   resources: {}
   autoscaling:
     enabled: true
-    minReplicas: 1
+    minReplicas: 2
     maxReplicas: 3
     targetCPUUtilizationPercentage: 85
   nodeSelector: {}
@@ -145,7 +146,9 @@ auth:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -156,7 +159,7 @@ auth:
   resources: {}
   autoscaling:
     enabled: true
-    minReplicas: 1
+    minReplicas: 2
     maxReplicas: 3
     targetCPUUtilizationPercentage: 85
   nodeSelector: {}
@@ -179,21 +182,21 @@ rest:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
     type: ClusterIP
     port: 3000
   environment:
-    # PGRST_DB_SCHEMAS: public,storage,graphql_public
     PGRST_DB_ANON_ROLE: anon
-    # PGRST_DB_USE_LEGACY_GUCS: false
     PGRST_APP_SETTINGS_JWT_EXP: 3600
   resources: {}
   autoscaling:
     enabled: true
-    minReplicas: 1
+    minReplicas: 2
     maxReplicas: 3
     targetCPUUtilizationPercentage: 85
   nodeSelector: {}
@@ -216,7 +219,9 @@ realtime:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -238,8 +243,8 @@ realtime:
   resources: {}
   autoscaling:
     enabled: true
-    minReplicas: 1
-    maxReplicas: 2
+    minReplicas: 2
+    maxReplicas: 3
     targetCPUUtilizationPercentage: 80
   nodeSelector: {}
   tolerations: []
@@ -262,7 +267,9 @@ meta:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -273,7 +280,7 @@ meta:
   resources: {}
   autoscaling:
     enabled: true
-    minReplicas: 1
+    minReplicas: 2
     maxReplicas: 3
     targetCPUUtilizationPercentage: 85
   nodeSelector: {}
@@ -297,7 +304,9 @@ storage:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -325,7 +334,7 @@ storage:
     class: ""
   autoscaling:
     enabled: true
-    minReplicas: 1
+    minReplicas: 2
     maxReplicas: 3
     targetCPUUtilizationPercentage: 85
   nodeSelector: {}
@@ -371,7 +380,7 @@ imgproxy:
     class: ""
   autoscaling:
     enabled: false
-    minReplicas: 1
+    minReplicas: 2
     maxReplicas: 100
     targetCPUUtilizationPercentage: 80
   nodeSelector: {}
@@ -395,7 +404,9 @@ kong:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -423,7 +434,7 @@ kong:
   resources: {}
   autoscaling:
     enabled: true
-    minReplicas: 1
+    minReplicas: 2
     maxReplicas: 5
     targetCPUUtilizationPercentage: 85
   nodeSelector: {}
@@ -446,7 +457,9 @@ analytics:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -524,7 +537,9 @@ functions:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -538,8 +553,8 @@ functions:
   resources: {}
   autoscaling:
     enabled: true
-    minReplicas: 1
-    maxReplicas: 100
+    minReplicas: 2
+    maxReplicas: 8
     targetCPUUtilizationPercentage: 80
   nodeSelector: {}
   tolerations: []
@@ -563,7 +578,9 @@ minio:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: {}
+  podAnnotations: 
+    "helm.sh/hook-weight": "15"
+    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -581,10 +598,9 @@ minio:
     class: ""
   autoscaling:
     enabled: true
-    minReplicas: 1
+    minReplicas: 2
     maxReplicas: 3
     targetCPUUtilizationPercentage: 85
-    # targetMemoryUtilizationPercentage: 80
   nodeSelector: {}
   tolerations: []
   affinity: {}

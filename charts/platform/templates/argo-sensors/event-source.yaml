@@ -1,0 +1,143 @@
+---
+#For attack.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-attack
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: {{ .Values.sensor.natsURL }}
+      jsonBody: true
+      subject: attack.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+
+---
+#For add-task.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-add-task
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: {{ .Values.sensor.natsURL }}
+      jsonBody: true
+      subject: add-task.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+
+---
+#For custom-task.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-custom-task
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: {{ .Values.sensor.natsURL }}
+      jsonBody: true
+      subject: custom-task.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+---
+#For generate-data.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-generate-data
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: {{ .Values.sensor.natsURL }}
+      jsonBody: true
+      subject: generate-data.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+---
+# For alignment-data.request
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-alignment-data
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: {{ .Values.sensor.natsURL }}
+      jsonBody: true
+      subject: alignment-data.request
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+
+---
+# For logs.attack
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: redteam-logs
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  insecure: true
+  eventBusName: redteam-eventbus 
+  nats:
+    redteam:
+      url: {{ .Values.sensor.natsURL }}
+      jsonBody: true
+      subject: logs.attack
+      connectionBackoff:
+        duration: 10s
+        steps: 5
+        factor: 2
+        jitter: 0.2
+---
+

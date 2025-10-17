@@ -4,74 +4,124 @@ This repository contains Helm charts for deploying the **EnkryptAI stack** — i
 
 ---
 
-##  Prerequisites
+# **EnkryptAI Stack Deployment Prerequisites**
+This document outlines the infrastructure and configuration requirements for deploying the **EnkryptAI stack** on an existing Kubernetes cluster.
+---
 
-Before installing Helm charts, ensure you have:
+## 1. GPU Node Group (Guardrails)
 
-* AWS CLI configured (`aws configure`)
-* kubectl installed and connected to your EKS cluster
-* Helm v3+ installed
-* Permissions to create CloudFormation stacks and EKS resources
+The **Guardrails** component requires GPU-enabled nodes. Create a dedicated GPU node group using the following configuration.
+
+**Node Group Name:** `gpu-node-group`
+
+| **Configuration**         | **Value**                          |
+| ------------------------- | ---------------------------------- |
+| **Instance Type**         | `p3.2xlarge`                       |
+| **Capacity Type**         | `ON_DEMAND`                        |
+| **AMI Type**              | `AL2023_x86_64_NVIDIA`             |
+| **Disk Size**             | `100 GB (gp3)`                     |
+| **Scaling Configuration** | Desired: `2` • Min: `1` • Max: `2` |
+
+**Usage Note:**
+The **Guardrails pod** requires a GPU and will be **scheduled exclusively** on this node group.
 
 ---
 
-## ☁️ Step 1: CloudFormation Setup
+## 2. Redteaming Node Group
 
-Run the CloudFormation stack **before** installing Helm charts.
-This will provision the required AWS infrastructure (EKS, S3, IAM roles, Secret Manager, etc.)
+The **Redteaming** workloads run on a separate node group optimized for compute-intensive tasks.
 
-### Files Required
+**Node Group Name:** `redteaming-node-group`
 
-| File             | Description                                                                             |
-| ---------------- | --------------------------------------------------------------------------------------- |
-| `parameter.json` | Contains environment-specific parameters and secrets *(provided by the EnkryptAI team)* |
-| `main.yaml`      | CloudFormation template that creates the infrastructure stack                           |
+| **Configuration**         | **Value**                           |
+| ------------------------- | ----------------------------------- |
+| **Instance Type**         | `r7i.xlarge`                        |
+| **Capacity Type**         | `ON_DEMAND`                         |
+| **AMI Type**              | `AL2_x86_64`                        |
+| **Disk Size**             | `100 GB (gp3)`                      |
+| **Scaling Configuration** | Desired: `2` • Min: `2` • Max: `10` |
+| **Labels**                | `dedicated: redteaming`             |
+| **Taints**                | `app=redteaming:NoSchedule`         |
 
-###  Create Stack
-
-```bash
-aws cloudformation create-stack \
-  --stack-name enkryptai-stack \
-  --template-body file://main.yaml \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --region us-west-2 \
-  --parameters file://parameter.json \
-  --tags Key=App,Value=enkryptai-stack
-```
-
-###  Update Stack
-
-```bash
-aws cloudformation update-stack \
-  --stack-name enkryptai-stack \
-  --template-body file://main.yaml \
-  --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --region us-west-2 \
-  --parameters file://parameter.json \
-  --tags Key=App,Value=enkryptai-stack
-```
-
-> **Note:** During initial setup (POC phase), the EnkryptAI team will provide preconfigured files.
-> You only need to supply environment-specific values such as your domain name.
+**Usage Note:**
+This node group ensures **Redteaming jobs** are scheduled exclusively on dedicated infrastructure.
 
 ---
 
-##  Step 2: Clone the Repository
+## 3. Prerequisite Namespaces and Secrets
 
-```bash
-git clone https://github.com/enkryptai/helm-charts.git
-cd helm-charts
-```
+Before installing the Helm chart, make sure the following namespaces and secrets are created.
+(EnkryptAI will provide the Helm chart and secret values.)
 
-Create the target namespace:
+### **Namespaces**
 
-```bash
-kubectl create namespace enkryptai-stack
+```sh
+enkryptai-stack
+redteam-jobs
 ```
 
 ---
 
-##  Step 3: Available Helm Charts
+### **Secrets**
+
+| **Namespace**   | **Secret Name**              |
+| --------------- | ---------------------------- |
+| enkryptai-stack | elastic-env-secret           |
+| enkryptai-stack | frontend-env-secret          |
+| enkryptai-stack | gateway-env-secret           |
+| enkryptai-stack | gateway-migration-env-secret |
+| enkryptai-stack | guardrails-env-secret        |
+| enkryptai-stack | onprem                       |
+| enkryptai-stack | openfga-env-secret           |
+| enkryptai-stack | opensearch-cred              |
+| enkryptai-stack | opensearch-securityconfig    |
+| enkryptai-stack | postgres-superuser-secret    |
+| enkryptai-stack | redteam-proxy-env-secret     |
+| enkryptai-stack | s3-cred                      |
+| enkryptai-stack | superuser-secret             |
+| redteam-jobs    | redteam-proxy-env-secret     |
+
+---
+
+## 4. Secret Usage Overview
+
+The following table summarizes which applications use each secret.
+
+### **Application Groups**
+
+* **Internal Applications:** `gateway-kong`, `frontend`, `redteaming`, `guardrails`
+* **On-Premise Applications:** `opensearch`, `openfga`, `cnpg`
+
+| **Secret Name**                | **Used By**                                                          |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `elastic-env-secret`           | `gateway-kong`, `opensearch`                                         |
+| `frontend-env-secret`          | `frontend`                                                           |
+| `gateway-env-secret`           | `gateway-kong`                                                       |
+| `gateway-migration-env-secret` | `gateway-kong`                                                       |
+| `guardrails-env-secret`        | `guardrails`                                                         |
+| `onprem`                       | Supabase (on-prem database and related services)                     |
+| `openfga-env-secret`           | `openfga`                                                            |
+| `opensearch-cred`              | `opensearch`                                                         |
+| `opensearch-securityconfig`    | `opensearch`                                                         |
+| `postgres-superuser-secret`    | Supabase on-prem                                                     |
+| `redteam-proxy-env-secret`     | `redteaming`, `redteam-jobs`                                         |
+| `s3-cred`                      | `redteaming`, Supabase (on-prem MinIO for internal artifact storage) |
+| `superuser-secret`             | Postgres CNPG credentials                                            |
+
+---
+
+## Summary
+
+Before deploying the Helm chart:
+
+1. **Create GPU and Redteaming node groups** with the configurations listed above.
+2. **Create namespaces:** `enkryptai-stack`, `redteam-jobs`.
+3. **Apply all required secrets** (values will be provided by EnkryptAI).
+4. Proceed with the **Helm chart installation** once these prerequisites are met.
+
+---
+
+## Available Helm Charts
 
 
 | Chart                                                   | Description                                                                  |
@@ -79,14 +129,6 @@ kubectl create namespace enkryptai-stack
 | [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
 | [`platform`](./charts/platform/README.md)               | Core platform dependencies and shared infrastructure                         |
 | [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
-
----
-
-## Notes
-
-* Ensure your AWS credentials have sufficient IAM permissions to deploy CloudFormation stacks and access S3.
-* If you’re deploying to a non-`us-west-2` region, modify the `--region` flag accordingly.
-* For private registries or secret values, update them in `values.yaml` or the provided parameter file.
 
 ---
 

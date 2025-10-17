@@ -1,0 +1,76 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: redteam-generate-data-sensor
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-weight": "10"
+spec:
+  dependencies:
+  - eventName: redteam
+    eventSourceName: redteam-generate-data
+    name: redteam-generate-data
+  eventBusName: redteam-eventbus
+  template:
+    serviceAccountName: argo-events-sa
+  triggers:
+  - template:
+      argoWorkflow:
+        operation: submit
+        parameters:
+        - dest: spec.arguments.parameters.0.value
+          src:
+            dataKey: body
+            dependencyName: redteam-generate-data
+        source:
+          resource:
+            apiVersion: argoproj.io/v1alpha1
+            kind: Workflow
+            metadata:
+              generateName: redteam-generate-data-job-
+              namespace: redteam-jobs
+            spec:
+              tolerations:
+              - effect: NoSchedule
+                key: app
+                operator: Equal
+                value: redteaming
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: dedicated
+                        operator: In
+                        values:
+                        - redteaming
+              arguments:
+                parameters:
+                - name: event-data
+                  value: '{{"{{.Input.body}}"}}'
+              entrypoint: process-order
+              templates:
+              - container:
+                  command:
+                    - python
+                    - job/job_service_sync_all.py
+                  env:
+                  - name: WORKER_TYPE 
+                    value: "combined"
+                  - name: NATS_URL
+                    value: {{ .Values.sensor.natsURL }}
+                  - name: IS_PROXY_MODE
+                    value: "true"
+                  - name: RT_NATS_PAYLOAD
+                    value: '{{"{{inputs.parameters.event-data}}"}}'
+                  envFrom:
+                  - secretRef:
+                      name: redteam-proxy-env-secret
+                  image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
+                  imagePullPolicy: Always
+                inputs:
+                  parameters:
+                  - name: event-data
+                name: process-order
+      name: argo-workflow-trigger

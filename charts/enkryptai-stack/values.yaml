@@ -1,6 +1,6 @@
 global:
-  imagePullSecrets: 
-    - core-app-pullsecret
+  # imagePullSecrets: 
+    # - core-app-pullsecret
   storageClass: ""
   imagePullPolicy: "IfNotPresent"
   externalSecret: true

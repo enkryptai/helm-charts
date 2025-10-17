@@ -3,7 +3,7 @@ entries:
   enkryptai-lite:
   - apiVersion: v2
     appVersion: 1.0.6
-    created: "2025-10-17T19:41:45.408894123+05:30"
+    created: "2025-10-17T19:45:44.60857439+05:30"
     dependencies:
     - alias: argo-workflow
       condition: argo-workflow.enabled
@@ -42,10 +42,26 @@ entries:
     urls:
     - https://enkryptai.github.io/helm-charts/helm-release/enkryptai-lite-1.0.6.tgz
     version: 1.0.6
+  enkryptai-stack:
+  - apiVersion: v2
+    appVersion: 1.0.1
+    created: "2025-10-17T19:45:44.619078773+05:30"
+    dependencies:
+    - alias: openfga
+      name: openfga
+      repository: https://openfga.github.io/helm-charts
+      version: 0.2.26
+    description: A Helm chart for Kubernetes
+    digest: 6e660a225b1c6ad47a6bbf12e72110b3ba038161c509b18e7d066d88141cb34e
+    name: enkryptai-stack
+    type: application
+    urls:
+    - https://enkryptai.github.io/helm-charts/helm-release/enkryptai-stack-1.0.1.tgz
+    version: 1.0.1
   platform-core:
   - apiVersion: v2
     appVersion: 1.0.3
-    created: "2025-10-17T19:41:45.443523835+05:30"
+    created: "2025-10-17T19:45:44.645019499+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -109,4 +125,19 @@ entries:
     urls:
     - https://enkryptai.github.io/helm-charts/helm-release/platform-core-1.0.3.tgz
     version: 1.0.3
-generated: "2025-10-17T19:41:45.391462384+05:30"
+  platform-stack:
+  - apiVersion: v2
+    appVersion: 1.0.2
+    created: "2025-10-17T19:45:44.678081016+05:30"
+    dependencies:
+    - alias: platform-core
+      name: platform-core
+      repository: https://enkryptai.github.io/helm-charts
+      version: 1.0.3
+    description: Complete platform infrastructure stack
+    digest: bfff8b9bdcd4eb0c953a661cec8847b78ebc57013411608e94adaa3e21a95b31
+    name: platform-stack
+    urls:
+    - https://enkryptai.github.io/helm-charts/helm-release/platform-stack-1.0.2.tgz
+    version: 1.0.2
+generated: "2025-10-17T19:45:44.599336734+05:30"

@@ -1,4 +1,3 @@
-# We need Values for it
 global: 
   platform: aws
 aws: 
@@ -45,6 +44,7 @@ opensearch:
       hash: ""
 
 externalSecret:
+  enabled: false
   databaseSecretName: onprem
   databaseSecretRepoName: enkryptaivpc/on-prem
   secretStoreRefName: enkryptai-clustersecret-store

@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-s3-buckets
+spec:
+  template:
+    spec:
+      containers:
+      - name: create-buckets
+        image: amazon/aws-cli:2.27.55
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+
+          ENDPOINT="http://supabase-storage.enkryptai-stack.svc:5000/s3"
+          HEALTH_URL="http://supabase-storage.enkryptai-stack.svc:5000/health"
+
+          echo "🩺 Checking Supabase Storage health endpoint with service role token..."
+          until [ "$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" $HEALTH_URL)" -eq 200 ]; do
+            echo "❌ Storage not healthy yet. Sleeping 10s..."
+            sleep 10
+          done
+
+          echo "✅ Storage service is healthy. Proceeding to bucket creation."
+
+          BUCKETS="
+          redteam
+          red_teaming
+          playground
+          datasets
+          dataset_red_teaming
+          leaderboard
+          code-of-conduct
+          redteam_reports
+          "
+
+          for bucket in $BUCKETS; do
+            if aws s3 ls "s3://$bucket" --endpoint-url $ENDPOINT >/dev/null 2>&1; then
+              echo "🟡 Bucket '$bucket' already exists. Skipping..."
+            else
+              echo "🆕 Creating bucket '$bucket'..."
+              aws s3 mb "s3://$bucket" --endpoint-url $ENDPOINT
+            fi
+          done
+
+          echo "✅ Bucket creation process completed."
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: s3-cred
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: s3-cred
+              key: AWS_SECRET_ACCESS_KEY
+        - name: AWS_DEFAULT_REGION  
+          valueFrom:
+            secretKeyRef:
+              name: s3-cred
+              key: AWS_DEFAULT_REGION
+        - name: SUPABASE_SERVICE_ROLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: onprem
+              key: serviceKey
+      restartPolicy: Never
+  backoffLimit: 1

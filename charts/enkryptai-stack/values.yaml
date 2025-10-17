@@ -3,7 +3,7 @@ global:
     # - core-app-pullsecret
   storageClass: ""
   imagePullPolicy: "IfNotPresent"
-  externalSecret: true
+  externalSecret: false
   domain: "djj.enkryptai.com"
 
 
@@ -88,7 +88,7 @@ frontend:
     NEXT_PUBLIC_URL: "test.example.com"
 
   externalSecret:
-    enabled: true
+    enabled: false
     secretName: frontend-env-secret
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/frontend
@@ -194,7 +194,7 @@ gateway-kong:
     targetCPUUtilizationPercentage: 80
 
   externalSecrets:
-    enabled: true
+    enabled: false
     secretStoreRefName: enkryptai-clustersecret-store
   externalSecret:
     repoName: enkryptaivpc/kong-gateway
@@ -283,7 +283,7 @@ redteam-proxy:
     targetCPUUtilizationPercentage: 80
 
   externalSecret:
-    enabled: true
+    enabled: false
     secretName: redteam-proxy-env-secret
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/redteam-proxy
@@ -354,7 +354,7 @@ guardrails:
     targetCPUUtilizationPercentage: 80
 
   externalSecret:
-    enabled: true
+    enabled: false
     secretName: guardrails-env-secret
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/guardrails
@@ -364,6 +364,25 @@ guardrails:
   tolerations: []
 
   affinity: {}
+
+
+supabase:
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    hosts:
+      - host: example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: frontend-tls
+        hosts:
+          - example.com
 
 openfgaconfig:
   externalSecret:

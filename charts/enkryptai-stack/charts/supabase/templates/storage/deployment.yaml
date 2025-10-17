@@ -60,6 +60,16 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secret.onprem.name }}
                   key: MINIO_ROOT_PASSWORD
+            - name: S3_PROTOCOL_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.onprem.name }}
+                  key: S3_PROTOCOL_ACCESS_KEY_ID
+            - name: S3_PROTOCOL_ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.onprem.name }}
+                  key: S3_PROTOCOL_ACCESS_KEY_SECRET
           name: init-bucket
           image: minio/mc
           imagePullPolicy: IfNotPresent
@@ -72,6 +82,9 @@ spec:
                 sleep 2
               done
               /usr/bin/mc mb --ignore-existing supa-minio/stub
+              /usr/bin/mc admin user add supa-minio $S3_PROTOCOL_ACCESS_KEY_ID $S3_PROTOCOL_ACCESS_KEY_SECRET
+              /usr/bin/mc admin policy attach supa-minio readwrite --user=$S3_PROTOCOL_ACCESS_KEY_ID
+              echo "User $S3_PROTOCOL_ACCESS_KEY_ID created and readwrite policy attached."
         {{- end }}
       containers:
         - name: {{ include "supabase.storage.name" $ }}

@@ -1,5 +1,5 @@
+{{- if  .Values.global.ingress }}
 {{- if eq .Values.global.platform "cloud" }}
-
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -670,4 +670,5 @@ webhooks:
     resources:
     - ingresses
   sideEffects: None
+{{- end }}
 {{- end }}

@@ -1,18 +1,13 @@
+{{- range .Values.namespaces }}
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: argo-events
+  name: {{ .name }}
+  {{- if .labels }}
   labels:
-    name: argo-events
+    {{- range $key, $value := .labels }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+  {{- end }}
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: argo
-  labels:
-    name: argo
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: redteam-jobs
+{{- end }}

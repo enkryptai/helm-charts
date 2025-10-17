@@ -1,3 +1,4 @@
+{{- if  .Values.global.ingress }}
 {{- if eq .Values.global.platform "baremetal" }}
 apiVersion: v1
 kind: Namespace
@@ -667,4 +668,5 @@ webhooks:
     resources:
     - ingresses
   sideEffects: None
+{{- end }}
 {{- end }}

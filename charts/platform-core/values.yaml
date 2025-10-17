@@ -1,9 +1,22 @@
 global: 
   platform: aws
+  ingress: true
+  externalsecret: false
+  metricsserver: false
 aws: 
   region: "us-west-2"
   ClusterSecretStoreName: "enkryptai-clustersecret-store" 
 
+namespaces:
+  - name: argo-events
+    labels:
+      name: argo-events
+  - name: argo
+    labels:
+      name: argo
+  - name: redteam-jobs
+
+ 
 storage-class: 
   enabled: true
 
@@ -106,8 +119,9 @@ cert-manager:
     create: true 
     name: "platform-cert-manager"
 
+
 external-secrets:
-  enabled: true
+  enabled: false
   replicaCount: 1
   bitwarden-sdk-server:
     enabled: false
@@ -202,13 +216,8 @@ nats:
         dir: /etc/nats-certs/leafnodes
         cert: tls.crt
         key: tls.key
-        # merge or patch the tls config
-        # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/tls
         merge: {}
         patch: []
-
-      # merge or patch the leafnodes config
-      # https://docs.nats.io/running-a-nats-service/configuration/leafnodes/leafnode_conf
       merge: {}
       patch: []
 
@@ -217,13 +226,10 @@ nats:
       port: 8080
       tls:
         enabled: false
-        # set secretName in order to mount an existing secret to dir
         secretName:
         dir: /etc/nats-certs/websocket
         cert: tls.crt
         key: tls.key
-        # merge or patch the tls config
-        # https://docs.nats.io/running-a-nats-service/configuration/securing_nats/tls
         merge: {}
         patch: []
 

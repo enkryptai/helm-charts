@@ -2,7 +2,6 @@
 
 ### 1️⃣ Install the **Platform Chart**
 
-Here’s a clean, professional Markdown note you can drop right into your repo 👇
 
 ---
 

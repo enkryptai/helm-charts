@@ -32,11 +32,11 @@ helm upgrade --install enkryptai enkryptai/enkryptai-stack -n enkryptai-stack -f
 
 ---
 
-### ✅ Post-Installation Steps-1: Update Required Secrets
+###  Post-Installation Steps-1: Update Required Secrets
 
 Once **both charts** have been successfully installed, you’ll need to update the following **Kubernetes secrets** with your OpenFGA configuration values.
 
-> ⚙️ You can find `authorization_model_id` and `store_id` in the **OpenFGA logs**.
+> You can find `authorization_model_id` and `store_id` in the **OpenFGA logs**.
 
 #### 1. Frontend
 
@@ -67,7 +67,7 @@ kubectl rollout restart deployment gateway-kong -n enkryptai-stack
 ```
 ---
 
-### ✅ Post-Installation Steps-2: Provide SSL Certificates for Your Domains 
+###  Post-Installation Steps-2: Provide SSL Certificates for Your Domains 
 
 Before you start using the **EnkryptAI Stack**, ensure the following subdomains are properly configured and secured with valid SSL/TLS certificates:
 
@@ -75,7 +75,7 @@ Before you start using the **EnkryptAI Stack**, ensure the following subdomains 
 2. **auth.<domain>** — Used by **EnkryptAI Auth Service**
 3. **api.<domain>** — Used by **EnkryptAI Kong (API Gateway)**
 
-> ⚙️ Example:
+> Example:
 > If your base domain is `example.com`, the stack will use:
 >
 > ```

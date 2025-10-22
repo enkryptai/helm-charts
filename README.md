@@ -105,6 +105,56 @@ The following table summarizes which applications use each secret.
 
 ---
 
+
+
+
+---
+
+## 5. Below components needs to be installed on existing kubernetes cluster
+
+Before installing the Helm charts, ensure the following components are available and configured on your Kubernetes cluster.
+
+### Cluster Requirements
+
+| Component                                  | Description                                                                                                               | Installation Reference                                                                       |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Kubernetes**                             | Version **≥ 1.31** (tested on **v1.33.0**)                                                                                | [Kubernetes Docs](https://kubernetes.io/docs/setup/)                                         |
+| **Cert Manager (AWS Certificate Manager)** | Used for managing TLS/SSL certificates for services.                                                                      | [AWS Cert Manager Setup](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) |
+| **Ingress Controller (NGINX)**             | Required for routing external traffic to services inside the cluster.                                                     | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/deploy/)               |
+| **Metrics Server**                         | Required for resource metrics (CPU/Memory) used by autoscalers and monitoring.                                            | [Metrics Server Installation](https://github.com/kubernetes-sigs/metrics-server)             |
+
+---
+
+### Notes
+
+* Ensure all components are in a **Ready** state before proceeding with Helm chart installation.
+
+---
+
+### Tested Setup Disclaimer
+
+> This Helm chart setup has been **tested on Kubernetes v1.33.0** with:
+>
+> * **AWS EKS** as the underlying cluster provider
+> * **Cert manager** for TLS management
+> * **NGINX Ingress Controller 1.13.3**
+> * **Metrics Server v0.8.0**
+
+Compatibility with other Kubernetes versions or distributions may vary.
+
+---
+
+### Monitoring 
+
+**"For accessing Redteaming job logs and more, please refer to the [Monitoring documentation](./Monitoring.md)."**
+---
+
+### Troubleshooting
+
+For troubleshooting, please refer to the [`Troubleshooting documentation`](./Troubleshooting.md)
+
+
+---
 ## Summary
 
 Before deploying the Helm chart:
@@ -114,8 +164,6 @@ Before deploying the Helm chart:
 3. **Apply all required secrets** (values will be provided by EnkryptAI).
 4. Proceed with the **Helm chart installation** once these prerequisites are met.
 
----
-
 ## Available Helm Charts
 
 
@@ -124,6 +172,7 @@ Before deploying the Helm chart:
 | [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
 | [`platform`](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
 | [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
+
 
 ---
 

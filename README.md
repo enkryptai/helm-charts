@@ -104,7 +104,7 @@ The following table summarizes which applications use each secret.
 | `s3-cred`                      | `redteaming`, Supabase (on-prem MinIO for internal artifact storage) |
 | `superuser-secret`             | Postgres CNPG credentials                                            |
 
-### Below components needs to be installed on existing kubernetes cluster
+### Other components required on the Kubernetes cluster
 
 Before installing the EnkryptAI Helm charts, ensure the following components are available and configured.
 
@@ -120,7 +120,6 @@ Before installing the EnkryptAI Helm charts, ensure the following components are
 > [!NOTE]
 > Ensure all components are in a **Ready** state before proceeding with Helm chart installation.
 
-
 We have tested the setup with following versions:
 
 This Helm chart setup has been **tested on Kubernetes v1.33.0** with:
@@ -131,6 +130,34 @@ This Helm chart setup has been **tested on Kubernetes v1.33.0** with:
 
 Compatibility with other Kubernetes versions or distributions may vary.
 
+## Installation
+
+To install EnkryptAI stack, use the following helm charts. You can click the chart to get more information to see the installation steps.
+
+```bash
+helm repo add enkryptai https://enkryptai.github.io/helm-charts
+helm repo update
+
+helm upgrade --install platform enkryptai/platform-stack -n enkryptai-stack -f values.yaml --timeout 15m
+
+# Don't forget to apply below configmap
+kubectl apply -f https://raw.githubusercontent.com/enkryptai/helm-charts/refs/heads/main/charts/enkryptai-stack/gateway-temp-config-map.yaml
+
+helm upgrade --install enkryptai enkryptai/enkryptai-stack -n enkryptai-stack -f values.yaml --timeout 15m
+```
+
+Read the documentation of each chart to perform post-installation tasks.
+
+
+### Available Helm Charts
+
+| Chart                                                   | Description                                                                  |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
+| [`platform`](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
+| [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
+
+
 ## Monitoring
 
 For accessing Redteaming job logs and more, please refer to the [Monitoring documentation](./docs/monitoring.md).
@@ -139,16 +166,10 @@ For accessing Redteaming job logs and more, please refer to the [Monitoring docu
 
 For troubleshooting, please refer to the [`Troubleshooting documentation`](./docs/troubleshooting.md)
 
+## Security
+TBD
 
-## Available Helm Charts
-
-
-| Chart                                                   | Description                                                                  |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
-| [`platform`](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
-| [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
-
+Report security issues to [EnkryptAI Support](mailto:hello@EnkryptAI.com).
 
 ## Support
 

@@ -121,7 +121,7 @@ Before deploying the Helm chart:
 | Chart                                                   | Description                                                                  |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
-| [`platform`](./charts/platform/README.md)               | Core platform dependencies and shared infrastructure                         |
+| [`platform`](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
 | [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
 
 ---

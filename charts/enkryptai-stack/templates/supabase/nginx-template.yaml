@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-html
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-html
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: nginx-html
+    spec:
+      containers:
+      - image: nginx:alpine
+        imagePullPolicy: IfNotPresent
+        name: nginx
+        ports:
+        - containerPort: 80
+          name: nginx-html
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: email-template
+      dnsPolicy: ClusterFirst
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: email-template
+        name: email-template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-html-service
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx-html
+  type: ClusterIP
+---
+apiVersion: v1
+data:
+  template.html: "<strong>\U0001F44B Hi,</strong>\n<p>\n  Please enter the below code
+    to log in to Enkrypt AI \U0001F511\n</p>\n<h2>\n  {{ .Token }}\n</h2>\n<strong>Stay
+    secure with Enkrypt AI</strong>\n<br>\n<em>\n  Log in to <a href=\"{{ .SiteURL
+    }}\">{{ .SiteURL }}</a>\n  find out more.\n</em>\n"
+kind: ConfigMap
+metadata:
+  name: email-template

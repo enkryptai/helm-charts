@@ -1,6 +1,6 @@
 # **EnkryptAI Stack Deployment Prerequisites**
 
-### This document outlines the infrastructure and configuration requirements for deploying the **EnkryptAI stack** on an existing Kubernetes cluster.
+This document outlines the infrastructure and configuration requirements for deploying the **EnkryptAI stack** on an existing Kubernetes cluster.
 ---
 
 ## 1. GPU Node Group (Guardrails)

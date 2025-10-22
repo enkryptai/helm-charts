@@ -1,11 +1,17 @@
-# **EnkryptAI Stack Deployment Prerequisites**
-This document outlines the infrastructure and configuration requirements for deploying the **EnkryptAI stack** on an existing Kubernetes cluster.
+# EnkryptAI Stack Deployment
 
----
+This document outlines the infrastructure and configuration requirements for deploying the [EnkryptAI](https://www.enkryptai.com/) stack on an existing Kubernetes cluster.
 
-## 1. GPU Node Group (Guardrails)
+There are various components such as Guardrails, Redteaming etc that are required for the deployment of the EnkryptAI stack. In this document, we are giving example of AWS and EKS cluster but the chart can be used for other cloud providers as well. If you get into any issues, reach out to us or raise an issue in this Github repo.
 
-The **Guardrails** component requires GPU-enabled nodes. Create a dedicated GPU node group using the following configuration.
+## Architecture
+![EnkryptAI Architecture](charts/enkryptai-stack/enkryptai_kubernetes_architecture.png)
+
+## Prerequisites
+
+### GPU Node(s) to run Guardrails
+
+The **Guardrails** component requires GPU-enabled nodes particularly NVIDIA V100 (minimum 16 GB VRAM recommended) or above. Create a dedicated GPU node group using the following configuration.
 
 **Node Group Name:** `gpu-node-group`
 
@@ -17,12 +23,13 @@ The **Guardrails** component requires GPU-enabled nodes. Create a dedicated GPU 
 | **Disk Size**             | `100 GB (gp3)`                     |
 | **Scaling Configuration** | Desired: `2` • Min: `1` • Max: `2` |
 
-**Usage Note:**
-The **Guardrails pod** requires a GPU and will be **scheduled exclusively** on this node group.
+> [!WARNING]
+> Avoid using SPOT instances because it can lead to unexpected behavior.
 
----
+> [!NOTE]
+> The **Guardrails pod** requires a GPU and will be **scheduled exclusively** on this node group.
 
-## 2. Redteaming Node Group
+### Redteaming Node Group
 
 The **Redteaming** workloads run on a separate node group optimized for compute-intensive tasks.
 
@@ -38,26 +45,22 @@ The **Redteaming** workloads run on a separate node group optimized for compute-
 | **Labels**                | `dedicated: redteaming`             |
 | **Taints**                | `app=redteaming:NoSchedule`         |
 
-**Usage Note:**
-This node group ensures **Redteaming jobs** are scheduled exclusively on dedicated infrastructure.
+> [!NOTE]
+> This node group ensures **Redteaming jobs** are scheduled exclusively on dedicated infrastructure. It is dependent on NATS, NACK,  Argo Workflows and Argo Events.
 
----
 
-## 3. Prerequisite Namespaces and Secrets
+### Namespaces and Secrets
 
-Before installing the Helm chart, make sure the following namespaces and secrets are created.
-(EnkryptAI will provide the Helm chart and secret values.)
+Before installing the Helm chart, make sure the following namespaces and secrets are created. EnkryptAI team will provide the secret values separately.
 
-### **Namespaces**
+#### Create Namespaces
 
-```sh
-enkryptai-stack
-redteam-jobs
+```bash
+kubectl create namespace enkryptai-stack
+kubectl create namespace redteam-jobs
 ```
 
----
-
-### **Secrets**
+#### Create Secrets
 
 | **Namespace**   | **Secret Name**              |
 | --------------- | ---------------------------- |
@@ -76,16 +79,14 @@ redteam-jobs
 | enkryptai-stack | superuser-secret             |
 | redteam-jobs    | redteam-proxy-env-secret     |
 
----
 
-## 4. Secret Usage Overview
+### Secret Usage Overview
 
 The following table summarizes which applications use each secret.
 
-### **Application Groups**
-
+#### Application Groups
 * **Internal Applications:** `gateway-kong`, `frontend`, `redteaming`, `guardrails`
-* **On-Premise Applications:** `opensearch`, `openfga`, `cnpg`
+* **Self-hosted (on-prem) Platform Applications:** `opensearch`, `openfga`, `CloudNativePG`
 
 | **Secret Name**                | **Used By**                                                          |
 | ------------------------------ | -------------------------------------------------------------------- |
@@ -103,67 +104,41 @@ The following table summarizes which applications use each secret.
 | `s3-cred`                      | `redteaming`, Supabase (on-prem MinIO for internal artifact storage) |
 | `superuser-secret`             | Postgres CNPG credentials                                            |
 
----
+### Below components needs to be installed on existing kubernetes cluster
 
-
-
-
----
-
-## 5. Below components needs to be installed on existing kubernetes cluster
-
-Before installing the Helm charts, ensure the following components are available and configured on your Kubernetes cluster.
+Before installing the EnkryptAI Helm charts, ensure the following components are available and configured.
 
 ### Cluster Requirements
 
 | Component                                  | Description                                                                                                               | Installation Reference                                                                       |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Kubernetes**                             | Version **≥ 1.31** (tested on **v1.33.0**)                                                                                | [Kubernetes Docs](https://kubernetes.io/docs/setup/)                                         |
+| **Kubernetes Cluster**                             | EKS Version **≥ 1.31** (tested on **v1.33.0**)                                                                                | [Kubernetes Docs](https://kubernetes.io/docs/setup/)                                         |
 | **Cert Manager (AWS Certificate Manager)** | Used for managing TLS/SSL certificates for services.                                                                      | [AWS Cert Manager Setup](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) |
 | **Ingress Controller (NGINX)**             | Required for routing external traffic to services inside the cluster.                                                     | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/deploy/)               |
 | **Metrics Server**                         | Required for resource metrics (CPU/Memory) used by autoscalers and monitoring.                                            | [Metrics Server Installation](https://github.com/kubernetes-sigs/metrics-server)             |
 
----
+> [!NOTE]
+> Ensure all components are in a **Ready** state before proceeding with Helm chart installation.
 
-### Notes
 
-* Ensure all components are in a **Ready** state before proceeding with Helm chart installation.
+We have tested the setup with following versions:
 
----
-
-### Tested Setup Disclaimer
-
-> This Helm chart setup has been **tested on Kubernetes v1.33.0** with:
->
-> * **AWS EKS** as the underlying cluster provider
-> * **Cert manager** for TLS management
-> * **NGINX Ingress Controller 1.13.3**
-> * **Metrics Server v0.8.0**
+This Helm chart setup has been **tested on Kubernetes v1.33.0** with:
+* **AWS EKS** as the underlying cluster provider
+* **Cert manager** for TLS management
+* **NGINX Ingress Controller 1.13.3**
+* **Metrics Server v0.8.0**
 
 Compatibility with other Kubernetes versions or distributions may vary.
 
----
+## Monitoring
 
-### Monitoring 
+For accessing Redteaming job logs and more, please refer to the [Monitoring documentation](./docs/monitoring.md).
 
-"For accessing Redteaming job logs and more, please refer to the [Monitoring documentation](./Monitoring.md)."
+## Troubleshooting
 
----
+For troubleshooting, please refer to the [`Troubleshooting documentation`](./docs/troubleshooting.md)
 
-### Troubleshooting
-
-For troubleshooting, please refer to the [`Troubleshooting documentation`](./Troubleshooting.md)
-
-
----
-## Summary
-
-Before deploying the Helm chart:
-
-1. **Create GPU and Redteaming node groups** with the configurations listed above.
-2. **Create namespaces:** `enkryptai-stack`, `redteam-jobs`.
-3. **Apply all required secrets** (values will be provided by EnkryptAI).
-4. Proceed with the **Helm chart installation** once these prerequisites are met.
 
 ## Available Helm Charts
 
@@ -175,10 +150,6 @@ Before deploying the Helm chart:
 | [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
 
 
----
-
 ## Support
 
-If you face any issues during deployment, reach out to the **EnkryptAI DevOps Team** or raise a GitHub issue in this repository.
-
----
+If you face any issues during deployment, reach out to the [EnkryptAI Support](mailto:hello@EnkryptAI.com) or raise a GitHub issue in this repository.

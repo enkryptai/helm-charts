@@ -2,9 +2,6 @@
 
 ### 1️⃣ Install the **Platform Chart**
 
-
----
-
 ## Note
 
 The **values file** will be provided by the **EnkryptAI team**.
@@ -19,7 +16,7 @@ helm upgrade --install platform enkryptai/platform-stack -n enkryptai-stack -f v
 
 ### 2️⃣ Install the **EnkryptAI Stack Chart**
 
-Don't forget to apply below configmap 
+Don't forget to apply below configmap
 ```
 kubectl apply -f https://raw.githubusercontent.com/enkryptai/helm-charts/refs/heads/main/charts/enkryptai-stack/gateway-temp-config-map.yaml
 ```
@@ -29,8 +26,6 @@ helm repo add enkryptai  https://enkryptai.github.io/helm-charts/
 helm repo update
 helm upgrade --install enkryptai enkryptai/enkryptai-stack -n enkryptai-stack -f values.yaml --timeout 15m
 ```
-
----
 
 ###  Post-Installation Steps-1: Update Required Secrets
 
@@ -57,7 +52,6 @@ Update the following environment variables:
 DECK_OPENFGA_STORE_ID=<store_id>
 DECK_OPENFGA_AUTHORIZATION_MODEL_ID=<authorization_model_id>
 ```
----
 ### Note: Restart Deployments After Updating Secrets
 Once the secrets have been updated, restart the deployments to ensure the new environment variables are loaded.
 Run the following commands:
@@ -65,9 +59,8 @@ Run the following commands:
 kubectl rollout restart deployment frontend -n enkryptai-stack
 kubectl rollout restart deployment gateway-kong -n enkryptai-stack
 ```
----
 
-###  Post-Installation Steps-2: Provide SSL Certificates for Your Domains 
+###  Post-Installation Steps-2: Provide SSL Certificates for Your Domains
 
 Before you start using the **EnkryptAI Stack**, ensure the following subdomains are properly configured and secured with valid SSL/TLS certificates:
 
@@ -88,5 +81,4 @@ Make sure you:
 * Create DNS records for each subdomain.
 * Attach valid SSL certificates for all three before deploying EnkryptAI Stack.
 
-
-If you encounter any issues during installation or post-deployment, please reach out to the EnkryptAI DevOps team for assistance and troubleshooting.
+If you encounter any issues during installation or post-deployment, please reach out to the [EnkryptAI team](mailto:hello@enkryptai.com) for assistance and troubleshooting.

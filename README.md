@@ -147,6 +147,7 @@ Compatibility with other Kubernetes versions or distributions may vary.
 ### Monitoring 
 
 "For accessing Redteaming job logs and more, please refer to the [Monitoring documentation](./Monitoring.md)."
+
 ---
 
 ### Troubleshooting

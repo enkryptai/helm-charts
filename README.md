@@ -52,6 +52,7 @@ Before installing the Helm chart, make sure the following namespaces and secrets
 
 ```sh
 enkryptai-stack
+redteam-jobs
 ```
 
 ---

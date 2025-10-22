@@ -1,4 +1,4 @@
-## ⚡ Quick Tip: Access Redteaming Job Logs
+## Quick Tip: Access Redteaming Job Logs
 
 For checking logs of running Redteaming jobs, you can leverage the **Argo Workflows dashboard** by port-forwarding it to your local system:
 
@@ -12,16 +12,15 @@ Then open your browser and access the dashboard at:
 
 ---
 
-## 📊 Monitoring (Optional)
+## Monitoring (Optional)
 
 Monitoring is an optional but **highly recommended** part of the deployment to ensure observability, performance visibility, and troubleshooting capabilities across the cluster and applications.
 
 
-Here’s a polished and consistent version of your **Recommended Tools** table:  
 
 ---
 
-### 🧠 Recommended Tools
+### Recommended Tools
 
 | Type        | Tool / Stack                                         |                                   Description                                                                                               |
 |------------ |------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------- |                                                
@@ -32,7 +31,7 @@ Here’s a polished and consistent version of your **Recommended Tools** table:
 ---
 
 
-### ⚙️ Suggested Setup
+### Suggested Setup
 
 - Install the **kube-prometheus-stack** Helm chart for metrics collection, alerting, and dashboards.  
 - Deploy a **single-instance Loki** setup for log aggregation.  
@@ -42,7 +41,7 @@ Here’s a polished and consistent version of your **Recommended Tools** table:
 
 ---
 
-### ⚠️ Note
+### Note
 
 > The monitoring stack is **not part of the EnkryptAI stack** by default.  
 > However, it can be **installed alongside EnkryptAI** to enable full observability.  
@@ -50,7 +49,7 @@ Here’s a polished and consistent version of your **Recommended Tools** table:
 
 ---
 
-### 🔗 References
+### References
 
 - [kube-prometheus-stack Helm Chart](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack)  
 - [Grafana Loki](https://grafana.com/oss/loki/)  

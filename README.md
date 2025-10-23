@@ -133,6 +133,8 @@ This Helm chart setup has been **tested on Kubernetes v1.33.0** with:
 
 Compatibility with other Kubernetes versions or distributions may vary.
 
+NOTE: Ensure that your vpc environment has access to pull image required for enkryptai-stack. For more info check [`image information doc`](./docs/images-requirement.md)
+
 ## Installation
 
 ### Ingress Requirements

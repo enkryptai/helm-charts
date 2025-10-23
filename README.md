@@ -244,7 +244,7 @@ Before you start using the **EnkryptAI Stack**, ensure the following subdomains 
 
 Make sure you:
 * Create DNS records for each subdomain.
-* Attach valid SSL certificates for all three before deploying EnkryptAI Stack.
+* Attach valid SSL certificates for all three domain
 
 
 Read the documentation of each chart to perform post-installation tasks.

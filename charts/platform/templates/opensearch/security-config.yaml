@@ -1,3 +1,4 @@
+{{- if .Values.opensearch.securityconfig }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -58,3 +59,4 @@ stringData:
               challenge: true
             authentication_backend:
               type: intern
+{{- end }}

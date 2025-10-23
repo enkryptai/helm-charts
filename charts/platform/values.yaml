@@ -33,6 +33,7 @@ adminpassword:
   secretName: "opensearch-cred"
 clustername: "enkryptai-opensearch"
 opensearch:
+  securityconfig: false
   users:
     admin:
       hash: ""

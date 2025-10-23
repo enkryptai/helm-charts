@@ -132,7 +132,83 @@ Compatibility with other Kubernetes versions or distributions may vary.
 
 ## Installation
 
-To install EnkryptAI stack, use the following helm charts. You can click the chart to get more information to see the installation steps.
+### Ingress Requirements
+
+| Service / Component        | Purpose                          | Domain         | Ingress Class (Controller) | Certificate Source                          |
+|-----------------------------|----------------------------------|----------------|-----------------------------|---------------------------------------------|
+| **Frontend (Web App)**      | EnkryptAI Web UI                 | `app.<domain>` | `nginx` *(or `alb` if on AWS)* | cert-manager *(Let’s Encrypt)* / ACM *(for ALB)* |
+| **Gateway-Kong (API Gateway)** | Routes all backend API traffic  | `api.<domain>` | `nginx` *(or `alb`)*        | cert-manager / ACM                         |
+| **Supabase (Auth Service)** | Authentication & Database APIs   | `auth.<domain>`| `nginx` *(or `alb`)*        | cert-manager / ACM                         |
+
+
+### For NGINX Ingress
+
+If you’re using **NGINX** as your ingress controller, configure TLS through **cert-manager** as shown below in your values file of enkryptai-stack helm chart:
+
+```yaml
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: frontend-tls
+      hosts:
+        - app.example.com
+```
+
+Repeat similar configuration for your **API** (`api.example.com`) and **Auth** (`auth.example.com`) services.
+
+---
+
+### For AWS ALB Ingress (when `className: alb`)
+
+If your environment uses **AWS Load Balancer Controller (ALB)** instead of NGINX,
+you do **not** need `cert-manager` or TLS secrets.
+Instead, you attach **ACM certificates** using ALB annotations directly in your values file of enkryptai-stack helm charts.
+
+```yaml
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:<region>:<account-id>:certificate/<your-cert-id>
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+```
+
+>  **Note:**
+>
+> * The ACM certificate **must** exist in the **same AWS region** as your EKS cluster.
+
+
+| When using                         | Set `ingressClassName` to | Cert managed by |
+| ---------------------------------- | ------------------------- | --------------- |
+| NGINX Ingress Controller           | `nginx`                   | cert-manager    |
+| AWS Load Balancer Controller (ALB) | `alb`                     | AWS ACM         |
+
+
+
+| Ingress Controller | Certificate Source            | Configuration Method                                       |
+| ------------------ | ----------------------------- | ---------------------------------------------------------- |
+| **NGINX**          | cert-manager (Let’s Encrypt)  | via `tls:` + `cert-manager.io/cluster-issuer`              |
+| **ALB**            | AWS Certificate Manager (ACM) | via `alb.ingress.kubernetes.io/certificate-arn` annotation |
+
+
+
+
 
 ```bash
 helm repo add enkryptai https://enkryptai.github.io/helm-charts
@@ -145,6 +221,28 @@ kubectl apply -f https://raw.githubusercontent.com/enkryptai/helm-charts/refs/he
 
 helm upgrade --install enkryptai enkryptai/enkryptai-stack -n enkryptai-stack -f values.yaml --timeout 15m
 ```
+
+### Provide SSL Certificates for Your Domains
+
+Before you start using the **EnkryptAI Stack**, ensure the following subdomains are properly configured and secured with valid SSL/TLS certificates:
+
+1. **app.<domain>** — Used by **EnkryptAI Frontend**
+2. **auth.<domain>** — Used by **EnkryptAI Auth Service**
+3. **api.<domain>** — Used by **EnkryptAI Kong (API Gateway)**
+
+> Example:
+> If your base domain is `example.com`, the stack will use:
+>
+> ```
+> app.example.com
+> auth.example.com
+> api.example.com
+> ```
+
+Make sure you:
+* Create DNS records for each subdomain.
+* Attach valid SSL certificates for all three before deploying EnkryptAI Stack.
+
 
 Read the documentation of each chart to perform post-installation tasks.
 

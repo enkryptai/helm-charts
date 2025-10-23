@@ -381,7 +381,7 @@ supabase:
           - path: /
             pathType: Prefix
     tls:
-      - secretName: frontend-tls
+      - secretName: supabase-tls
         hosts:
           - example.com
 

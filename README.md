@@ -234,6 +234,7 @@ kubectl apply -f secrets/
 ```bash
 helm repo add enkryptai https://enkryptai.github.io/helm-charts
 helm repo update
+```
 
 ```output
 Update Complete. ⎈Happy Helming!⎈

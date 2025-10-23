@@ -210,28 +210,99 @@ ingress:
 | **ALB**            | AWS Certificate Manager (ACM) | via `alb.ingress.kubernetes.io/certificate-arn` annotation |
 
 
+### Helm chart installation
+
+Below are available Helm Charts. To install complete enkryptai-stack you need to install enkryptai-stack and platform helm chart.
+
+| Chart                                                   | Description                                                                  |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
+| [`platform`](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
+| [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
 
 
+#### Installation of EnkryptAI Stack
+
+1. Kubernetes Secrets. This will be provided by Enkryptai
+
+```bash 
+kubectl apply -f secrets/
+```
+
+2. Add the helm chart repository
 
 ```bash
 helm repo add enkryptai https://enkryptai.github.io/helm-charts
 helm repo update
 
-helm upgrade --install platform enkryptai/platform-stack -n enkryptai-stack -f values.yaml --timeout 15m
-
-# Don't forget to apply below configmap
-kubectl apply -f https://raw.githubusercontent.com/enkryptai/helm-charts/refs/heads/main/charts/enkryptai-stack/gateway-temp-config-map.yaml
-
-helm upgrade --install enkryptai enkryptai/enkryptai-stack -n enkryptai-stack -f values.yaml --timeout 15m
+```output
+Update Complete. ⎈Happy Helming!⎈
 ```
 
-### Provide SSL Certificates for Your Domains
+3. Install Platform Helm Chart
+
+
+```bash
+helm upgrade --install platform enkryptai/platform-stack -n enkryptai-stack -f ./values/platform.yaml --timeout 15m
+```
+
+```output
+Release "platform" does not exist. Installing it now.
+I1023 12:33:44.463885  237189 warnings.go:110] "Warning: spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].key: node-role.kubernetes.io/master is use \
+"node-role.kubernetes.io/control-plane\" instead" I1023 12:33:44.474265  237189 warnings.go:110] "Warning: spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].key: node-role.kubernetes.io/master is use \
+"node-role.kubernetes.io/control-plane\" instead"I1023 12:36:49.296107  237189 warnings.go:110] "Warning: unknown field \"spec.nodePools[0].NodeSelector\""
+NAME: platform
+LAST DEPLOYED: Thu Oct 23 12:32:38 2025
+NAMESPACE: enkryptai-stack
+STATUS: deployed
+REVISION: 1
+
+```
+
+4. Install Enkryptai-stack Helm Chart
+
+a. Install Gateway-Kong configmap 
+
+```bash 
+ kubectl apply -f https://raw.githubusercontent.com/enkryptai/helm-charts/refs/heads/main/charts/enkryptai-stack/gateway-temp-config-map.yaml
+```
+
+b. Install Helm chart 
+
+```bash 
+helm upgrade --install enkryptai enkryptai/enkryptai-stack -n enkryptai-stack -f ./values/enkryptai-stack.yaml --timeout 15m
+```
+
+```output 
+Release "enkryptai" does not exist. Installing it now.
+I1023 12:43:26.132872  244265 warnings.go:110] "Warning: spec.template.spec.containers[0].env[18]: hides previous definition of \"GLOBAL_S3_ENDPOINT\", which may be dropped when using apply"
+NAME: enkryptai
+LAST DEPLOYED: Thu Oct 23 12:43:06 2025
+NAMESPACE: enkryptai-stack
+STATUS: deployed
+REVISION: 1
+NOTES:
+
+```
+
+Read the documentation of each chart to perform post-installation tasks. This is required before you run any redteam jobs
+
+
+### Available Helm Charts
+
+| Chart                                                   | Description                                                                  |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [`enkryptai-stack Doc`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
+| [`platform Doc `](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
+| [`enkryptai-lite Doc`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
+
+### NOTE: Provide SSL Certificates for Your Domains
 
 Before you start using the **EnkryptAI Stack**, ensure the following subdomains are properly configured and secured with valid SSL/TLS certificates:
 
-1. **app.<domain>** — Used by **EnkryptAI Frontend**
-2. **auth.<domain>** — Used by **EnkryptAI Auth Service**
-3. **api.<domain>** — Used by **EnkryptAI Kong (API Gateway)**
+1. app.<domain>   — Used by **EnkryptAI Frontend**
+2. auth.<domain>  — Used by **EnkryptAI Auth Service**
+3. api.<domain>   — Used by **EnkryptAI Kong (API Gateway)**
 
 > Example:
 > If your base domain is `example.com`, the stack will use:
@@ -245,18 +316,6 @@ Before you start using the **EnkryptAI Stack**, ensure the following subdomains 
 Make sure you:
 * Create DNS records for each subdomain.
 * Attach valid SSL certificates for all three domain
-
-
-Read the documentation of each chart to perform post-installation tasks.
-
-
-### Available Helm Charts
-
-| Chart                                                   | Description                                                                  |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
-| [`platform`](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
-| [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
 
 
 ## Monitoring

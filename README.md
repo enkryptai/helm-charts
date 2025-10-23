@@ -79,6 +79,9 @@ kubectl create namespace redteam-jobs
 | enkryptai-stack | superuser-secret             |
 | redteam-jobs    | redteam-proxy-env-secret     |
 
+> **Note:**  
+> If the required secrets are **not provided by the EnkryptAI Team**, you may need to make certain configuration changes manually.  
+> Please refer to the [secrets documentation](./docs/secrets.md) for detailed instructions.
 
 ### Secret Usage Overview
 

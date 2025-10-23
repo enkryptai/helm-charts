@@ -20,7 +20,7 @@ If applicable, update IAM roles to allow image pulls from the required sources.
 | `gcr.io` | Google Container Registry | Public | Used for Kubernetes utility images. |
 | `ghcr.io` | GitHub Container Registry | Public | Used for CloudNativePG and PostgreSQL images. |
 | `quay.io` | Red Hat / CNCF Registry | Public | Used for Argo, MinIO, and related components. |
-| `nvcr.io` | NVIDIA NGC Registry | Restricted | Requires NVIDIA API key or authentication for GPU-related components. |
+| `nvcr.io` | NVIDIA NGC Registry | Public | Requires NVIDIA Drivers for GPU-related components. |
 | `registry.k8s.io` | Kubernetes Official Registry | Public | Used for Ingress Controller, Node Feature Discovery, and similar components. |
 
 ---

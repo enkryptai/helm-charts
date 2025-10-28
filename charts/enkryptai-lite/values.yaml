@@ -198,7 +198,7 @@ keydb:
   enabled: true
   nameOverride: "keydb"
   fullnameOverride: "keydb"
-  imageRepository: eqalpha/keydb
+  imageRepository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/keydb
   imageTag: x86_64_v6.3.2
   imagePullPolicy: IfNotPresent
   nodes: 3
@@ -575,7 +575,7 @@ nats:
   ############################################################
   container:
     image:
-      repository: nats
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats
       tag: 2.11.8-alpine
       pullPolicy:
       registry:
@@ -620,7 +620,7 @@ nats:
   reloader:
     enabled: true
     image:
-      repository: natsio/nats-server-config-reloader
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats-server-config-reloader
       tag: 0.19.1
       pullPolicy:
       registry:
@@ -647,7 +647,7 @@ nats:
   promExporter:
     enabled: true
     image:
-      repository: natsio/prometheus-nats-exporter
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/prometheus-nats-exporter
       tag: 0.17.3
       pullPolicy:
       registry:
@@ -831,7 +831,7 @@ nats:
     defaultContextName: default
     container:
       image:
-        repository: natsio/nats-box
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats-box
         tag: 0.18.0
         pullPolicy:
         registry:

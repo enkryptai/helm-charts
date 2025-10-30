@@ -3,6 +3,7 @@ global:
   ingress: true
   externalsecret: false
   metricsserver: false
+  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
 aws: 
   region: "us-west-2"
   ClusterSecretStoreName: "enkryptai-clustersecret-store" 
@@ -25,6 +26,9 @@ cluster-autoscaler:
 
 cloudnative-pg:
   enabled: true
+  image:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cloudnative-pg
+    tag: "1.27.0"
   config:
     clusterWide: false
 
@@ -32,18 +36,105 @@ opensearch-operator:
   enabled: true
   nameOverride: "opensearch"
   fullnameOverride: "opensearch" 
-
+  manager:
+    image:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch-operator
+      tag: "2.8.0"
+  kubeRbacProxy:
+    image:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/kube-rbac-proxy
+      tag: "v0.15.0"
 
 gpu-operator:
-  toolkit:
-    version: v1.13.1-ubi8
   enabled: true
+  operator:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/gpu-operator
+    version: v24.9.0
+    initContainer:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+      image: onprem/gpu-operator-init
+      version: v24.9.0
+  validator:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+      image: onprem/gpu-operator-validator
+      version: v24.9.0
+  toolkit:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/container-toolkit
+    version: v1.13.1-ubi8
+  dcgm:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/dcgm-exporter
+    version: 3.3.8-3.6.0-ubuntu22.04
+  gfd:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/k8s-device-plugin
+    version: v0.17.0-ubi9
+  driver: 
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/nvidia-driver
+    version: 525.85.12-ubi9
+
+    manager:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+      image: onprem/k8s-driver-manager
+      version: "v0.7.0"
+  vgpuManager:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/vgpu-manager
+    driverManager:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+      image: onprem/k8s-driver-manager
+      version: "v0.7.0"
+
+  kataManager:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/k8s-kata-manager
+    version: "v0.2.2"
+  vfioManager:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/cuda
+    version: "12.6.2-base-ubi9"
+
+  vgpuDeviceManager:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/vgpu-device-manager
+    version: "v0.2.8"
+  ccManager:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/k8s-cc-manager
+    version: "v0.1.1"
+  devicePlugin:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/k8s-device-plugin
+    version: "v0.17.0-ubi9"
+  dcgmExporter:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/dcgm-exporter
+    version: "3.3.8-3.6.0-ubuntu22.04"
+  migManager:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/k8s-mig-manager
+    version: "v0.10.0-ubuntu20.04"
+  nodeStatusExporter:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/gpu-operator-validator
+    version: "v24.9.0"
+  gdrcopy:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/gdrdrv
+    version: "v2.4.1-2"
+  sandboxDevicePlugin:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    image: onprem/kubevirt-gpu-device-plugin
+    version: "v1.2.10"
 
 keydb:
   enabled: true
   nameOverride: "keydb"
   fullnameOverride: "keydb"
-  imageRepository: eqalpha/keydb
+  imageRepository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/keydb
   imageTag: x86_64_v6.3.2
   imagePullPolicy: IfNotPresent
   nodes: 3
@@ -112,6 +203,21 @@ keydb:
 
 cert-manager:
   enabled: false
+  image:
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-controller
+    tag: v1.19.1
+  webhook:
+    image:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-webhook
+  cainjector:
+    image:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-cainjector
+      tag: v1.19.1
+  acmesolver:
+    image:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-acmesolver
+      tag: v1.19.1
+
   crds:
     enabled: true 
     keep: true
@@ -122,6 +228,8 @@ cert-manager:
 
 external-secrets:
   enabled: false
+  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/external-secrets
+  tag: v0.20.1
   replicaCount: 1
   bitwarden-sdk-server:
     enabled: false
@@ -149,6 +257,9 @@ external-secrets:
 
 nats: 
   enabled: true
+  global: 
+    image: 
+      registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
   nameOverride: "nats"
   fullnameOverride: "nats"
   namespaceOverride:
@@ -256,7 +367,7 @@ nats:
       enabled: false
   container:
     image:
-      repository: nats
+      repository: onprem/nats
       tag: 2.11.8-alpine
       pullPolicy:
       registry:
@@ -275,7 +386,7 @@ nats:
   reloader:
     enabled: true
     image:
-      repository: natsio/nats-server-config-reloader
+      repository: onprem/nats-server-config-reloader
       tag: 0.19.1
       pullPolicy:
       registry:
@@ -289,7 +400,7 @@ nats:
   promExporter:
     enabled: true
     image:
-      repository: natsio/prometheus-nats-exporter
+      repository: onprem/prometheus-nats-exporter
       tag: 0.17.3
       pullPolicy:
       registry:
@@ -356,7 +467,7 @@ nats:
     defaultContextName: default
     container:
       image:
-        repository: natsio/nats-box
+        repository: onprem/nats-box
         tag: 0.18.0
         pullPolicy:
         registry:
@@ -398,6 +509,12 @@ nats:
 nack:
   enabled: true
   jetstream:
+    enabled: true
+    image:
+      repository: onprem/jetstream-controller
+      tag: 0.19.1
+      registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+
     tls:
       enabled: false
   nats:

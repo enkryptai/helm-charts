@@ -1,3 +1,15 @@
 global: 
   platform: aws
+  image: 
+    registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+
+ingresscontroller:
+  repository: onprem/ingress-controller
+  tag: v1.14.0
+webhook:
+  repository: onprem/kube-webhook-certgen
+  tag: v1.6.4
+
+
+
 

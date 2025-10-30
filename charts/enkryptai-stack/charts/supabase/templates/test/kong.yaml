@@ -16,7 +16,7 @@ spec:
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
           name: test-kong
-          image: kdevup/curljq
+          image: {{.Values.global.registry}}/{{.Values.testimage.repository}}:{{.Values.testimage.tag}}
           imagePullPolicy: IfNotPresent
           command:
             - /bin/bash

@@ -6,7 +6,7 @@ metadata:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
 spec:
-  imageName:  ghcr.io/cloudnative-pg/postgresql:17.4-8 
+  imageName: {{ .Values.global.registry }}/{{ .Values.openfga.repository }}:{{ .Values.openfga.tag }}
   postgresGID: 26
   postgresUID: 26
   superuserSecret:

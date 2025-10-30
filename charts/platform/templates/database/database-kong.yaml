@@ -5,7 +5,6 @@ metadata:
   annotations:  
     "helm.sh/hook-weight": "17"
     "helm.sh/hook": post-install, post-upgrade
-
 spec:
   backoffLimit: 2
   template:
@@ -13,7 +12,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: db-check
-          image: postgres:16
+          image: {{ .Values.global.registry }}/{{ .Values.databasekong.repository }}:{{ .Values.databasekong.tag }}
           env:
             - name: DB_NAME
               value: "postgres"
@@ -22,7 +21,7 @@ spec:
             - name: DB_PORT
               value: "5432"
             - name: DB_USER
-              value: "postgres"
+              value: "supabase_admin"
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:

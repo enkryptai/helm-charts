@@ -32,7 +32,7 @@ spec:
         - name: {{ include "supabase.studio.name" $ }}
           securityContext:
             {{- toYaml .Values.studio.securityContext | nindent 12 }}
-          image: "{{ .Values.studio.image.repository }}:{{ .Values.studio.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.global.registry }}/{{ .Values.studio.image.repository }}:{{ .Values.studio.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.studio.image.pullPolicy }}
           envFrom:
             - secretRef:

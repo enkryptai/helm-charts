@@ -1,5 +1,6 @@
 global: 
   platform: aws
+  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
 aws: 
   region: "us-west-2"
   ClusterSecretStoreName: "enkryptai-clustersecret-store" 
@@ -22,8 +23,18 @@ openfgaconfig:
         property: password
       - secretKey: test-query.sql 
         property: test-query.sql
-
-
+supabase:
+    repository: supabase
+    tag: 16.0.1
+openfga:
+    repository: onprem/postgresql
+    tag: 17.4-8
+databasekong:
+  repository: onprem/postgres
+  tag: 16
+migrationjob:
+  repository: onprem/postgres
+  tag: 15
 sensor: 
   natsURL: "nats://nats.enkryptai-stack:4222"
   jobversion: "dev-v1.1.76" 
@@ -50,11 +61,12 @@ externalSecret:
   databaseSecretRepoName: enkryptaivpc/on-prem
   secretStoreRefName: enkryptai-clustersecret-store
 
-platform-core: 
+platform-core:
   nack: 
     nats: 
       url: nats://nats:4222
   external-secrets:
+    enable: false
     webhook: 
       certCheckInterval: "20s"
     serviceAccount:

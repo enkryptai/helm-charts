@@ -1,0 +1,15 @@
+global: 
+  image: 
+    registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+nats:
+    repository: onprem/nats
+    tag: 2.10.10
+exporter:
+    repository: onprem/prometheus-nats-exporter
+    tag: 0.14.0
+reloader: 
+    repository: onprem/nats-server-config-reloader
+    tag: 0.14.0
+argoEvents:
+  repository: onprem/argo-events
+  tag: v1.9.7

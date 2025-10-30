@@ -284,6 +284,7 @@ cluster-autoscaler:
 
   image:
     # image.repository -- Image repository
+    # private access not provided - enkryptai
     repository: registry.k8s.io/autoscaling/cluster-autoscaler
     # image.tag -- Image tag
     tag: v1.33.0

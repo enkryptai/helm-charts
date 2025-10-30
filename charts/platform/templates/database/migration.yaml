@@ -12,7 +12,7 @@ spec:
       restartPolicy: Never
       initContainers:
         - name: wait-for-db
-          image: postgres:15
+          image: {{ .Values.global.registry }}/{{ .Values.databasekong.repository }}:{{ .Values.databasekong.tag }}
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -25,7 +25,7 @@ spec:
                 name: superuser-secret
       containers:
         - name: run-sql
-          image: postgres:15
+          image: {{ .Values.global.registry }}/{{ .Values.migrationjob.repository }}:{{ .Values.migrationjob.tag  }}
           command: ["/bin/sh", "-c"]
           args:
             - |

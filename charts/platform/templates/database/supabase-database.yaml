@@ -7,7 +7,7 @@ metadata:
     "helm.sh/hook": post-install, post-upgrade
 
 spec:
-  imageName:  188451452903.dkr.ecr.us-east-1.amazonaws.com/supabase:16.0.1
+  imageName: {{ .Values.global.registry }}/{{ .Values.supabase.repository }}:{{ .Values.supabase.tag }}
   postgresGID: 26
   postgresUID: 26
   superuserSecret:

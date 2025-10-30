@@ -14,11 +14,11 @@ spec:
       restartPolicy: Never
       initContainers:
         - name: wait-for-openfga
-          image: busybox
+          image: {{.Values.global.registry}}/{{.Values.busybox.repository}}:{{.Values.busybox.tag}}
           command: ["sh", "-c", "until wget -q --spider http://openfga:8080/healthz; do echo 'Waiting for OpenFGA...'; sleep 2; done"]
       containers:
         - name: openfga-sync
-          image: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/openfga-sync:v1.3.0
+          image: {{.Values.global.registry}}/{{.Values.openfgaSyncJob.repository}}:{{.Values.openfgaSyncJob.tag}}
           env:
             - name: FGA_API_URL
               value: "http://openfga:8080"

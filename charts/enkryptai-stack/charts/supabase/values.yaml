@@ -92,7 +92,7 @@ db:
 studio:
   enabled: true
   image:
-    repository: supabase/studio
+    repository: onprem/studio
     pullPolicy: IfNotPresent
     tag: "20240326-5e5586d"
   imagePullSecrets: []
@@ -133,7 +133,7 @@ studio:
 auth:
   enabled: true
   image:
-    repository: supabase/gotrue
+    repository: onprem/gotrue
     pullPolicy: IfNotPresent
     tag: "v2.169.0"
   imagePullSecrets: []
@@ -170,7 +170,7 @@ auth:
 rest:
   enabled: true
   image:
-    repository: postgrest/postgrest
+    repository: onprem/postgrest
     pullPolicy: IfNotPresent
     tag: "v12.2.8"
   imagePullSecrets: []
@@ -254,7 +254,7 @@ realtime:
 meta:
   enabled: true
   image:
-    repository: supabase/postgres-meta
+    repository: onprem/postgres-meta
     pullPolicy: IfNotPresent
     tag: "v0.86.0"
   imagePullSecrets: []
@@ -291,7 +291,7 @@ meta:
 storage:
   enabled: true
   image:
-    repository: supabase/storage-api
+    repository: onprem/storage-api
     pullPolicy: IfNotPresent
     tag: "v1.19.1"
   imagePullSecrets: []
@@ -391,7 +391,7 @@ imgproxy:
 kong:
   enabled: true
   image:
-    repository: kong
+    repository: onprem/kong
     pullPolicy: IfNotPresent
     tag: "2.8.1"
   imagePullSecrets: []
@@ -604,3 +604,16 @@ minio:
   nodeSelector: {}
   tolerations: []
   affinity: {}
+
+testimage: 
+  repository: onprem/curljq
+  tag: "latest"
+postgresalpine:
+  repository: onprem/postgres
+  tag: "15-alpine"
+aws:
+  repository: onprem/aws-cli
+  tag: "2.27.55"
+minio:
+  repository: onprem/minio
+  tag: "latest"

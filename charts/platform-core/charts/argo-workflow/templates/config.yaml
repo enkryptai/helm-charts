@@ -3632,7 +3632,7 @@ spec:
         - --auth-mode
         - client
         env: []
-        image: quay.io/argoproj/argocli:v3.7.1
+        image: {{ .Values.global.image.registry }}/{{ .Values.argocli.repository }}:{{ .Values.argocli.tag }}
         name: argo-server
         ports:
         - containerPort: 2746
@@ -3687,7 +3687,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.name
-        image: quay.io/argoproj/workflow-controller:v3.7.1
+        image: {{ .Values.global.image.registry }}/{{ .Values.workflowcontroller.repository }}:{{ .Values.workflowcontroller.tag }}
         livenessProbe:
           failureThreshold: 3
           httpGet:
@@ -3735,7 +3735,7 @@ spec:
       - env:
         - name: PORT
           value: "80"
-        image: quay.io/holos/mccutchen/go-httpbin:v2.14.1@sha256:2612f203b1be154524b0dbb65212a158776f0643e2f6e1dad45984fc93413d97
+        image: {{ .Values.global.image.registry }}/{{ .Values.httpbin.repository }}:{{ .Values.httpbin.tag }}
         livenessProbe:
           httpGet:
             path: /get
@@ -3781,7 +3781,7 @@ spec:
           value: admin
         - name: MINIO_SECRET_KEY
           value: password
-        image: quay.io/minio/minio:RELEASE.2022-11-17T23-20-09Z@sha256:b2a98df34c3e8d605a5e96f0bc1657dd440a5bd53d95465a7b342e736da9c6cf
+        image: {{ .Values.global.image.registry }}/{{ .Values.minio.repository }}:{{ .Values.minio.tag }}
         lifecycle:
           postStart:
             exec:

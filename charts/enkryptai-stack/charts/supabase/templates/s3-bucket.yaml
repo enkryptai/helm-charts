@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: create-buckets
-        image: amazon/aws-cli:2.27.55
+        image: {{.Values.global.registry}}/{{.Values.aws.repository}}:{{.Values.aws.tag}}
         command:
         - /bin/sh
         - -c

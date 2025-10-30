@@ -30,7 +30,7 @@ spec:
         {{- toYaml .Values.analytics.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: postgres:15-alpine
+          image: {{.Values.global.registry}}/{{.Values.supabaseinitdb.repository}}:{{.Values.supabaseinitdb.tag}}
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_HOST

@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: test-meta
-          image: kdevup/curljq
+          image: {{.Values.global.registry}}/{{.Values.testimage.repository}}:{{.Values.testimage.tag}}
           imagePullPolicy: IfNotPresent
           command:
             - /bin/bash

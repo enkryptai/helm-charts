@@ -21,7 +21,7 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
-          image: postgres:15-alpine
+          image: {{.Values.global.registry}}/{{.Values.postgresalpine.repository}}:{{.Values.postgresalpine.tag}}
           imagePullPolicy: IfNotPresent
           name: test-db
       restartPolicy: Never

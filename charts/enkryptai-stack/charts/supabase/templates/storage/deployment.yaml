@@ -31,7 +31,7 @@ spec:
         {{- toYaml .Values.storage.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: postgres:15-alpine
+          image: {{.Values.global.registry}}/{{.Values.postgresalpine.repository}}:{{.Values.postgresalpine.tag}}
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
@@ -71,7 +71,7 @@ spec:
                   name: {{ .Values.secret.onprem.name }}
                   key: S3_PROTOCOL_ACCESS_KEY_SECRET
           name: init-bucket
-          image: minio/mc
+          image: {{.Values.global.registry}}/{{.Values.minio.repository}}:{{.Values.minio.tag}}
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
@@ -90,7 +90,7 @@ spec:
         - name: {{ include "supabase.storage.name" $ }}
           securityContext:
             {{- toYaml .Values.storage.securityContext | nindent 12 }}
-          image: "{{ .Values.storage.image.repository }}:{{ .Values.storage.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.global.registry }}/{{ .Values.storage.image.repository }}:{{ .Values.storage.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.storage.image.pullPolicy }}
           envFrom:
             - secretRef:

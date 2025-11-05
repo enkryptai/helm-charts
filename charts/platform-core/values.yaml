@@ -55,6 +55,12 @@ gpu-operator:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/gpu-operator-init
       version: v24.9.0
+
+  node-feature-discovery:
+    image:
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/node-feature-discovery
+      tag: v0.16.6
+
   validator:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/gpu-operator-validator

@@ -3460,5 +3460,4 @@ kind: ConfigMap
 metadata:
   name: supabase-migration
   annotations:
-    "helm.sh/hook-weight": "-1"
     "helm.sh/hook": pre-install

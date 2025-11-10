@@ -3,7 +3,7 @@ kind: Job
 metadata:
   annotations:
     "helm.sh/hook-weight": "17"
-    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook": post-install
   name: db-migration-supabase
 spec:
   backoffLimit: 2

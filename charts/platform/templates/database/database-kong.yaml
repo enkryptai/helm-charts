@@ -4,7 +4,7 @@ metadata:
   name: db-check-and-grant
   annotations:  
     "helm.sh/hook-weight": "17"
-    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook": post-install
 spec:
   backoffLimit: 2
   template:
@@ -21,7 +21,7 @@ spec:
             - name: DB_PORT
               value: "5432"
             - name: DB_USER
-              value: "supabase_admin"
+              value: "postgres"
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:

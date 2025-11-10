@@ -4,8 +4,7 @@ metadata:
   name: db-check-and-grant
   annotations:  
     "helm.sh/hook-weight": "17"
-    "helm.sh/hook": post-install, post-upgrade
-
+    "helm.sh/hook": post-install
 spec:
   backoffLimit: 2
   template:
@@ -13,7 +12,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: db-check
-          image: postgres:16
+          image: {{ .Values.global.registry }}/{{ .Values.databasekong.repository }}:{{ .Values.databasekong.tag }}
           env:
             - name: DB_NAME
               value: "postgres"

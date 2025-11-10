@@ -1,0 +1,15 @@
+global: 
+  image: 
+    registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+workflowcontroller:
+  repository: onprem/workflow-controller
+  tag: v3.7.1
+minio:
+  repository: onprem/minio
+  tag: RELEASE.2022-11-17T23-20-09Z
+argocli: 
+  repository: onprem/argocli
+  tag: v3.7.1
+httpbin:
+  repository: onprem/go-httpbin
+  tag: v2.14.1

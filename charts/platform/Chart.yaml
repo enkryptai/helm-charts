@@ -7,4 +7,4 @@ dependencies:
   - name: platform-core
     version: 1.0.3
     alias: platform-core
-    repository: "https://enkryptai.github.io/helm-charts"
+    repository: "file://../platform-core"

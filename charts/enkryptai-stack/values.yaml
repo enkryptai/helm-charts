@@ -5,8 +5,21 @@ global:
   imagePullPolicy: "IfNotPresent"
   externalSecret: false
   domain: "djj.enkryptai.com"
+  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
 
-
+supabaseinitdb:
+  repository: onprem/supabase-initdb
+  tag: "latest"
+nginxalpine:
+  repository: onprem/nginx
+  tag: "alpine"
+openfgaSyncJob:
+  repository: enkryptai-prod/openfga-sync
+  tag: v1.3.0
+busybox:
+  repository: onprem/busybox
+  tag: "latest"
+ 
 frontend:
   enabled: true
   image:
@@ -107,7 +120,7 @@ gateway-kong:
       tag: "19a0eb3"
       pullPolicy: IfNotPresent
     fluentBit:
-      repository: fluent/fluent-bit
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/fluent-bit
       tag: "3.2.1"
       pullPolicy: IfNotPresent
 
@@ -402,9 +415,9 @@ openfgaconfig:
 openfga:
   replicaCount: 1 
   image:
-    repository: openfga/openfga
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/openfga
     pullPolicy: Always
-    tag: ""
+    tag: "v1.8.9"
 
   imagePullSecrets: []
   nameOverride: "openfga"
@@ -463,7 +476,7 @@ openfga:
   securityContext: {}
 
   initContainer:
-    repository: groundnuty/k8s-wait-for
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
     tag: "v2.0"
     pullPolicy: IfNotPresent
 
@@ -544,7 +557,7 @@ openfga:
     migrations:
       resources: {}
       image:
-        repository: groundnuty/k8s-wait-for
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
         pullPolicy: Always
         tag: "v2.0"
 

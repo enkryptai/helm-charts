@@ -14,6 +14,14 @@ spec:
   eventBusName: redteam-eventbus
   template:
     serviceAccountName: argo-events-sa
+    container:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 50Mi
+          limits:
+            cpu: 100m
+            memory: 50Mi
   triggers:
   - template:
       argoWorkflow:
@@ -68,7 +76,7 @@ spec:
                   - secretRef:
                       name: redteam-proxy-env-secret
                   image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
-                  imagePullPolicy: Always
+                  imagePullPolicy: Always               
                 inputs:
                   parameters:
                   - name: event-data

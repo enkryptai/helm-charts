@@ -422,7 +422,13 @@ openfga:
   imagePullSecrets: []
   nameOverride: "openfga"
   fullnameOverride: "openfga"
-
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "250Mi"
+    limits:
+      cpu: "250m"
+      memory: "250Mi"
   commonLabels: {}
 
   serviceAccount:
@@ -641,8 +647,6 @@ openfga:
           - path: /
             pathType: ImplementationSpecific
     tls: []
-
-  resources: {}
 
   lifecycle: {}
 

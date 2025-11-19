@@ -2,11 +2,11 @@ replicaCount: 2
 
 image:
   gateway:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway
+    repository: vpcdepoyment.azurecr.io/enkryptai-dev/gateway
     tag: "dev"
     pullPolicy: IfNotPresent
   sync:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway-sync
+    repository: vpcdepoyment.azurecr.io/enkryptai-dev/gateway-sync
     tag: "dev"
     pullPolicy: IfNotPresent
   fluentBit:

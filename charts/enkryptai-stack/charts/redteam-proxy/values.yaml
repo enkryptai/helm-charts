@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy
+  repository: vpcdepoyment.azurecr.io/enkryptai-dev/redteam-proxy
   pullPolicy: IfNotPresent
   tag: "dev"
 

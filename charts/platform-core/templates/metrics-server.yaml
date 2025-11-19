@@ -1,4 +1,4 @@
-{{- if .Values.global.metricsserver }}
+{{- if .Values.metricsServer.enabled }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:

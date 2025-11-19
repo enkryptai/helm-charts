@@ -3,26 +3,9 @@ global:
   registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
 aws: 
   region: "us-west-2"
-  ClusterSecretStoreName: "enkryptai-clustersecret-store" 
 backup: 
   openfgsS3Bucket: "s3://vpc"
   supabaseS3Bucket: "s3://vpc"
-openfgaconfig:
-  externalSecret:
-    name: openfga-env-secret
-    refreshInterval: "15m"
-    secretStoreName: enkryptai-clustersecret-store
-    secretStoreKind: ClusterSecretStore
-    remoteSecretKey: enkryptaivpc/openfga
-    keys:
-      - secretKey: uri
-        property: uri
-      - secretKey: username 
-        property: username 
-      - secretKey: password 
-        property: password
-      - secretKey: test-query.sql 
-        property: test-query.sql
 supabase:
     repository: supabase
     tag: 16.0.1
@@ -200,30 +183,52 @@ platform-core:
         registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
     nats: 
       url: nats://nats:4222
-  external-secrets:
-    enable: false
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/external-secrets
-    tag: v0.20.1
-    webhook: 
-      certCheckInterval: "20s"
-    serviceAccount:
-      create: true
-      automount: true
-      name: "platform-external-secrets"
-  cert-manager:
-    enabled: false
-    image:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-controller
-      tag: v1.19.1
-    webhook:
+  argo-events: 
+    namespaceOverride: "enkryptai-stack"
+  argo-workflows:
+    images:
+      tag: ""
+      pullPolicy: Always
+      pullSecrets: []
+    singleNamespace: true
+    server:
+      enabled: true
+      baseHref: /
       image:
-        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-webhook
-    cainjector:
+        registry: quay.io
+        repository: argoproj/argocli
+        tag: ""
+      deploymentAnnotations: {}
+      podAnnotations: {}
+      podLabels: {}
+      podSecurityContext: {}
+      rbac:
+        create: true
+      securityContext:
+        readOnlyRootFilesystem: false
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+    executor:
       image:
-        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-cainjector
-        tag: v1.19.1
-    acmesolver:
+        registry: quay.io
+        repository: argoproj/argoexec
+        tag: ""
+        pullPolicy: ""
+      resources: {}
+      args: []
+      env: []
+      securityContext: {}
+    controller:
       image:
-        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-acmesolver
-        tag: v1.19.1
+        registry: quay.io
+        repository: argoproj/workflow-controller
+        tag: ""
+      namespaceParallelism: "10"
+      retentionPolicy:
+        completed: 10
+        failed: 3
+        errored: 3
 

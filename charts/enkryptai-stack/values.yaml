@@ -5,7 +5,7 @@ global:
   imagePullPolicy: "IfNotPresent"
   externalSecret: false
   domain: "djj.enkryptai.com"
-  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+  registry: vpcdepoyment.azurecr.io
 
 supabaseinitdb:
   repository: onprem/supabase-initdb
@@ -23,7 +23,7 @@ busybox:
 frontend:
   enabled: true
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/frontend
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
     tag: "91d6764"
 
@@ -112,15 +112,15 @@ gateway-kong:
   replicaCount: 2
   image:
     gateway:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
+      repository: vpcdepoyment.azurecr.io/enkryptai-prod/gateway
       tag: "19a0eb3"
       pullPolicy: IfNotPresent
     sync:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
+      repository: vpcdepoyment.azurecr.io/enkryptai-prod/gateway-sync
       tag: "19a0eb3"
       pullPolicy: IfNotPresent
     fluentBit:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/fluent-bit
+      repository: vpcdepoyment.azurecr.io/onprem/fluent-bit
       tag: "3.2.1"
       pullPolicy: IfNotPresent
 
@@ -234,7 +234,7 @@ redteam-proxy:
   replicaCount: 2
 
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-proxy
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-proxy
     pullPolicy: IfNotPresent
     tag: "da62bf6"
 
@@ -312,7 +312,7 @@ guardrails:
   enabled: false
   replicaCount: 1
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrails
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrails
     pullPolicy: IfNotPresent
     tag: "aa2fdfb"
 
@@ -415,7 +415,7 @@ openfgaconfig:
 openfga:
   replicaCount: 1 
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/openfga
+    repository: vpcdepoyment.azurecr.io/onprem/openfga
     pullPolicy: Always
     tag: "v1.8.9"
 
@@ -476,7 +476,7 @@ openfga:
   securityContext: {}
 
   initContainer:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
+    repository: vpcdepoyment.azurecr.io/onprem/k8s-wait-for
     tag: "v2.0"
     pullPolicy: IfNotPresent
 
@@ -557,7 +557,7 @@ openfga:
     migrations:
       resources: {}
       image:
-        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
+        repository: vpcdepoyment.azurecr.io/onprem/k8s-wait-for
         pullPolicy: Always
         tag: "v2.0"
 

@@ -1,6 +1,6 @@
 global: 
   image: 
-    registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    registry: vpcdepoyment.azurecr.io
 nats:
     repository: onprem/nats
     tag: 2.10.10

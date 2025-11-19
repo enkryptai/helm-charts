@@ -7,8 +7,9 @@ metadata:
     storageclass.kubernetes.io/is-default-class: "true"
   name: gp3-encrypted
 parameters:
-  encrypted: "true"
-  type: gp3
-provisioner: ebs.csi.aws.com
+  cachingmode: ReadOnly
+  kind: Managed
+  storageaccounttype: Premium_LRS
+provisioner: disk.csi.azure.com
 reclaimPolicy: Delete
 volumeBindingMode: Immediate

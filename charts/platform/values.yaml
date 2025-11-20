@@ -226,4 +226,5 @@ platform-core:
         completed: 10
         failed: 3
         errored: 3
-
+externalSecret:
+  enabled: false

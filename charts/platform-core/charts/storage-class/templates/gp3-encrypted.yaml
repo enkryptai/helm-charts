@@ -1,4 +1,4 @@
-# Please edit the object below. Lines beginning with a '#' will be ignored,
+{{- if eq .Values.global.platform "aws" }}
 allowVolumeExpansion: true
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -12,3 +12,30 @@ parameters:
 provisioner: ebs.csi.aws.com
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
+{{- end }}
+---
+{{- if eq .Values.global.platform "azure" }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-encrypted
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: disk.csi.azure.com
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+{{- end }}
+---
+{{- if eq .Values.global.platform "gcp" }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-encrypted
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: pd.csi.storage.gke.io
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+{{- end }}

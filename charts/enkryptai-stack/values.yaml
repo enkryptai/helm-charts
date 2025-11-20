@@ -675,9 +675,3 @@ openfga:
   testContainerSpec: {}
   extraObjects: []
 
-platform:
-  opensearch:
-    enabled: true
-    opensearch-operator:
-      nameOverride: "opensearch"
-      fullnameOverride: "opensearch" 

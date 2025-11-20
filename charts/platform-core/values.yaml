@@ -1,12 +1,14 @@
 global: 
-  platform: aws
-  ingress: true
-  externalsecret: false
-  metricsserver: false
+  platform: aws # values -> azure, gcp, onprem 
   registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
-aws: 
-  region: "us-west-2"
-  ClusterSecretStoreName: "enkryptai-clustersecret-store" 
+  
+
+# NOTE: Below is required when global.platform is `onprem`
+# storeageClass: 
+#   provisioner: "" 
+
+metricsServer: 
+  enabled: false
 
 namespaces:
   - name: argo-events
@@ -15,14 +17,8 @@ namespaces:
   - name: argo
     labels:
       name: argo
-  - name: redteam-jobs
+  # - name: redteam-jobs
 
- 
-storage-class: 
-  enabled: true
-
-cluster-autoscaler: 
-  enabled: false
 
 cloudnative-pg:
   enabled: true
@@ -68,7 +64,7 @@ gpu-operator:
   toolkit:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
     image: onprem/container-toolkit
-    version: v1.13.1-ubi8
+    version: v1.17.9-ubi8
   dcgm:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
     image: onprem/dcgm-exporter
@@ -207,60 +203,6 @@ keydb:
   scripts:
     enabled: false
 
-cert-manager:
-  enabled: false
-  image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-controller
-    tag: v1.19.1
-  webhook:
-    image:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-webhook
-  cainjector:
-    image:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-cainjector
-      tag: v1.19.1
-  acmesolver:
-    image:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-acmesolver
-      tag: v1.19.1
-
-  crds:
-    enabled: true 
-    keep: true
-  serviceAccount: 
-    create: true 
-    name: "platform-cert-manager"
-
-
-external-secrets:
-  enabled: false
-  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/external-secrets
-  tag: v0.20.1
-  replicaCount: 1
-  bitwarden-sdk-server:
-    enabled: false
-  installCRDs: true
-  webhook:
-    annotations:
-      "helm.sh/hook-weight": "-15"
-  crds:
-    createClusterExternalSecret: true
-    createClusterSecretStore: true
-    createClusterGenerator: true
-    createPushSecret: true
-    annotations:
-      "helm.sh/hook-weight": "-15"
-  nameOverride: "external-secrets"
-  fullnameOverride: "external-secrets"
-  podDisruptionBudget:
-    enabled: false
-    minAvailable: 1
-  hostNetwork: false
-  serviceAccount:
-    create: true
-    automount: true
-    name: "platform-external-secrets"
-
 nats: 
   enabled: true
   global: 
@@ -349,17 +291,10 @@ nats:
         key: tls.key
         merge: {}
         patch: []
-
-      ############################################################
-      # ingress
-      ############################################################
-      # service must be enabled also
       ingress:
         enabled: false
-
     mqtt:
       enabled: false
-
     gateway:
       enabled: false
     monitor:
@@ -447,8 +382,6 @@ nats:
     enabled: true
   serviceAccount:
     enabled: false
-
-  # NATS Box Deployment and associated resources
   natsBox:
     enabled: true
     contexts:
@@ -520,8 +453,580 @@ nack:
       repository: onprem/jetstream-controller
       tag: 0.19.1
       registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
-
     tls:
       enabled: false
   nats:
     url: nats://nats:4222
+
+argo-events: 
+  nameOverride: argo-events
+  fullnameOverride: "argo"
+  namespaceOverride: ""
+  openshift: false
+  createAggregateRoles: false
+  crds:
+    install: true
+    keep: true
+    annotations: {}
+  global:
+    image:
+      repository: quay.io/argoproj/argo-events
+      tag: ""
+      imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    podAnnotations: {}
+    podLabels: {}
+    additionalLabels: {}
+    securityContext: {}
+    #  runAsNonRoot: true
+    #  runAsUser: 9731
+    #  runAsGroup: 9731
+    #  fsGroup: 9731
+    # -- Mapping between IP and hostnames that will be injected as entries in the pod's hosts files
+    hostAliases: []
+  configs:
+    nats:
+      versions:
+        - version: latest
+          natsStreamingImage: nats-streaming:latest
+          metricsExporterImage: natsio/prometheus-nats-exporter:latest
+        - version: 0.22.1
+          natsStreamingImage: nats-streaming:0.22.1
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.8.0
+    jetstream:
+      settings:
+        maxMemoryStore: -1
+        maxFileStore: -1
+      streamConfig:
+        maxMsgs: 1000000
+        maxAge: 72h
+        maxBytes: 1GB
+        replicas: 3
+        duplicates: 300s
+        retention: 0
+        discard: 0
+      versions:
+        - version: latest
+          natsImage: nats:2.10.10
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.14.0
+          configReloaderImage: natsio/nats-server-config-reloader:0.14.0
+          startCommand: /nats-server
+        - version: 2.8.1
+          natsImage: nats:2.8.1
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+          configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+          startCommand: /nats-server
+        - version: 2.8.1-alpine
+          natsImage: nats:2.8.1-alpine
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+          configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+          startCommand: nats-server
+        - version: 2.8.2
+          natsImage: nats:2.8.2
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+          configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+          startCommand: /nats-server
+        - version: 2.8.2-alpine
+          natsImage: nats:2.8.2-alpine
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+          configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+          startCommand: nats-server
+        - version: 2.9.1
+          natsImage: nats:2.9.1
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+          configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+          startCommand: /nats-server
+        - version: 2.9.12
+          natsImage: nats:2.9.12
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+          configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+          startCommand: /nats-server
+        - version: 2.9.16
+          natsImage: nats:2.9.16
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+          configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+          startCommand: /nats-server
+        - version: 2.10.10
+          natsImage: nats:2.10.10
+          metricsExporterImage: natsio/prometheus-nats-exporter:0.14.0
+          configReloaderImage: natsio/nats-server-config-reloader:0.14.0
+          startCommand: /nats-server
+  extraObjects: []
+    # - apiVersion: secrets-store.csi.x-k8s.io/v1
+    #   kind: SecretProviderClass
+    #   metadata:
+    #     name: argo-events-secrets-store
+    #   spec:
+    #     provider: aws
+    #     parameters:
+    #       objects: |
+    #         - objectName: "argo-events"
+    #           objectType: "secretsmanager"
+    #           jmesPath:
+    #               - path: "client_id"
+    #                 objectAlias: "client_id"
+    #               - path: "client_secret"
+    #                 objectAlias: "client_secret"
+    #     secretObjects:
+    #     - data:
+    #       - key: client_id
+    #         objectName: client_id
+    #       - key: client_secret
+    #         objectName: client_secret
+    #       secretName: argo-events-secrets-store
+    #       type: Opaque
+    #       labels:
+    #         app.kubernetes.io/part-of: argocd
+
+  controller:
+    name: controller-manager
+    rbac:
+      enabled: true
+      namespaced: false
+      managedNamespace: ""
+      rules: []
+    image:
+      repository: ""
+      tag: ""
+      imagePullPolicy: ""
+    revisionHistoryLimit: 5
+    replicas: 1
+    pdb:
+      enabled: false
+      labels: {}
+      annotations: {}
+    env: []
+    # - name: DEBUG_LOG
+    #   value: "true"
+    envFrom: []
+    podAnnotations: {}
+    podLabels: {}
+    containerSecurityContext: {}
+      # capabilities:
+      #   drop:
+      #     - all
+      # readOnlyRootFilesystem: true
+      # runAsNonRoot: true
+
+    readinessProbe:
+      failureThreshold: 3
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    livenessProbe:
+      failureThreshold: 3
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    volumes: []
+    volumeMounts: []
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    topologySpreadConstraints: []
+    priorityClassName: ""
+    resources: {}
+    extraContainers: []
+    initContainers: []
+    serviceAccount:
+      create: true
+      name: ""
+      annotations: {}
+      automountServiceAccountToken: true
+    metrics:
+      enabled: false
+      service:
+        annotations: {}
+        labels: {}
+        servicePort: 8082
+      serviceMonitor:
+        enabled: false
+        interval: 30s
+        relabelings: []
+        metricRelabelings: []
+        selector: {}
+        namespace: "" # "monitoring"
+        additionalLabels: {}
+  webhook:
+    enabled: false
+    name: events-webhook
+    image:
+      repository: ""
+      tag: ""
+      imagePullPolicy: ""
+    revisionHistoryLimit: 5
+    replicas: 1
+    pdb:
+      enabled: false
+      labels: {}
+      annotations: {}
+    env: []
+    envFrom: []
+    podAnnotations: {}
+    podLabels: {}
+    port: 443
+    containerSecurityContext: {}
+      # capabilities:
+      #   drop:
+      #     - all
+      # readOnlyRootFilesystem: true
+      # runAsNonRoot: true
+    readinessProbe:
+      failureThreshold: 3
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    livenessProbe:
+      failureThreshold: 3
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    volumeMounts: []
+    volumes: []
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    topologySpreadConstraints: []
+    # - maxSkew: 1
+    #   topologyKey: topology.kubernetes.io/zone
+    #   whenUnsatisfiable: DoNotSchedule
+    priorityClassName: ""
+    resources: {}
+    serviceAccount:
+      create: true
+      name: ""
+      annotations: {}
+      automountServiceAccountToken: true
+
+argo-workflows: 
+  images:
+    tag: ""
+    pullPolicy: Always
+    pullSecrets: []
+  crds:
+    install: true
+    keep: true
+    annotations: {}
+  createAggregateRoles: true
+  nameOverride:
+  fullnameOverride: "argo"
+  namespaceOverride: ""
+  commonLabels: {}
+  kubeVersionOverride: ""
+  apiVersionOverrides:
+    autoscaling: "" # autoscaling/v2
+    cloudgoogle: "" # cloud.google.com/v1
+    monitoring: "" # monitoring.coreos.com/v1
+  singleNamespace: true
+  workflow:
+    namespace:
+    serviceAccount:
+      create: false
+      labels: {}
+      annotations: {}
+      name: "argo-workflow"
+      pullSecrets: []
+    rbac:
+      create: true
+      agentPermissions: false
+      artifactGC: false
+      serviceAccounts: []
+      rules: []
+  controller:
+    image:
+      registry: quay.io
+      repository: argoproj/workflow-controller
+      tag: ""
+    parallelism:
+    # -- Globally limits the rate at which pods are created.
+    # This is intended to mitigate flooding of the Kubernetes API server by workflows with a large amount of
+    # parallel nodes.
+    resourceRateLimit: {}
+      # limit: 10
+      # burst: 1
+    rbac:
+      create: true
+      secretWhitelist: []
+      accessAllSecrets: false
+      writeConfigMaps: false
+    configMap:
+      create: true
+      name: ""
+      annotations: {}
+    namespaceParallelism:
+    # -- Resolves ongoing, uncommon AWS EKS bug: https://github.com/argoproj/argo-workflows/pull/4224
+    initialDelay:
+    deploymentAnnotations: {}
+    podAnnotations: {}
+    podLabels: {}
+    podSecurityContext: {}
+    metricsConfig:
+      enabled: false
+      path: /metrics
+      interval: 30s
+      port: 9090
+      metricsTTL: ""
+      ignoreErrors: false
+      secure: false
+      portName: metrics
+      servicePort: 8080
+      servicePortName: metrics
+      scheme: http
+      headlessService: false
+      honorLabels: false
+      relabelings: []
+      metricRelabelings: []
+      targetLabels: []
+    securityContext:
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    persistence: {}
+    workflowDefaults: {}
+    workflowWorkers: # 32
+    workflowTTLWorkers: # 4
+    podCleanupWorkers: # 4
+    cronWorkflowWorkers: # 8
+    workflowRestrictions: {}
+    telemetryConfig:
+      enabled: false
+      path: /telemetry
+      interval: 30s
+      port: 8081
+      metricsTTL: ""
+      ignoreErrors: false
+      secure: false
+      servicePort: 8081
+      servicePortName: telemetry
+      scheme: http
+    serviceMonitor:
+      enabled: false
+      additionalLabels: {}
+      namespace: "" # "monitoring"
+    serviceAccount:
+      create: true
+      name: ""
+      labels: {}
+      annotations: {}
+    name: workflow-controller
+    workflowNamespaces:
+      - default
+    instanceID:
+      enabled: false
+      useReleaseName: false
+      explicitID: ""
+    logging:
+      level: info
+      globallevel: "0"
+      format: "text"
+    serviceType: ClusterIP
+    serviceAnnotations: {}
+    serviceLabels: {}
+    loadBalancerClass: ""
+    loadBalancerSourceRanges: []
+    resources: {}
+    livenessProbe:
+      httpGet:
+        port: 6060
+        path: /healthz
+      failureThreshold: 3
+      initialDelaySeconds: 90
+      periodSeconds: 60
+      timeoutSeconds: 30
+    extraEnv: []
+    extraArgs: []
+    volumeMounts: []
+    volumes: []
+    replicas: 1
+    revisionHistoryLimit: 10
+    pdb:
+      enabled: false
+      # minAvailable: 1
+      # maxUnavailable: 1
+    nodeSelector:
+      kubernetes.io/os: linux
+    tolerations: []
+    affinity: {}
+    topologySpreadConstraints: []
+    priorityClassName: ""
+    links: []
+    columns: []
+    navColor: ""
+    clusterWorkflowTemplates:
+      enabled: true
+      serviceAccounts: []
+    extraContainers: []
+    extraInitContainers: []
+    retentionPolicy: {}
+    #  completed: 10
+    #  failed: 3
+    #  errored: 3
+    nodeEvents:
+      enabled: true
+    workflowEvents:
+      enabled: true
+    kubeConfig: {}
+    podGCGracePeriodSeconds:
+    podGCDeleteDelayDuration: ""
+    synchronization: {}
+  mainContainer:
+    imagePullPolicy: ""
+    resources: {}
+    env: []
+    envFrom: []
+    securityContext: {}
+  executor:
+    image:
+      registry: quay.io
+      repository: argoproj/argoexec
+      tag: ""
+      pullPolicy: ""
+    resources: {}
+    args: []
+    env: []
+    securityContext: {}
+  server:
+    enabled: true
+    baseHref: /
+    image:
+      registry: quay.io
+      repository: argoproj/argocli
+      tag: ""
+    deploymentAnnotations: {}
+    podAnnotations: {}
+    podLabels: {}
+    podSecurityContext: {}
+    rbac:
+      create: true
+    securityContext:
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    name: server
+    serviceType: ClusterIP
+    servicePort: 2746
+    serviceNodePort: # 32746
+    servicePortName: "" # http
+    hostAliases: []
+    serviceAccount:
+      create: true
+      name: ""
+      labels: {}
+      annotations: {}
+    serviceAnnotations: {}
+    serviceLabels: {}
+    loadBalancerClass: ""
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    resources: {}
+    replicas: 1
+    revisionHistoryLimit: 10
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 50
+      targetMemoryUtilizationPercentage: 50
+      behavior: {}
+    pdb:
+      enabled: false
+      # minAvailable: 1
+      # maxUnavailable: 1
+    nodeSelector:
+      kubernetes.io/os: linux
+    tolerations: []
+    affinity: {}
+    topologySpreadConstraints: []
+    priorityClassName: ""
+    secure: false
+    extraEnv: []
+    authMode: ""
+    authModes: []
+    extraArgs: []
+    logging:
+      level: info
+      globallevel: "0"
+      format: "text"
+    tmpVolume:
+      emptyDir: {}
+    volumeMounts: []
+    volumes: []
+    ingress:
+      enabled: false
+      annotations: {}
+      labels: {}
+      ingressClassName: ""
+      hosts: []
+      paths:
+        - /
+      pathType: Prefix
+      extraPaths: []
+      tls: []
+    GKEbackendConfig:
+      enabled: false
+      spec: {}
+    GKEmanagedCertificate:
+      enabled: false
+      domains:
+      - argoworkflows.example.com
+    GKEfrontendConfig:
+      enabled: false
+      spec: {}
+    clusterWorkflowTemplates:
+      enabled: true
+      enableEditing: true
+    sso:
+      enabled: false
+      issuer: https://accounts.google.com
+      clientId:
+        name: argo-server-sso
+        key: client-id
+      clientSecret:
+        name: argo-server-sso
+        key: client-secret
+      redirectUrl: ""
+      rbac:
+        enabled: true
+        secretWhitelist: []
+      scopes: []
+      sessionExpiry: ""
+      issuerAlias: ""
+      customGroupClaimName: ""
+      userInfoPath: ""
+      insecureSkipVerify: false
+      filterGroupsRegex: []
+    extraContainers: []
+    extraInitContainers: []
+    lifecycle: {}
+    terminationGracePeriodSeconds: 30
+    livenessProbe:
+      enabled: false
+      httpGet:
+        port: 2746
+        path: /
+      failureThreshold: 3
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 1
+      successThreshold: 1
+  extraObjects: []
+  useStaticCredentials: true
+  artifactRepository:
+    archiveLogs: false
+    s3: {}
+    gcs: {}
+    azure: {}
+  customArtifactRepository: {}
+  artifactRepositoryRef: {}
+  emissary:
+    images: []

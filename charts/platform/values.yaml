@@ -44,11 +44,6 @@ opensearch:
       hash: ""
     kibana_read_only:
       hash: ""
-externalSecret:
-  enabled: false
-  databaseSecretName: onprem
-  databaseSecretRepoName: enkryptaivpc/on-prem
-  secretStoreRefName: enkryptai-clustersecret-store
 
 platform-core:
   cloudnative-pg:

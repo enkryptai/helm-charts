@@ -193,6 +193,12 @@ gpu-operator:
   toolkit:
     version: v1.13.1-ubi8
   enabled: true
+  securityContext: 
+     capabilities:
+       drop:
+       - ALL
+     readOnlyRootFilesystem: true
+     runAsNonRoot: true
 
 keydb:
   enabled: true

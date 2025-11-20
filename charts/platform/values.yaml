@@ -73,6 +73,14 @@ platform-core:
     image:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cloudnative-pg
       tag: "1.27.0"
+    resources: 
+      requests:
+        memory: "1024Mi"
+        cpu: 1
+      limits:
+        memory: "1024Mi"
+        cpu: 1
+
   opensearch-operator:
     manager:
       image:
@@ -99,14 +107,32 @@ platform-core:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator-validator
         version: v24.9.0
+        resources:
+          limits:
+            memory: 1G
+          requests:
+            cpu: 10m
+            memory: 128Mi
     toolkit:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/container-toolkit
       version: v1.13.1-ubi8
+      resources: 
+        limits:
+          memory: 1G
+        requests:
+          cpu: 10m
+          memory: 128Mi
     dcgm:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/dcgm-exporter
       version: 3.3.8-3.6.0-ubuntu22.04
+      resources:
+        limits:
+          memory: 1G
+        requests:
+          cpu: 10m
+          memory: 128Mi 
     gfd:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-device-plugin
@@ -147,6 +173,12 @@ platform-core:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-device-plugin
       version: "v0.17.0-ubi9"
+      resources: 
+        limits:
+          memory: 1G
+        requests:
+          cpu: 10m
+          memory: 128Mi
     dcgmExporter:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/dcgm-exporter
@@ -215,13 +247,34 @@ platform-core:
     image:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-controller
       tag: v1.19.1
+      resources:
+        limits:
+          cpu: 50m
+          memory: 500Mi
+        requests:
+          cpu: 10m
+          memory: 64Mi
     webhook:
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-webhook
+      resources:
+        limits:
+          cpu: 50m
+          memory: 500Mi
+        requests:
+          cpu: 10m
+          memory: 32Mi
     cainjector:
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-cainjector
         tag: v1.19.1
+      resources:
+        limits:
+          cpu: 50m
+          memory: 500Mi
+        requests:
+          cpu: 10m
+          memory: 64Mi
     acmesolver:
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cert-manager-acmesolver

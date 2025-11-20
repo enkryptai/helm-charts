@@ -14,6 +14,14 @@ spec:
   eventBusName: redteam-eventbus
   template:
     serviceAccountName: argo-events-sa
+    container:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+        limits:
+          cpu: 200m
+          memory: 200Mi
   triggers:
   - template:
       argoWorkflow:

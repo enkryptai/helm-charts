@@ -60,7 +60,22 @@ db:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+  securityContext: 
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+  volumeMounts:
+    - name: psql-data
+      mountPath: /var/lib/postgresql/data
+    - name: psql
+      mountPath: /var/run/postgresql
+  volumes:
+    - name: psql-data
+      emptyDir: {}
+    - name: psql
+      emptyDir: {}
   service:
     type: ClusterIP
     port: 5432
@@ -113,7 +128,13 @@ studio:
     "helm.sh/hook-weight": "5"
     "helm.sh/hook": post-install
   podSecurityContext: {}
-  securityContext: {}
+  securityContext: 
+     capabilities:
+       drop:
+       - ALL
+     readOnlyRootFilesystem: true
+     runAsNonRoot: true
+     runAsUser: 1000
   service:
     type: ClusterIP
     port: 3000
@@ -150,7 +171,13 @@ auth:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
   service:
     type: ClusterIP
     port: 9999
@@ -186,7 +213,13 @@ rest:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
   service:
     type: ClusterIP
     port: 3000
@@ -223,7 +256,13 @@ realtime:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
   service:
     type: ClusterIP
     port: 4000
@@ -271,7 +310,13 @@ meta:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
   service:
     type: ClusterIP
     port: 8080
@@ -308,7 +353,13 @@ storage:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+  securityContext: 
+     capabilities:
+       drop:
+       - ALL
+     readOnlyRootFilesystem: true
+     runAsNonRoot: true
+     runAsUser: 1000
   service:
     type: ClusterIP
     port: 5000
@@ -360,7 +411,13 @@ imgproxy:
     name: ""
   podAnnotations: {}
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
   service:
     type: ClusterIP
     port: 5001
@@ -408,7 +465,7 @@ kong:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+
   service:
     type: ClusterIP
     port: 8000
@@ -461,7 +518,13 @@ analytics:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
   service:
     type: ClusterIP
     port: 4000
@@ -507,7 +570,24 @@ vector:
     name: ""
   podAnnotations: {}
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+     capabilities:
+       drop:
+       - ALL
+     readOnlyRootFilesystem: true
+     runAsNonRoot: true
+     runAsUser: 1000
+  volumeMounts:
+    - name: pod-logs
+      mountPath: /var/log/pods
+    - name: vector-tmp
+      mountPath: /var/lib/vector 
+  volumes:
+    - name: pod-logs
+      hostPath:
+        path: /var/log/pods
+    - name: vector-tmp
+      emptyDir: {} 
   service:
     type: ClusterIP
     port: 9001
@@ -541,7 +621,24 @@ functions:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: false
+  env:
+    - name: DENO_DIR
+      value: /tmp/deno
+    - name: DENO_CACHE
+      value: /tmp/deno/cache
+  volumeMounts:
+    - name: deno-cache
+      mountPath: /root/.cache/deno
+  volumes:
+    - name: deno-cache
+      emptyDir: {}
+
   service:
     type: ClusterIP
     port: 9000
@@ -614,6 +711,7 @@ postgresalpine:
 aws:
   repository: onprem/aws-cli
   tag: "2.27.55"
+  
 minio:
   repository: onprem/minio
   tag: "latest"

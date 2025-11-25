@@ -8,7 +8,12 @@ metadata:
   annotations:
     "helm.sh/hook-weight": "5"
     "helm.sh/hook": post-install, post-upgrade
+
 spec:
+  template:
+    container:
+      resources:
+        {{- toYaml .Values.sensor.resources | nindent 8 }}
   insecure: true
   eventBusName: redteam-eventbus 
   nats:
@@ -33,6 +38,10 @@ metadata:
     "helm.sh/hook-weight": "5"
     "helm.sh/hook": post-install, post-upgrade
 spec:
+  template:
+    container:
+      resources:
+        {{- toYaml .Values.sensor.resources | nindent 8 }}
   insecure: true
   eventBusName: redteam-eventbus 
   nats:
@@ -57,6 +66,10 @@ metadata:
     "helm.sh/hook-weight": "5"
     "helm.sh/hook": post-install, post-upgrade
 spec:
+  template:
+    container:
+      resources:
+        {{- toYaml .Values.sensor.resources | nindent 8 }}
   insecure: true
   eventBusName: redteam-eventbus 
   nats:
@@ -80,6 +93,10 @@ metadata:
     "helm.sh/hook-weight": "5"
     "helm.sh/hook": post-install, post-upgrade
 spec:
+  template:
+    container:
+      resources:
+        {{- toYaml .Values.sensor.resources | nindent 8 }}
   insecure: true
   eventBusName: redteam-eventbus 
   nats:
@@ -103,6 +120,10 @@ metadata:
     "helm.sh/hook-weight": "5"
     "helm.sh/hook": post-install, post-upgrade
 spec:
+  template:
+    container:
+      resources:
+        {{- toYaml .Values.sensor.resources | nindent 8 }}
   insecure: true
   eventBusName: redteam-eventbus 
   nats:
@@ -127,6 +148,10 @@ metadata:
     "helm.sh/hook-weight": "5"
     "helm.sh/hook": post-install, post-upgrade
 spec:
+  template:
+    container:
+      resources:
+        {{- toYaml .Values.sensor.resources | nindent 8 }}
   insecure: true
   eventBusName: redteam-eventbus 
   nats:
@@ -140,4 +165,3 @@ spec:
         factor: 2
         jitter: 0.2
 ---
-

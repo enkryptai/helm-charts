@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: db-check-and-grant
-  annotations:  
+  annotations:
     "helm.sh/hook-weight": "17"
     "helm.sh/hook": post-install
 spec:
@@ -13,6 +13,8 @@ spec:
       containers:
         - name: db-check
           image: {{ .Values.global.registry }}/{{ .Values.databasekong.repository }}:{{ .Values.databasekong.tag }}
+          resources:
+            {{- toYaml .Values.databasekong.resources | nindent 12 }}
           env:
             - name: DB_NAME
               value: "postgres"
@@ -22,21 +24,21 @@ spec:
               value: "5432"
             - name: DB_USER
               value: "postgres"
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: superuser-secret
-                  key: DB_PASSWORD
-            - name: GRANT_SQL
-              valueFrom:
-                secretKeyRef:
-                  name: superuser-secret
-                  key: kong.sql
+
+          volumeMounts:
+            - name: superuser-secret
+              mountPath: /run/dbcreds
+              readOnly: true
+
           command:
             - /bin/bash
             - -c
             - |
               set -e
+
+              DB_PASSWORD=$(cat /run/dbcreds/DB_PASSWORD)
+              GRANT_SQL=$(cat /run/dbcreds/kong.sql)
+
               echo "🔍 Checking if database is up..."
               RETRIES=20
 
@@ -53,5 +55,10 @@ spec:
 
               echo "✅ Database is up. Applying GRANT SQL..."
               echo "$GRANT_SQL" | PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1
+
               echo "🎯 Grant applied successfully."
 
+      volumes:
+        - name: superuser-secret
+          secret:
+            secretName: superuser-secret

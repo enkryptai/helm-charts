@@ -13,6 +13,8 @@ spec:
       initContainers:
         - name: wait-for-db
           image: {{ .Values.global.registry }}/{{ .Values.databasekong.repository }}:{{ .Values.databasekong.tag }}
+          resources:
+            {{- toYaml .Values.migrationjob.resources | nindent 12 }}
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -26,6 +28,8 @@ spec:
       containers:
         - name: run-sql
           image: {{ .Values.global.registry }}/{{ .Values.migrationjob.repository }}:{{ .Values.migrationjob.tag  }}
+          resources:
+            {{- toYaml .Values.migrationjob.resources | nindent 12 }}
           command: ["/bin/sh", "-c"]
           args:
             - |

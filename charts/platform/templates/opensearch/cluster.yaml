@@ -10,7 +10,7 @@ spec:
     tls:
       transport:  
         generate: true  
-      http:  
+      http:
         generate: true  
     config:
       securityConfigSecret:
@@ -24,9 +24,11 @@ spec:
     pluginsList: ["repository-s3"]
     additionalConfig:
       reindex.ssl.verification_mode: none
+    resources: {{- toYaml .Values.opensearch.general.resources | nindent 6 }}
   initHelper:
     image: {{ .Values.opensearch.initHelper.image }}
   dashboards:
+    resources: {{- toYaml .Values.opensearch.dashboards.resources | nindent 6 }}
     image: {{ .Values.opensearch.dashboards.image }}
     opensearchCredentialsSecret:
       name: opensearch-cred

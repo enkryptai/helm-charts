@@ -21,6 +21,7 @@ spec:
     image: {{.Values.opensearch.general.image }}
     serviceName: enkryptai-opensearch-cluster
     version: 3.2.0
+    setVMMaxMapCount: true
     pluginsList: ["repository-s3"]
     additionalConfig:
       reindex.ssl.verification_mode: none

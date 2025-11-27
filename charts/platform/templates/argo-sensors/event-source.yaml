@@ -7,10 +7,13 @@ metadata:
   namespace: argo-events
   annotations:
     "helm.sh/hook-weight": "5"
-    "helm.sh/hook": post-install, post-upgrade
-
+    "helm.sh/hook": "post-install,post-upgrade"
 spec:
   template:
+    metadata:
+      annotations:
+        owner: "enkrytpai"
+        cost-center: ""
     container:
       resources:
         {{- toYaml .Values.sensor.resources | nindent 8 }}

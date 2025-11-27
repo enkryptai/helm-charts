@@ -102,7 +102,7 @@ platform-core:
 
   cloudnative-pg:
     commonAnnotations: 
-      worker: enkrypt
+      owner: enkryptai
       cost-center: ""
     enabled: true
     image:
@@ -125,6 +125,9 @@ platform-core:
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/kube-rbac-proxy
         tag: "v0.15.0"
+    openSearchAnnotations:
+      owner: enkryptai
+      cost-center: ""
   gpu-operator:
     operator:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
@@ -134,7 +137,14 @@ platform-core:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator-init
         version: v24.9.0
+      annotations:
+        owner: enkryptai
+        cost-center: ""
     node-feature-discovery:
+      daemonsets:
+        annotations: 
+          owner: enkryptai
+          cost-center: ""
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/node-feature-discovery
         tag: v0.16.6
@@ -157,6 +167,9 @@ platform-core:
           requests:
             cpu: 5m
             memory: 30Mi
+        annotations: 
+          owner: enkryptai
+          cost-center: ""
       gc:
         resources:
           limits:
@@ -421,6 +434,11 @@ platform-core:
 externalSecret:
   enabled: false
 
-commandAnnotations:
+commonAnnotations:
     owner: enkryptai
     cost-center: ""
+
+openSearchAnnotations:
+  owner: enkryptai
+  cost-center: ""
+

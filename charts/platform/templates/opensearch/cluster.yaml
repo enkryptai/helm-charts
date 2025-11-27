@@ -5,6 +5,9 @@ metadata:
   annotations:
     "helm.sh/hook-weight": "10"
     "helm.sh/hook": post-install
+    {{- with .Values.openSearchAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   security:
     tls:

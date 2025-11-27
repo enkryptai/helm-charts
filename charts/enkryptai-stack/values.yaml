@@ -13,6 +13,17 @@ supabaseinitdb:
 nginxalpine:
   repository: onprem/nginx
   tag: "alpine"
+  resources: 
+    requests:
+      cpu: 0.5m
+      memory: 10Mi 
+    limits: 
+      cpu: 1.5m
+      memory: 50Mi 
+  annotations:
+    owner: enkryptai
+    cost-center: ""
+  securityContext: {}
 openfgaSyncJob:
   repository: enkryptai-prod/openfga-sync
   tag: v1.3.0
@@ -26,7 +37,6 @@ frontend:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
     tag: "91d6764"
-
   serviceAccount:
     create: false
   podAnnotations:
@@ -123,7 +133,9 @@ gateway-kong:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/fluent-bit
       tag: "3.2.1"
       pullPolicy: IfNotPresent
-
+  deploymentAnnotations: 
+    owner: enkryptai
+    cost-center: ""
   nameOverride: ""
   fullnameOverride: "gateway-kong"
 
@@ -243,6 +255,8 @@ redteam-proxy:
 
   podAnnotations:
     reloader.stakater.com/auto: "true"
+    owner: enkryptai
+    cost-center: ""
 
   podLabels:
     app: redteam-proxy
@@ -318,10 +332,10 @@ guardrails:
 
   nameOverride: ""
   fullnameOverride: "guardrails"
-
   podAnnotations:
     reloader.stakater.com/auto: "true"
-
+    owner: enkryptai
+    cost-center: ""
   podLabels:
     app: guardrails
 
@@ -430,8 +444,9 @@ openfga:
     annotations: {}
     name: ""
 
-  annotations: {} 
-
+  annotations:
+    owner: enkryptai
+    cost-center: "" 
   podAnnotations: {} 
   podExtraLabels: {}
 
@@ -473,7 +488,6 @@ openfga:
 
   podSecurityContext: {}
 
-  securityContext: {}
 
   initContainer:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
@@ -555,7 +569,13 @@ openfga:
     waitForMigrations: true
     migrationType: job
     migrations:
-      resources: {}
+      resources: 
+        requests:
+          cpu:  5m
+          memory: 500Mi
+        limits:
+          cpu: 10m
+          memory: 1Gi
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
         pullPolicy: Always

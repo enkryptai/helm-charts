@@ -4,7 +4,7 @@ kind: OpensearchRole
 metadata:
   name: alerting-read-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -21,7 +21,7 @@ kind: OpensearchRole
 metadata:
   name: alerting-ack-alerts
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -35,7 +35,7 @@ kind: OpensearchRole
 metadata:
   name: alerting-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -57,7 +57,7 @@ kind: OpensearchRole
 metadata:
   name: anomaly-read-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -77,7 +77,7 @@ kind: OpensearchRole
 metadata:
   name: anomaly-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -99,7 +99,7 @@ kind: OpensearchRole
 metadata:
   name: notebooks-read-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -114,7 +114,7 @@ kind: OpensearchRole
 metadata:
   name: notebooks-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -133,7 +133,7 @@ kind: OpensearchRole
 metadata:
   name: observability-read-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -147,7 +147,7 @@ kind: OpensearchRole
 metadata:
   name: observability-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -165,7 +165,7 @@ kind: OpensearchRole
 metadata:
   name: reports-read-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -183,7 +183,7 @@ kind: OpensearchRole
 metadata:
   name: reports-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -206,7 +206,7 @@ kind: OpensearchRole
 metadata:
   name: asynchronous-search-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -224,7 +224,7 @@ kind: OpensearchRole
 metadata:
   name: asynchronous-search-read-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -239,7 +239,7 @@ kind: OpensearchRole
 metadata:
   name: index-management-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -260,7 +260,7 @@ kind: OpensearchRole
 metadata:
   name: cross-cluster-replication-leader-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -279,7 +279,7 @@ kind: OpensearchRole
 metadata:
   name: cross-cluster-replication-follower-full-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -307,7 +307,7 @@ kind: OpensearchTenant
 metadata:
   name: global
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -318,7 +318,7 @@ kind: OpensearchTenant
 metadata:
   name: admin
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -329,7 +329,7 @@ kind: OpensearchTenant
 metadata:
   name: kibanaserver
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -343,7 +343,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: all-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -358,7 +358,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: own-index
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -373,7 +373,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: readall
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -388,7 +388,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: manage-snapshots
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -403,7 +403,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: dashboard-server
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:

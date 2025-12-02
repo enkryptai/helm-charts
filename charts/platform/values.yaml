@@ -257,7 +257,7 @@ platform-core:
       tag: ""
       pullPolicy: Always
       pullSecrets: []
-    singleNamespace: true
+    singleNamespace: false
     server:
       enabled: true
       baseHref: /
@@ -282,7 +282,7 @@ platform-core:
       image:
         registry: vpcdepoyment.azurecr.io
         repository: onprem/argoexec
-        tag: "v3.7.1"
+        tag: "v3.6.13"
         pullPolicy: ""
       resources: {}
       args: []

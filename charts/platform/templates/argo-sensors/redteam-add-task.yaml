@@ -13,6 +13,9 @@ spec:
     name: redteam-add-task
   eventBusName: redteam-eventbus
   template:
+    container:
+      resources:
+        {{- toYaml .Values.sensor.resources | nindent 8 }}
     serviceAccountName: argo-events-sa
   triggers:
   - template:

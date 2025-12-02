@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-html
+  annotations:
+    {{- toYaml .Values.nginxalpine.annotations | nindent 4 }}
+
 spec:
   replicas: 1
   selector:
@@ -19,6 +22,8 @@ spec:
     spec:
       containers:
       - image: {{.Values.global.registry}}/{{.Values.nginxalpine.repository}}:{{.Values.nginxalpine.tag}}
+        resources:
+          {{ toYaml .Values.nginxalpine.resources | nindent 10 }}
         imagePullPolicy: IfNotPresent
         name: nginx
         ports:

@@ -14,6 +14,9 @@ spec:
   eventBusName: redteam-eventbus
   template:
     serviceAccountName: argo-events-sa
+    container:
+      resources:
+        {{- toYaml .Values.sensor.resources | nindent 8 }}
   triggers:
   - template:
       argoWorkflow:

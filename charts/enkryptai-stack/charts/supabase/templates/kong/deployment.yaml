@@ -5,6 +5,10 @@ metadata:
   name: {{ include "supabase.kong.fullname" . }}
   labels:
     {{- include "supabase.labels" . | nindent 4 }}
+  {{- if .Values.commonAnnotations }}
+  annotations:
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
 spec:
   {{- if not .Values.kong.autoscaling.enabled }}
   replicas: {{ .Values.kong.replicaCount }}

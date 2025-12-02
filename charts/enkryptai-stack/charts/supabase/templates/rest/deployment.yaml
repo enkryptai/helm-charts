@@ -5,6 +5,10 @@ metadata:
   name: {{ include "supabase.rest.fullname" . }}
   labels:
     {{- include "supabase.labels" . | nindent 4 }}
+  {{- if .Values.commonAnnotations }}
+  annotations:
+    {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
 spec:
   {{- if not .Values.rest.autoscaling.enabled }}
   replicas: {{ .Values.rest.replicaCount }}
@@ -14,124 +18,59 @@ spec:
       {{- include "supabase.rest.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.rest.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
         {{- include "supabase.rest.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.rest.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       serviceAccountName: {{ include "supabase.rest.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.rest.podSecurityContext | nindent 8 }}
+
+      volumes:
+        - name: rest-secret
+          secret:
+            secretName: {{ .Values.secret.onprem.name }}
+
       containers:
         - name: {{ include "supabase.rest.name" $ }}
-          securityContext:
-            {{- toYaml .Values.rest.securityContext | nindent 12 }}
           image: "{{ .Values.global.registry }}/{{ .Values.rest.image.repository }}:{{ .Values.rest.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.rest.image.pullPolicy }}
-          envFrom:
-            - secretRef:
-                name: {{ .Values.secret.onprem.name }}
+          {{- with .Values.rest.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+     
           env:
             {{- range $key, $value := .Values.rest.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+
+
+            - name: DB_PASSWORD_FILE
+              value: "/secrets/dbpassword"
+
+            - name: DB_PASSWORD_ENC_FILE
+              value: "/secrets/dbpassword"
+
+            - name: DB_NAME_FILE
+              value: "/secrets/dbdatabase"
+
+            - name: PGRST_JWT_SECRET_FILE
+              value: "/secrets/secretjwt"
+
+            - name: PGRST_APP_SETTINGS_JWT_SECRET_FILE
+              value: "/secrets/secretjwt"
+
+
             {{- if .Values.db.enabled }}
             - name: DB_HOST
               value: {{ include "supabase.db.fullname" . }}
             {{- end }}
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  {{- if .Values.secret.db.secretRef }}
-                  name: {{ .Values.secret.db.secretRef }}
-                  key: {{ .Values.secret.db.secretRefKey.password | default "password" }}
-                  {{- else }}
-                  name: {{ include "supabase.secret.db" . }}
-                  key: password
-                  {{- end }}
-            - name: DB_PASSWORD_ENC
-              valueFrom:
-                secretKeyRef:
-                  {{- if .Values.secret.db.secretRef }}
-                  name: {{ .Values.secret.db.secretRef }}
-                  key: {{ .Values.secret.db.secretRefKey.password | default "password" }}
-                  {{- else }}
-                  name: {{ include "supabase.secret.db" . }}
-                  key: password_encoded
-                  {{- end }}
-            - name: DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  {{- if .Values.secret.db.secretRef }}
-                  name: {{ .Values.secret.db.secretRef }}
-                  key: {{ .Values.secret.db.secretRefKey.database | default "database" }}
-                  {{- else }}
-                  name: {{ include "supabase.secret.db" . }}
-                  key: database
-                  {{- end }}
+
+
             - name: PGRST_DB_URI
-              value: $(DB_DRIVER)://$(DB_USER):$(DB_PASSWORD_ENC)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSL)
-            - name: PGRST_JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  {{- if .Values.secret.jwt.secretRef }}
-                  name: {{ .Values.secret.jwt.secretRef }}
-                  key: {{ .Values.secret.jwt.secretRefKey.secret | default "secret" }}
-                  {{- else }}
-                  name: {{ include "supabase.secret.jwt" . }}
-                  key: secret
-                  {{- end }}
-            - name: PGRST_APP_SETTINGS_JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  {{- if .Values.secret.jwt.secretRef }}
-                  name: {{ .Values.secret.jwt.secretRef }}
-                  key: {{ .Values.secret.jwt.secretRefKey.secret | default "secret" }}
-                  {{- else }}
-                  name: {{ include "supabase.secret.jwt" . }}
-                  key: secret
-                  {{- end }}
-          {{- with .Values.rest.livenessProbe }}
-          livenessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.rest.readinessProbe }}
-          readinessProbe:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          ports:
-            - name: http
-              containerPort: 3000
-              protocol: TCP
-          {{- with .Values.rest.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.rest.volumeMounts }}
+              value: "$(DB_DRIVER)://$(DB_USER):$(DB_PASSWORD_ENC)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSL)"
+
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.rest.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.rest.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.rest.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.rest.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+            - name: rest-secret
+              mountPath: /secrets
+              readOnly: true
+
 {{- end }}

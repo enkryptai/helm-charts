@@ -571,7 +571,7 @@ minio:
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
-  fullnameOverride: ""
+  fullnameOverride: "minio"
   livenessProbe: {}
   readinessProbe: {}
   serviceAccount:

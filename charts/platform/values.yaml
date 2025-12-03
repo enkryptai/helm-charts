@@ -282,7 +282,7 @@ platform-core:
       image:
         registry: vpcdepoyment.azurecr.io
         repository: onprem/argoexec
-        tag: "v3.6.13"
+        tag: "v3.6.14"
         pullPolicy: ""
       resources: {}
       args: []

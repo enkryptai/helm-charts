@@ -291,7 +291,7 @@ meta:
 storage:
   enabled: true
   image:
-    repository: onprem/storage-api
+    repository: vpcdepoyment.azurecr.io/onprem/storage-api
     pullPolicy: IfNotPresent
     tag: "v1.19.1"
   imagePullSecrets: []
@@ -565,7 +565,7 @@ functions:
 minio:
   enabled: true
   image:
-    repository: onprem/minio
+    repository: vpcdepoyment.azurecr.io/onprem/minio
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []
@@ -614,6 +614,3 @@ postgresalpine:
 aws:
   repository: onprem/aws-cli
   tag: "2.27.55"
-minio:
-  repository: onprem/minio
-  tag: "latest"

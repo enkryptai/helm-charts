@@ -46,6 +46,10 @@ opensearch:
       hash: ""
 
 platform-core:
+  namespaces:
+    - name: argo-events
+      labels:
+        name: argo-events
   cloudnative-pg:
     enabled: true
     image:

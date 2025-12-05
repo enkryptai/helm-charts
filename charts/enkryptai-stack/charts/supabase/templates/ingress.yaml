@@ -33,7 +33,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: enkryptai-stack-supabase-kong
+                name: {{ $.Release.Name }}-supabase-kong
                 port:
                   number: 8000
           {{- end }}

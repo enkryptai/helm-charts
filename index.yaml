@@ -3,7 +3,7 @@ entries:
   enkryptai-lite:
   - apiVersion: v2
     appVersion: 1.0.6
-    created: "2025-12-05T10:52:58.665167888+05:30"
+    created: "2025-12-05T11:37:05.545393222+05:30"
     dependencies:
     - alias: argo-workflow
       condition: argo-workflow.enabled
@@ -44,8 +44,23 @@ entries:
     version: 1.0.6
   enkryptai-stack:
   - apiVersion: v2
+    appVersion: 1.1.2
+    created: "2025-12-05T11:37:05.59648066+05:30"
+    dependencies:
+    - alias: openfga
+      name: openfga
+      repository: https://openfga.github.io/helm-charts
+      version: 0.2.26
+    description: A Helm chart for Kubernetes
+    digest: 530c69dfb1835486bbbdda5331d516ac99b35b96372ee78458d1eeacd021d921
+    name: enkryptai-stack
+    type: application
+    urls:
+    - https://enkryptai.github.io/helm-charts/helm-release/enkryptai-stack-1.1.2.tgz
+    version: 1.1.2
+  - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-05T10:52:58.712882838+05:30"
+    created: "2025-12-05T11:37:05.58418803+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -60,7 +75,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.2
-    created: "2025-12-05T10:52:58.6959387+05:30"
+    created: "2025-12-05T11:37:05.570529363+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -75,7 +90,7 @@ entries:
     version: 1.0.2
   - apiVersion: v2
     appVersion: 1.0.1
-    created: "2025-12-05T10:52:58.678268871+05:30"
+    created: "2025-12-05T11:37:05.557049976+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -91,7 +106,7 @@ entries:
   platform-core:
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-05T10:52:58.776122549+05:30"
+    created: "2025-12-05T11:37:05.659711285+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -142,7 +157,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.4
-    created: "2025-12-05T10:52:58.757363599+05:30"
+    created: "2025-12-05T11:37:05.641196594+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -193,7 +208,7 @@ entries:
     version: 1.0.4
   - apiVersion: v2
     appVersion: 1.0.3
-    created: "2025-12-05T10:52:58.743330421+05:30"
+    created: "2025-12-05T11:37:05.625143781+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -260,7 +275,7 @@ entries:
   platform-stack:
   - apiVersion: v2
     appVersion: 1.1.2
-    created: "2025-12-05T10:52:58.862548621+05:30"
+    created: "2025-12-05T11:37:05.787085792+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -274,7 +289,7 @@ entries:
     version: 1.1.2
   - apiVersion: v2
     appVersion: 1.1.1
-    created: "2025-12-05T10:52:58.845546777+05:30"
+    created: "2025-12-05T11:37:05.774177831+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -288,7 +303,7 @@ entries:
     version: 1.1.1
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-05T10:52:58.831602341+05:30"
+    created: "2025-12-05T11:37:05.757590591+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -302,7 +317,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.3
-    created: "2025-12-05T10:52:58.813649621+05:30"
+    created: "2025-12-05T11:37:05.733966449+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -316,7 +331,7 @@ entries:
     version: 1.0.3
   - apiVersion: v2
     appVersion: 1.0.2
-    created: "2025-12-05T10:52:58.799431452+05:30"
+    created: "2025-12-05T11:37:05.712311099+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -328,4 +343,4 @@ entries:
     urls:
     - https://enkryptai.github.io/helm-charts/helm-release/platform-stack-1.0.2.tgz
     version: 1.0.2
-generated: "2025-12-05T10:52:58.653007428+05:30"
+generated: "2025-12-05T11:37:05.536846775+05:30"

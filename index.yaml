@@ -3,7 +3,7 @@ entries:
   enkryptai-lite:
   - apiVersion: v2
     appVersion: 1.0.6
-    created: "2025-12-05T11:37:05.545393222+05:30"
+    created: "2025-12-08T19:01:21.992459135+05:30"
     dependencies:
     - alias: argo-workflow
       condition: argo-workflow.enabled
@@ -45,7 +45,7 @@ entries:
   enkryptai-stack:
   - apiVersion: v2
     appVersion: 1.1.2
-    created: "2025-12-05T11:37:05.59648066+05:30"
+    created: "2025-12-08T19:01:22.063313154+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -60,7 +60,7 @@ entries:
     version: 1.1.2
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-05T11:37:05.58418803+05:30"
+    created: "2025-12-08T19:01:22.050638913+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -75,7 +75,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.2
-    created: "2025-12-05T11:37:05.570529363+05:30"
+    created: "2025-12-08T19:01:22.036127663+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -90,7 +90,7 @@ entries:
     version: 1.0.2
   - apiVersion: v2
     appVersion: 1.0.1
-    created: "2025-12-05T11:37:05.557049976+05:30"
+    created: "2025-12-08T19:01:22.015614539+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -106,7 +106,7 @@ entries:
   platform-core:
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-05T11:37:05.659711285+05:30"
+    created: "2025-12-08T19:01:22.122201853+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -157,7 +157,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.4
-    created: "2025-12-05T11:37:05.641196594+05:30"
+    created: "2025-12-08T19:01:22.108841458+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -208,7 +208,7 @@ entries:
     version: 1.0.4
   - apiVersion: v2
     appVersion: 1.0.3
-    created: "2025-12-05T11:37:05.625143781+05:30"
+    created: "2025-12-08T19:01:22.094532884+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -274,8 +274,22 @@ entries:
     version: 1.0.3
   platform-stack:
   - apiVersion: v2
+    appVersion: 1.1.3
+    created: "2025-12-08T19:01:22.25910552+05:30"
+    dependencies:
+    - alias: platform-core
+      name: platform-core
+      repository: https://enkryptai.github.io/helm-charts
+      version: 1.1.0
+    description: Complete platform infrastructure stack
+    digest: cb3af97319f72c9ab947cba0f6048ded1a8c7ad6bf106249bb2b86d735ed71d2
+    name: platform-stack
+    urls:
+    - https://enkryptai.github.io/helm-charts/helm-release/platform-stack-1.1.3.tgz
+    version: 1.1.3
+  - apiVersion: v2
     appVersion: 1.1.2
-    created: "2025-12-05T11:37:05.787085792+05:30"
+    created: "2025-12-08T19:01:22.234456451+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -289,7 +303,7 @@ entries:
     version: 1.1.2
   - apiVersion: v2
     appVersion: 1.1.1
-    created: "2025-12-05T11:37:05.774177831+05:30"
+    created: "2025-12-08T19:01:22.217721191+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -303,7 +317,7 @@ entries:
     version: 1.1.1
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-05T11:37:05.757590591+05:30"
+    created: "2025-12-08T19:01:22.193840403+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -317,7 +331,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.3
-    created: "2025-12-05T11:37:05.733966449+05:30"
+    created: "2025-12-08T19:01:22.176851569+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -331,7 +345,7 @@ entries:
     version: 1.0.3
   - apiVersion: v2
     appVersion: 1.0.2
-    created: "2025-12-05T11:37:05.712311099+05:30"
+    created: "2025-12-08T19:01:22.161045339+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -343,4 +357,4 @@ entries:
     urls:
     - https://enkryptai.github.io/helm-charts/helm-release/platform-stack-1.0.2.tgz
     version: 1.0.2
-generated: "2025-12-05T11:37:05.536846775+05:30"
+generated: "2025-12-08T19:01:21.977231779+05:30"

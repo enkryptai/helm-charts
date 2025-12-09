@@ -291,7 +291,7 @@ meta:
 storage:
   enabled: true
   image:
-    repository: vpcdepoyment.azurecr.io/onprem/storage-api
+    repository: onprem/storage-api
     pullPolicy: IfNotPresent
     tag: "v1.19.1"
   imagePullSecrets: []
@@ -565,7 +565,7 @@ functions:
 minio:
   enabled: true
   image:
-    repository: vpcdepoyment.azurecr.io/onprem/minio
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/minio
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []

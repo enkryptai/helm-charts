@@ -3,7 +3,7 @@ kind: Cluster
 metadata:
   name: supabase-cluster
   annotations:
-    "helm.sh/hook-weight": "15"
+    "helm.sh/hook-weight": "20"
     "helm.sh/hook": post-install
 
 spec:

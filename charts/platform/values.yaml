@@ -9,81 +9,28 @@ backup:
 supabase:
     repository: supabase
     tag: 16.0.1
-    resources:
-      requests:
-        cpu: 0.5
-        memory: 1Gi
-      limits:
-        cpu: 1.5
-        memory: 2Gi
 openfga:
     repository: onprem/postgresql
     tag: 17.4-8
-    resources:
-      requests:
-        cpu: 0.5
-        memory: 1Gi
-      limits:
-        cpu: 1.5
-        memory: 2Gi
-
 databasekong:
   repository: onprem/postgres
   tag: 16
-  resources:
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
 migrationjob:
   repository: onprem/postgres
   tag: 15
-  resources:
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
 sensor: 
   natsURL: "nats://nats.enkryptai-stack:4222"
   jobversion: "dev-v1.1.76" 
   jobImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-job 
-  resources:
-    requests:
-      cpu: 30m
-      memory: 50Mi
-    limits:
-      cpu: 50m
-      memory: 50Mi
+
 adminpassword: 
   secretName: "opensearch-cred"
 clustername: "enkryptai-opensearch"
-
 opensearch:
   general:
     image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch:3.2.0"
-    resources:
-      limits:
-        cpu: 100m
-        memory: 512M
-      requests:
-        cpu: 100m
-        memory: 512M
   dashboards:
     image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch-dashboards:3.2.0"
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "512M"
-      limits:
-        cpu: "100m"
-        memory: "512M"
-    dashboardAnnotations: 
-      owner: enkryptai
-      cost-center: ""
   initHelper:
     image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/busybox:latest"
   security:
@@ -99,23 +46,15 @@ opensearch:
       hash: ""
 
 platform-core:
-
+  namespaces:
+    - name: argo-events
+      labels:
+        name: argo-events
   cloudnative-pg:
-    commonAnnotations: 
-      owner: enkryptai
-      cost-center: ""
     enabled: true
     image:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cloudnative-pg
       tag: "1.27.0"
-    resources:
-      requests:
-        cpu: 50m
-        memory: 100Mi
-      limits:
-        cpu: 200m
-        memory: 300Mi
-
   opensearch-operator:
     manager:
       image:
@@ -125,9 +64,6 @@ platform-core:
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/kube-rbac-proxy
         tag: "v0.15.0"
-    openSearchAnnotations:
-      owner: enkryptai
-      cost-center: ""
   gpu-operator:
     operator:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
@@ -137,72 +73,18 @@ platform-core:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator-init
         version: v24.9.0
-      annotations:
-        owner: enkryptai
-        cost-center: ""
     node-feature-discovery:
-      daemonsets:
-        annotations: 
-          owner: enkryptai
-          cost-center: ""
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/node-feature-discovery
         tag: v0.16.6
-      master:
-        resources:
-          limits:
-            cpu: 10m
-            memory: 100Mi
-          requests:
-            cpu: 5m
-            memory: 30Mi
-        deploymentAnnotations: 
-          owner: enkryptai
-          cost-center: ""
-      worker:
-        resources:
-          limits:
-            cpu: 10m
-            memory: 100Mi
-          requests:
-            cpu: 5m
-            memory: 30Mi
-        annotations: 
-          owner: enkryptai
-          cost-center: ""
-      gc:
-        resources:
-          limits:
-            cpu: 5m
-            memory: 1G
-          requests:
-            cpu: 1m
-            memory: 128Mi
-        deploymentAnnotations: 
-          owner: enkryptai
-          cost-center: ""
     validator:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator-validator
         version: v24.9.0
-        resources: 
-          limits:
-            cpu: 10m
-            memory: 50Mi
-          requests:
-            cpu: 5m
-            memory: 30Mi
     toolkit:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/container-toolkit
       version: v1.13.1-ubi8
-      resources: 
-        limits:
-          cpu: 5m
-          memory: 50Mi
-        requests:
-          cpu: 1m
-          memory: 30Mi
     dcgm:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/dcgm-exporter
@@ -211,13 +93,6 @@ platform-core:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-device-plugin
       version: v0.17.0-ubi9
-      resources: 
-        limits:
-          cpu: 1m
-          memory: 1Gi
-        requests:
-          cpu: 0.5m
-          memory: 500Mi
     driver: 
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/nvidia-driver
@@ -253,25 +128,11 @@ platform-core:
     devicePlugin:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-device-plugin
-      resources: 
-        limits:
-          cpu: 1.5m
-          memory: 1Gi
-        requests:
-          cpu: 1m
-          memory: 500Mi   
       version: "v0.17.0-ubi9"
     dcgmExporter:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/dcgm-exporter
       version: "3.3.8-3.6.0-ubuntu22.04"
-      resources: 
-        limits:
-          cpu: 1.5m
-          memory: 1Gi
-        requests:
-          cpu: 1m
-          memory: 500Mi
     migManager:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-mig-manager
@@ -291,29 +152,12 @@ platform-core:
   keydb:
     imageRepository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/keydb
     imageTag: x86_64_v6.3.2
-    resources: 
-      limits:
-        cpu: 30m
-        memory: 1Gi
-      requests:
-        cpu: 10m
-        memory: 500Mi
-    annotations:
-      owner: enkryptai
-      cost-center: ""
   nats:
     natsBox:
       container:
         image:
           repository: onprem/nats-box
           tag: 0.18.0
-      resources:
-        limits:
-          cpu: 1m
-          memory: 10Mi
-        requests:
-          cpu: 0.5m 
-          memory: 5Mi
     promExporter:
       image:
         repository: onprem/prometheus-nats-exporter
@@ -326,13 +170,6 @@ platform-core:
       image:
         repository: onprem/nats
         tag: 2.11.8-alpine
-      resources:
-        limits:
-          cpu: 1m
-          memory: 10Mi
-        requests:
-          cpu: 0.5m 
-          memory: 5Mi
     global: 
       image: 
         registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
@@ -343,45 +180,96 @@ platform-core:
         repository: onprem/jetstream-controller
         tag: 0.19.1
         registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
-    podAnnotations: 
-      owner: enkryptai 
-      cost-center: ""
-
     nats: 
       url: nats://nats:4222
-    resources:
-        limits:
-          cpu: 1m
-          memory: 10Mi
-        requests:
-          cpu: 0.5m 
-          memory: 5Mi
   argo-events: 
     namespaceOverride: "enkryptai-stack"
-    controller:
-      resources:
-        limits:
-          cpu: 1.5m 
-          memory: 100Mi
-        requests:
-          cpu: 1m
-          memory: 50Mi
+    configs:
+      nats:
+        versions:
+          - version: latest
+            natsStreamingImage: nats-streaming:latest
+            metricsExporterImage: natsio/prometheus-nats-exporter:latest
+          - version: 0.22.1
+            natsStreamingImage: nats-streaming:0.22.1
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.8.0
+      jetstream:
+        settings:
+          maxMemoryStore: -1
+          maxFileStore: -1
+        streamConfig:
+          maxMsgs: 1000000
+          maxAge: 72h
+          maxBytes: 1GB
+          replicas: 3
+          duplicates: 300s
+          retention: 0
+          discard: 0
+        versions:
+          - version: latest
+            natsImage: nats:2.10.10
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.14.0
+            configReloaderImage: natsio/nats-server-config-reloader:0.14.0
+            startCommand: /nats-server
+          - version: 2.8.1
+            natsImage: nats:2.8.1
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: /nats-server
+          - version: 2.8.1-alpine
+            natsImage: nats:2.8.1-alpine
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: nats-server
+          - version: 2.8.2
+            natsImage: nats:2.8.2
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: /nats-server
+          - version: 2.8.2-alpine
+            natsImage: nats:2.8.2-alpine
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: nats-server
+          - version: 2.9.1
+            natsImage: nats:2.9.1
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: /nats-server
+          - version: 2.9.12
+            natsImage: nats:2.9.12
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: /nats-server
+          - version: 2.9.16
+            natsImage: nats:2.9.16
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+            configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+            startCommand: /nats-server
+          - version: 2.10.10
+            natsImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats:2.10.10
+            metricsExporterImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/prometheus-nats-exporter:0.14.0
+            configReloaderImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats-server-config-reloader:0.14.0
+            startCommand: /nats-server
+    global:
+      image:
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/argo-events
+        tag: "v1.9.7"
+        imagePullPolicy: IfNotPresent
   argo-workflows:
     images:
       tag: ""
       pullPolicy: Always
       pullSecrets: []
-    singleNamespace: true
+    singleNamespace: false
     server:
       enabled: true
       baseHref: /
       image:
-        registry: quay.io
-        repository: argoproj/argocli
-        tag: ""
-      deploymentAnnotations: 
-        cost-center: ""
-        owner: enkryptai
+        registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+        repository: onprem/argocli
+        tag: "v3.7.1"
+      deploymentAnnotations: {}
       podAnnotations: {}
       podLabels: {}
       podSecurityContext: {}
@@ -394,18 +282,11 @@ platform-core:
         capabilities:
           drop:
             - ALL
-      resources:
-        limits:
-          cpu: 1.5m 
-          memory: 100Mi
-        requests:
-          cpu: 1m 
-          memory: 50Mi
     executor:
       image:
-        registry: quay.io
-        repository: argoproj/argoexec
-        tag: ""
+        registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+        repository: onprem/argoexec
+        tag: "v3.6.14"
         pullPolicy: ""
       resources: {}
       args: []
@@ -413,32 +294,13 @@ platform-core:
       securityContext: {}
     controller:
       image:
-        registry: quay.io
-        repository: argoproj/workflow-controller
-        tag: ""
+        registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+        repository: onprem/workflow-controller
+        tag: "v3.7.1"
       namespaceParallelism: "10"
       retentionPolicy:
         completed: 10
         failed: 3
         errored: 3
-      resources:
-        limits:
-          cpu: 1.5m 
-          memory: 100Mi
-        requests:
-          cpu: 1m 
-          memory: 50Mi
-      deploymentAnnotations: 
-        cost-center: ""
-        owner: enkryptai
 externalSecret:
   enabled: false
-
-commonAnnotations:
-    owner: enkryptai
-    cost-center: ""
-
-openSearchAnnotations:
-  owner: enkryptai
-  cost-center: ""
-

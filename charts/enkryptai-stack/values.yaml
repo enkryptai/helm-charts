@@ -13,6 +13,17 @@ supabaseinitdb:
 nginxalpine:
   repository: onprem/nginx
   tag: "alpine"
+  resources: 
+    requests:
+      cpu: 0.5m
+      memory: 10Mi 
+    limits: 
+      cpu: 1.5m
+      memory: 50Mi 
+  annotations:
+    owner: enkryptai
+    cost-center: ""
+  securityContext: {}
 openfgaSyncJob:
   repository: enkryptai-prod/openfga-sync
   tag: v1.3.0
@@ -23,16 +34,14 @@ busybox:
 frontend:
   enabled: true
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/frontend
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
-    tag: "dev-1764326836"
-
+    tag: "91d6764"
   serviceAccount:
     create: false
   podAnnotations:
     reloader.stakater.com/auto: "true"
-    owner: enkryptai
-    cost-center: ""
+
   podLabels:
     app: frontend
   securityContext:
@@ -45,15 +54,14 @@ frontend:
       drop:
         - ALL
     readOnlyRootFilesystem: true
-  annotations:
-    owner: enkryptai
-    cost-center: ""
   service:
     type: ClusterIP
     port: 3000
     targetPort: 3000
     name: http
-
+  annotations:
+      owner: enkryptai
+      cost-center: ""
   ingress:
     enabled: true
     className: nginx
@@ -61,14 +69,14 @@ frontend:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: app.anishs.xyz
+      - host: test.example.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: frontend-tls
         hosts:
-          - app.anishs.xyz
+          - test.example.com
 
   resources:
     limits:
@@ -111,7 +119,7 @@ frontend:
   affinity: {}
 
   configMap:
-    NEXT_PUBLIC_URL: "app.anishs.xyz"
+    NEXT_PUBLIC_URL: "test.example.com"
 
   externalSecret:
     enabled: false
@@ -125,12 +133,12 @@ gateway-kong:
   replicaCount: 2
   image:
     gateway:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway
-      tag: "c5cbd5f"
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
+      tag: "19a0eb3"
       pullPolicy: IfNotPresent
     sync:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway-sync
-      tag: "57df811"
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
+      tag: "19a0eb3"
       pullPolicy: IfNotPresent
     fluentBit:
       repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/fluent-bit
@@ -141,7 +149,25 @@ gateway-kong:
     cost-center: ""
   nameOverride: ""
   fullnameOverride: "gateway-kong"
-
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  syncPod:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    readOnlyRootFilesystem: true
   service:
     type: ClusterIP
     ports:
@@ -171,33 +197,15 @@ gateway-kong:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: api.anishs.xyz
+      - host: example.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: gateway-kong-tls
         hosts:
-          - api.anishs.xyz
-  podSecurityContext:
-    runAsNonRoot: true
-    runAsUser: 1001
-    runAsGroup: 1001
-    fsGroup: 1001
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
-  syncPod:
-    runAsNonRoot: true
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-      - ALL
-    runAsUser: 1000
-    runAsGroup: 1000
-    fsGroup: 1000
-    readOnlyRootFilesystem: true
+          - example.com
+
   resources:
     gateway:
       limits:
@@ -259,7 +267,6 @@ gateway-kong:
 
   affinity: {}
 
-  
 
 ################REDTEAMING###########################
 redteam-proxy: 
@@ -267,7 +274,7 @@ redteam-proxy:
   replicaCount: 2
 
   image:
-    repository:  188451452903.dkr.ecr.us-east-1.amazonaws.com/test/redteaming-test
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/test/redteaming-test
     pullPolicy: Always
     tag: "v1.0.0"
   securityContext:
@@ -288,6 +295,7 @@ redteam-proxy:
     reloader.stakater.com/auto: "true"
     owner: enkryptai
     cost-center: ""
+
   podLabels:
     app: redteam-proxy
 
@@ -359,13 +367,16 @@ guardrails:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrails
     pullPolicy: IfNotPresent
     tag: "aa2fdfb"
-
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
   nameOverride: ""
   fullnameOverride: "guardrails"
-
   podAnnotations:
     reloader.stakater.com/auto: "true"
-
+    owner: enkryptai
+    cost-center: ""
   podLabels:
     app: guardrails
 
@@ -433,14 +444,14 @@ supabase:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: auth.anishs.xyz
+      - host: example.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: supabase-tls
         hosts:
-          - auth.anishs.xyz
+          - example.com
 
 openfgaconfig:
   externalSecret:
@@ -474,8 +485,9 @@ openfga:
     annotations: {}
     name: ""
 
-  annotations: {} 
-
+  annotations:
+    owner: enkryptai
+    cost-center: "" 
   podAnnotations: {} 
   podExtraLabels: {}
 
@@ -517,7 +529,6 @@ openfga:
 
   podSecurityContext: {}
 
-  securityContext: {}
 
   initContainer:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
@@ -599,7 +610,13 @@ openfga:
     waitForMigrations: true
     migrationType: job
     migrations:
-      resources: {}
+      resources: 
+        requests:
+          cpu:  5m
+          memory: 500Mi
+        limits:
+          cpu: 10m
+          memory: 1Gi
       image:
         repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
         pullPolicy: Always

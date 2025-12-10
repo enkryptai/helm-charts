@@ -113,6 +113,10 @@ spec:
               name: gateway-kong-temp-config
         - name: fluent-bit
           image: "{{ .Values.image.fluentBit.repository }}:{{ .Values.image.fluentBit.tag }}"
+          {{- with .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12}}
+          {{- end }}
           envFrom:
             - secretRef:
                 name: elastic-env-secret

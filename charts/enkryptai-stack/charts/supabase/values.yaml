@@ -2,7 +2,9 @@ externalSecret:
   databaseSecretName: onprem
   databaseSecretRepoName: enkryptaivpc/on-prem
   secretStoreRefName: enkryptai-clustersecret-store
-  
+commonAnnotations: 
+  owner: enkryptai
+  cost-center: ""
 secret:
   onprem: 
     name: onprem
@@ -103,7 +105,10 @@ studio:
     httpGet:
       path: /api/profile
       port: 3000
-    initialDelaySeconds: 3
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
   readinessProbe: {}
   serviceAccount:
     create: true
@@ -119,7 +124,14 @@ studio:
     port: 3000
   environment:
     SUPABASE_TYPE: "studio"
-  resources: {}
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "500Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -156,7 +168,13 @@ auth:
     port: 9999
   environment:
     GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: "/auth/v1/verify"
-  resources: {}
+  resources:
+    requests:
+      cpu: "1m"
+      memory: "500Mi"
+    limits:
+      cpu: "5m"
+      memory: "1Gi"
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -193,7 +211,13 @@ rest:
   environment:
     PGRST_DB_ANON_ROLE: anon
     PGRST_APP_SETTINGS_JWT_EXP: 3600
-  resources: {}
+  resources:
+    requests:
+      cpu: "1m"
+      memory: "500Mi"
+    limits:
+      cpu: "5m"
+      memory: "1Gi"
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -240,7 +264,13 @@ realtime:
   envFrom:
     - secretRef:
         name: on-prem
-  resources: {}
+  resources:
+    requests:
+      cpu: "1m"
+      memory: "500Mi"
+    limits:
+      cpu: "5m"
+      memory: "1Gi"
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -277,7 +307,13 @@ meta:
     port: 8080
   environment:
     PG_META_PORT: "8080"
-  resources: {}
+  resources:
+    requests:
+      cpu: "1m"
+      memory: "500Mi"
+    limits:
+      cpu: "5m"
+      memory: "1Gi"
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -323,7 +359,13 @@ storage:
     GLOBAL_S3_PROTOCOL: http
     GLOBAL_S3_FORCE_PATH_STYLE: true
     AWS_DEFAULT_REGION: stub
-  resources: {}
+  resources:
+    requests:
+      cpu: "1m"
+      memory: "500Mi"
+    limits:
+      cpu: "5m"
+      memory: "1Gi"
   persistence:
     enabled: true
     storageClassName: "gp3-encrypted"
@@ -431,7 +473,13 @@ kong:
         paths:
           - path: /
             pathType: Prefix
-  resources: {}
+  resources:
+    requests:
+      cpu: "1m"
+      memory: "500Mi"
+    limits:
+      cpu: "5m"
+      memory: "1Gi"
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -451,7 +499,7 @@ analytics:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
+   
   readinessProbe: {}
   serviceAccount:
     create: true
@@ -565,13 +613,13 @@ functions:
 minio:
   enabled: true
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/minio
+    repository: onprem/minio
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
-  fullnameOverride: "minio"
+  fullnameOverride: ""
   livenessProbe: {}
   readinessProbe: {}
   serviceAccount:
@@ -614,3 +662,13 @@ postgresalpine:
 aws:
   repository: onprem/aws-cli
   tag: "2.27.55"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 100m 
+      memory: 200Mi
+minio:
+  repository: onprem/minio
+  tag: "latest"

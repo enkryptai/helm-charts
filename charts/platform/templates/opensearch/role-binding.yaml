@@ -3,7 +3,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: all-access
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "18"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -19,7 +19,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: own-index
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "18"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -35,7 +35,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: readall
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "18"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -51,7 +51,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: manage-snapshots
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "18"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -67,7 +67,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: dashboard-server
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "18"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:

@@ -14,10 +14,7 @@ namespaces:
   - name: argo-events
     labels:
       name: argo-events
-  - name: argo
-    labels:
-      name: argo
-  # - name: redteam-jobs
+  
 
 
 cloudnative-pg:

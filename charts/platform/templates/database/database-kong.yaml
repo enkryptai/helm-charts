@@ -2,8 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: db-check-and-grant
-  annotations:
-    "helm.sh/hook-weight": "17"
+    "helm.sh/hook-weight": "21"
     "helm.sh/hook": post-install
 spec:
   backoffLimit: 2

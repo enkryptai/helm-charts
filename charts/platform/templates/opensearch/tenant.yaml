@@ -3,7 +3,7 @@ kind: OpensearchTenant
 metadata:
   name: global
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "12"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -15,7 +15,7 @@ kind: OpensearchTenant
 metadata:
   name: admin
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "12"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:
@@ -27,7 +27,7 @@ kind: OpensearchTenant
 metadata:
   name: kibanaserver
   annotations:
-    "helm.sh/hook-weight": "7"
+    "helm.sh/hook-weight": "12"
     "helm.sh/hook": post-install
 spec:
   opensearchCluster:

@@ -5,7 +5,7 @@ global:
   imagePullPolicy: "IfNotPresent"
   externalSecret: false
   domain: "djj.enkryptai.com"
-  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+  registry: vpcdepoyment.azurecr.io
 
 supabaseinitdb:
   repository: onprem/supabase-initdb
@@ -23,9 +23,9 @@ busybox:
 frontend:
   enabled: true
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/frontend
+    repository: vpcdepoyment.azurecr.io/enkryptai-dev/frontend
     pullPolicy: IfNotPresent
-    tag: "91d6764"
+    tag: "dev-1764326836"
 
   serviceAccount:
     create: false
@@ -48,14 +48,14 @@ frontend:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: test.example.com
+      - host: app.anishs.xyz
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: frontend-tls
         hosts:
-          - test.example.com
+          - app.anishs.xyz
 
   resources:
     limits:
@@ -98,7 +98,7 @@ frontend:
   affinity: {}
 
   configMap:
-    NEXT_PUBLIC_URL: "test.example.com"
+    NEXT_PUBLIC_URL: "app.anishs.xyz"
 
   externalSecret:
     enabled: false
@@ -112,15 +112,15 @@ gateway-kong:
   replicaCount: 2
   image:
     gateway:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
-      tag: "19a0eb3"
+      repository: vpcdepoyment.azurecr.io/enkryptai-dev/gateway
+      tag: "c5cbd5f"
       pullPolicy: IfNotPresent
     sync:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
-      tag: "19a0eb3"
+      repository: vpcdepoyment.azurecr.io/enkryptai-dev/gateway-sync
+      tag: "57df811"
       pullPolicy: IfNotPresent
     fluentBit:
-      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/fluent-bit
+      repository: vpcdepoyment.azurecr.io/onprem/fluent-bit
       tag: "3.2.1"
       pullPolicy: IfNotPresent
 
@@ -156,14 +156,14 @@ gateway-kong:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: example.com
+      - host: api.anishs.xyz
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: gateway-kong-tls
         hosts:
-          - example.com
+          - api.anishs.xyz
 
   resources:
     gateway:
@@ -234,9 +234,9 @@ redteam-proxy:
   replicaCount: 2
 
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-proxy
+    repository: vpcdepoyment.azurecr.io/enkryptai-dev/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "da62bf6"
+    tag: "dev-v1.1.127-1764130957"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"
@@ -312,7 +312,7 @@ guardrails:
   enabled: false
   replicaCount: 1
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrails
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrails
     pullPolicy: IfNotPresent
     tag: "aa2fdfb"
 
@@ -389,14 +389,14 @@ supabase:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
-      - host: example.com
+      - host: auth.anishs.xyz
         paths:
           - path: /
             pathType: Prefix
     tls:
       - secretName: supabase-tls
         hosts:
-          - example.com
+          - auth.anishs.xyz
 
 openfgaconfig:
   externalSecret:
@@ -415,7 +415,7 @@ openfgaconfig:
 openfga:
   replicaCount: 1 
   image:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/openfga
+    repository: vpcdepoyment.azurecr.io/onprem/openfga
     pullPolicy: Always
     tag: "v1.8.9"
 
@@ -476,7 +476,7 @@ openfga:
   securityContext: {}
 
   initContainer:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
+    repository: vpcdepoyment.azurecr.io/onprem/k8s-wait-for
     tag: "v2.0"
     pullPolicy: IfNotPresent
 
@@ -557,7 +557,7 @@ openfga:
     migrations:
       resources: {}
       image:
-        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
+        repository: vpcdepoyment.azurecr.io/onprem/k8s-wait-for
         pullPolicy: Always
         tag: "v2.0"
 

@@ -1,6 +1,6 @@
 global: 
-  platform: azure
-  registry: vpcdepoyment.azurecr.io
+  platform: aws
+  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
 aws: 
   region: "us-west-2"
 backup: 
@@ -9,30 +9,83 @@ backup:
 supabase:
     repository: supabase
     tag: 16.0.1
+    resources:
+      requests:
+        cpu: 0.5
+        memory: 1Gi
+      limits:
+        cpu: 1.5
+        memory: 2Gi
 openfga:
     repository: onprem/postgresql
     tag: 17.4-8
+    resources:
+      requests:
+        cpu: 0.5
+        memory: 1Gi
+      limits:
+        cpu: 1.5
+        memory: 2Gi
+
 databasekong:
   repository: onprem/postgres
   tag: 16
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
 migrationjob:
   repository: onprem/postgres
   tag: 15
+  resources:
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
 sensor: 
   natsURL: "nats://nats.enkryptai-stack:4222"
   jobversion: "dev-v1.1.76" 
-  jobImage: vpcdepoyment.azurecr.io/enkryptai-dev/redteam-job 
-
+  jobImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-job 
+  resources:
+    requests:
+      cpu: 30m
+      memory: 50Mi
+    limits:
+      cpu: 50m
+      memory: 50Mi
 adminpassword: 
   secretName: "opensearch-cred"
 clustername: "enkryptai-opensearch"
+
 opensearch:
   general:
-    image: "vpcdepoyment.azurecr.io/onprem/opensearch:3.2.0"
+    image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch:3.2.0"
+    resources:
+      limits:
+        cpu: 100m
+        memory: 512M
+      requests:
+        cpu: 100m
+        memory: 512M
   dashboards:
-    image: "vpcdepoyment.azurecr.io/onprem/opensearch-dashboards:3.2.0"
+    image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch-dashboards:3.2.0"
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "512M"
+      limits:
+        cpu: "100m"
+        memory: "512M"
+    dashboardAnnotations: 
+      owner: enkryptai
+      cost-center: ""
   initHelper:
-    image: "vpcdepoyment.azurecr.io/onprem/busybox:latest"
+    image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/busybox:latest"
   security:
   securityconfig: false
   users:
@@ -46,118 +99,221 @@ opensearch:
       hash: ""
 
 platform-core:
-  namespaces:
-    - name: argo-events
-      labels:
-        name: argo-events
+
   cloudnative-pg:
+    commonAnnotations: 
+      owner: enkryptai
+      cost-center: ""
     enabled: true
     image:
-      repository: vpcdepoyment.azurecr.io/onprem/cloudnative-pg
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cloudnative-pg
       tag: "1.27.0"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 300Mi
+
   opensearch-operator:
     manager:
       image:
-        repository: vpcdepoyment.azurecr.io/onprem/opensearch-operator
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch-operator
         tag: "2.8.0"
     kubeRbacProxy:
       image:
-        repository: vpcdepoyment.azurecr.io/onprem/kube-rbac-proxy
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/kube-rbac-proxy
         tag: "v0.15.0"
+    openSearchAnnotations:
+      owner: enkryptai
+      cost-center: ""
   gpu-operator:
     operator:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/gpu-operator
       version: v24.9.0
       initContainer:
-        repository: vpcdepoyment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator-init
         version: v24.9.0
+      annotations:
+        owner: enkryptai
+        cost-center: ""
     node-feature-discovery:
+      daemonsets:
+        annotations: 
+          owner: enkryptai
+          cost-center: ""
       image:
-        repository: vpcdepoyment.azurecr.io/onprem/node-feature-discovery
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/node-feature-discovery
         tag: v0.16.6
+      master:
+        resources:
+          limits:
+            cpu: 10m
+            memory: 100Mi
+          requests:
+            cpu: 5m
+            memory: 30Mi
+        deploymentAnnotations: 
+          owner: enkryptai
+          cost-center: ""
+      worker:
+        resources:
+          limits:
+            cpu: 10m
+            memory: 100Mi
+          requests:
+            cpu: 5m
+            memory: 30Mi
+        annotations: 
+          owner: enkryptai
+          cost-center: ""
+      gc:
+        resources:
+          limits:
+            cpu: 5m
+            memory: 1G
+          requests:
+            cpu: 1m
+            memory: 128Mi
+        deploymentAnnotations: 
+          owner: enkryptai
+          cost-center: ""
     validator:
-        repository: vpcdepoyment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator-validator
         version: v24.9.0
+        resources: 
+          limits:
+            cpu: 10m
+            memory: 50Mi
+          requests:
+            cpu: 5m
+            memory: 30Mi
     toolkit:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/container-toolkit
       version: v1.13.1-ubi8
+      resources: 
+        limits:
+          cpu: 5m
+          memory: 50Mi
+        requests:
+          cpu: 1m
+          memory: 30Mi
     dcgm:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/dcgm-exporter
       version: 3.3.8-3.6.0-ubuntu22.04
     gfd:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-device-plugin
       version: v0.17.0-ubi9
+      resources: 
+        limits:
+          cpu: 1m
+          memory: 1Gi
+        requests:
+          cpu: 0.5m
+          memory: 500Mi
     driver: 
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/nvidia-driver
       version: 525.85.12-ubi9
       manager:
-        repository: vpcdepoyment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/k8s-driver-manager
         version: "v0.7.0"
     vgpuManager:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/vgpu-manager
       driverManager:
-        repository: vpcdepoyment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/k8s-driver-manager
         version: "v0.7.0"
     kataManager:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-kata-manager
       version: "v0.2.2"
     vfioManager:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/cuda
       version: "12.6.2-base-ubi9"
 
     vgpuDeviceManager:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/vgpu-device-manager
       version: "v0.2.8"
     ccManager:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-cc-manager
       version: "v0.1.1"
     devicePlugin:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-device-plugin
+      resources: 
+        limits:
+          cpu: 1.5m
+          memory: 1Gi
+        requests:
+          cpu: 1m
+          memory: 500Mi   
       version: "v0.17.0-ubi9"
     dcgmExporter:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/dcgm-exporter
       version: "3.3.8-3.6.0-ubuntu22.04"
+      resources: 
+        limits:
+          cpu: 1.5m
+          memory: 1Gi
+        requests:
+          cpu: 1m
+          memory: 500Mi
     migManager:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/k8s-mig-manager
       version: "v0.10.0-ubuntu20.04"
     nodeStatusExporter:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/gpu-operator-validator
       version: "v24.9.0"
     gdrcopy:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/gdrdrv
       version: "v2.4.1-2"
     sandboxDevicePlugin:
-      repository: vpcdepoyment.azurecr.io
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       image: onprem/kubevirt-gpu-device-plugin
       version: "v1.2.10"
   keydb:
-    imageRepository: vpcdepoyment.azurecr.io/onprem/keydb
+    imageRepository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/keydb
     imageTag: x86_64_v6.3.2
+    resources: 
+      limits:
+        cpu: 30m
+        memory: 1Gi
+      requests:
+        cpu: 10m
+        memory: 500Mi
+    annotations:
+      owner: enkryptai
+      cost-center: ""
   nats:
     natsBox:
       container:
         image:
           repository: onprem/nats-box
           tag: 0.18.0
+      resources:
+        limits:
+          cpu: 1m
+          memory: 10Mi
+        requests:
+          cpu: 0.5m 
+          memory: 5Mi
     promExporter:
       image:
         repository: onprem/prometheus-nats-exporter
@@ -170,18 +326,36 @@ platform-core:
       image:
         repository: onprem/nats
         tag: 2.11.8-alpine
+      resources:
+        limits:
+          cpu: 1m
+          memory: 10Mi
+        requests:
+          cpu: 0.5m 
+          memory: 5Mi
     global: 
       image: 
-        registry: vpcdepoyment.azurecr.io
+        registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
   nack: 
     jetstream:
       enabled: true
       image:
         repository: onprem/jetstream-controller
         tag: 0.19.1
-        registry: vpcdepoyment.azurecr.io
+        registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    podAnnotations: 
+      owner: enkryptai 
+      cost-center: ""
+
     nats: 
       url: nats://nats:4222
+    resources:
+        limits:
+          cpu: 1m
+          memory: 10Mi
+        requests:
+          cpu: 0.5m 
+          memory: 5Mi
   argo-events: 
     namespaceOverride: "enkryptai-stack"
     configs:
@@ -247,15 +421,23 @@ platform-core:
             configReloaderImage: natsio/nats-server-config-reloader:0.7.0
             startCommand: /nats-server
           - version: 2.10.10
-            natsImage: vpcdepoyment.azurecr.io/onprem/nats:2.10.10
-            metricsExporterImage: vpcdepoyment.azurecr.io/onprem/prometheus-nats-exporter:0.14.0
-            configReloaderImage: vpcdepoyment.azurecr.io/onprem/nats-server-config-reloader:0.14.0
+            natsImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats:2.10.10
+            metricsExporterImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/prometheus-nats-exporter:0.14.0
+            configReloaderImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats-server-config-reloader:0.14.0
             startCommand: /nats-server
     global:
       image:
-        repository: vpcdepoyment.azurecr.io/onprem/argo-events
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/argo-events
         tag: "v1.9.7"
         imagePullPolicy: IfNotPresent
+    controller:
+      resources:
+        limits:
+          cpu: 1.5m 
+          memory: 100Mi
+        requests:
+          cpu: 1m
+          memory: 50Mi
   argo-workflows:
     images:
       tag: ""
@@ -266,10 +448,12 @@ platform-core:
       enabled: true
       baseHref: /
       image:
-        registry: vpcdepoyment.azurecr.io
+        registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         repository: onprem/argocli
         tag: "v3.7.1"
-      deploymentAnnotations: {}
+      deploymentAnnotations: 
+        cost-center: ""
+        owner: enkryptai
       podAnnotations: {}
       podLabels: {}
       podSecurityContext: {}
@@ -282,9 +466,16 @@ platform-core:
         capabilities:
           drop:
             - ALL
+      resources:
+        limits:
+          cpu: 1.5m 
+          memory: 100Mi
+        requests:
+          cpu: 1m 
+          memory: 50Mi
     executor:
       image:
-        registry: vpcdepoyment.azurecr.io
+        registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         repository: onprem/argoexec
         tag: "v3.6.14"
         pullPolicy: ""
@@ -294,7 +485,7 @@ platform-core:
       securityContext: {}
     controller:
       image:
-        registry: vpcdepoyment.azurecr.io
+        registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         repository: onprem/workflow-controller
         tag: "v3.7.1"
       namespaceParallelism: "10"
@@ -302,5 +493,24 @@ platform-core:
         completed: 10
         failed: 3
         errored: 3
+      resources:
+        limits:
+          cpu: 1.5m 
+          memory: 100Mi
+        requests:
+          cpu: 1m 
+          memory: 50Mi
+      deploymentAnnotations: 
+        cost-center: ""
+        owner: enkryptai
 externalSecret:
   enabled: false
+
+commonAnnotations:
+    owner: enkryptai
+    cost-center: ""
+
+openSearchAnnotations:
+  owner: enkryptai
+  cost-center: ""
+

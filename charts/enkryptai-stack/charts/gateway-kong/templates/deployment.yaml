@@ -4,6 +4,10 @@ metadata:
   name: {{ include "gateway-kong.fullname" . }}
   labels:
     {{- include "gateway-kong.labels" . | nindent 4 }}
+  {{- with .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4}}
+  {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -40,6 +44,10 @@ spec:
         - name: gateway
           image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.gateway.pullPolicy }}
+          {{- with .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12}}
+          {{- end }}
           envFrom:
             - secretRef:
                 name: gateway-env-secret
@@ -65,8 +73,6 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.resources.gateway | nindent 12 }}
-          securityContext:
-            allowPrivilegeEscalation: true
           volumeMounts:
             - mountPath: /var/run/kong
               name: kong-prefix-vol
@@ -74,6 +80,10 @@ spec:
               name: kong-tmp-vol
         - name: gateway-deck-sync
           image: "{{ .Values.image.sync.repository }}:{{ .Values.image.sync.tag | default .Chart.AppVersion }}"
+          {{- with .Values.syncPod }}
+          securityContext:
+            {{- toYaml . | nindent 12}}
+          {{- end }}
           envFrom:
             - secretRef:
                 name: gateway-env-secret
@@ -98,14 +108,15 @@ spec:
               done
           resources:
             {{- toYaml .Values.resources.sync | nindent 12 }}
-          securityContext:
-            allowPrivilegeEscalation: true
-            runAsUser: 0
           volumeMounts:
             - mountPath: /mnt/deck
               name: gateway-kong-temp-config
         - name: fluent-bit
           image: "{{ .Values.image.fluentBit.repository }}:{{ .Values.image.fluentBit.tag }}"
+          {{- with .Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12}}
+          {{- end }}
           envFrom:
             - secretRef:
                 name: elastic-env-secret

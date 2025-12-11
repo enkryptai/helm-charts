@@ -1,9 +1,9 @@
 replicaCount: 2
 
 image:
-  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy
-  pullPolicy: IfNotPresent
-  tag: "dev"
+  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/test/redteaming-test
+  pullPolicy: Always
+  tag: "v1.0.0"
 
 nameOverride: ""
 fullnameOverride: "redteam-proxy"
@@ -23,7 +23,7 @@ strategy:
 service:
   type: ClusterIP
   port: 9091
-  targetPort: 9091
+  targetPort: 8443
   name: http
 
 env:
@@ -44,7 +44,7 @@ livenessProbe:
   enabled: true
   httpGet:
     path: /health
-    port: 9091
+    port: 8443
   initialDelaySeconds: 90
   timeoutSeconds: 10
 
@@ -52,7 +52,7 @@ readinessProbe:
   enabled: true
   httpGet:
     path: /health
-    port: 9091
+    port: 8443
   initialDelaySeconds: 30
   timeoutSeconds: 10
 

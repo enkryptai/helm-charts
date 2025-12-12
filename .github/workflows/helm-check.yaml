@@ -1,0 +1,152 @@
+name: Helm Chart CI Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'charts/**'
+      - '.github/workflows/helm-ci.yml'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.0'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run chart-testing (lint)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
+
+      - name: Create kind cluster
+        if: steps.list-changed.outputs.changed == 'true'
+        uses: helm/kind-action@v1.9.0
+
+      - name: Run chart-testing (install)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct install --target-branch ${{ github.event.repository.default_branch }}
+
+  template-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.0'
+
+      - name: Validate Helm templates
+        run: |
+          for chart in charts/*/; do
+            echo "Validating $chart"
+            helm template test "$chart" --debug
+            helm template test "$chart" --validate
+          done
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: charts/
+          framework: helm
+          soft_fail: true
+
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check chart version bump
+        run: |
+          for chart in charts/*/Chart.yaml; do
+            chart_dir=$(dirname "$chart")
+            chart_name=$(basename "$chart_dir")
+            
+            current_version=$(grep '^version:' "$chart" | awk '{print $2}')
+            
+            git checkout ${{ github.event.pull_request.base.ref }}
+            if [ -f "$chart" ]; then
+              base_version=$(grep '^version:' "$chart" | awk '{print $2}')
+              git checkout -
+              
+              if [ "$current_version" == "$base_version" ]; then
+                echo "::error::Chart version not bumped for $chart_name (still $current_version)"
+                exit 1
+              else
+                echo "✓ Chart $chart_name version bumped: $base_version -> $current_version"
+              fi
+            else
+              git checkout -
+              echo "✓ New chart detected: $chart_name (v$current_version)"
+            fi
+          done
+
+  documentation-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for README
+        run: |
+          for chart in charts/*/; do
+            if [ ! -f "${chart}README.md" ]; then
+              echo "::error::Missing README.md in $chart"
+              exit 1
+            fi
+          done
+
+      - name: Generate docs with helm-docs
+        run: |
+          curl -sSL https://github.com/norwoodj/helm-docs/releases/download/v1.11.0/helm-docs_1.11.0_Linux_x86_64.tar.gz | tar xz
+          ./helm-docs --dry-run
+
+  summary:
+    needs: [lint-and-test, template-validation, security-scan, version-check, documentation-check]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          if [[ "${{ needs.lint-and-test.result }}" != "success" ]] || \
+             [[ "${{ needs.template-validation.result }}" != "success" ]] || \
+             [[ "${{ needs.version-check.result }}" != "success" ]] || \
+             [[ "${{ needs.documentation-check.result }}" != "success" ]]; then
+            echo "One or more required checks failed"
+            exit 1
+          fi
+          echo "All checks passed successfully!"

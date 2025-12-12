@@ -1,59 +1,73 @@
-# Redteam Proxy Environment Variables
+# redteam-proxy
 
-This service requires the following environment variables.  
-Values are stored in remote secrets (`dev/enkryptai/redteaming`).
+![Version: 1.0.1](https://img.shields.io/badge/Version-1.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: dev](https://img.shields.io/badge/AppVersion-dev-informational?style=flat-square)
 
----
+A Helm chart for EnkryptAI RedTeam Proxy service
 
-## 🤖 AI & Model Providers
-- `OPENAI_API_KEY` – OpenAI API key
-- `HF_TOKEN` – HuggingFace token
-- `MISTRAL_API_KEY` – Mistral API key
-- `GROQ_API_KEY` – Groq API key
-- `GOOGLE_API_KEY` – Google API key
-- `SMALLESTAI_API_KEY` – SmallestAI API key
+## Requirements
 
----
+| Repository | Name | Version |
+|------------|------|---------|
+| file://./charts/sensors | sensors(sensors) | 1.0.0 |
 
-## ☁️ Cloud & Storage
-- `AZURE_STORAGE_CONNECTION_STRING` – Azure blob storage connection
-- `REGION` – Deployment region
-- `ACCESS_KEY_ID` – Cloud access key
-- `SECRET_ACCESS_KEY` – Cloud secret key
-- `ENDPOINT` – Cloud storage endpoint
-- `SUPABASE_URL` – Supabase instance URL
-- `SUPABASE_KEY` – Supabase API key
-- `SUPABASE_STORAGE_URL` – Supabase storage bucket URL
+## Values
 
----
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` |  |
+| autoscaling.enabled | bool | `true` |  |
+| autoscaling.maxReplicas | int | `3` |  |
+| autoscaling.minReplicas | int | `2` |  |
+| autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| env[0].name | string | `"NATS_URL"` |  |
+| env[0].value | string | `"nats://nats:4222"` |  |
+| env[1].name | string | `"IS_PROXY_MODE"` |  |
+| env[1].value | string | `"true"` |  |
+| externalSecret.enabled | bool | `true` |  |
+| externalSecret.repoName | string | `"enkryptai/redteam-proxy"` |  |
+| externalSecret.secretName | string | `"redteam-proxy-env-secret"` |  |
+| externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
+| fullnameOverride | string | `"redteam-proxy"` |  |
+| image.pullPolicy | string | `"IfNotPresent"` |  |
+| image.repository | string | `"188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy"` |  |
+| image.tag | string | `"fbab688"` |  |
+| ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
+| ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
+| ingress.className | string | `"nginx"` |  |
+| ingress.enabled | bool | `true` |  |
+| ingress.hosts[0].host | string | `"app.dev.enkryptai.com"` |  |
+| ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
+| ingress.name | string | `"redteam"` |  |
+| ingress.tls[0].hosts[0] | string | `"app.dev.enkryptai.com"` |  |
+| ingress.tls[0].secretName | string | `"frontend-tls"` |  |
+| livenessProbe.enabled | bool | `true` |  |
+| livenessProbe.httpGet.path | string | `"/health"` |  |
+| livenessProbe.httpGet.port | int | `9091` |  |
+| livenessProbe.initialDelaySeconds | int | `90` |  |
+| livenessProbe.timeoutSeconds | int | `10` |  |
+| nameOverride | string | `""` |  |
+| nodeSelector | object | `{}` |  |
+| podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| podLabels.app | string | `"redteam-proxy"` |  |
+| readinessProbe.enabled | bool | `true` |  |
+| readinessProbe.httpGet.path | string | `"/health"` |  |
+| readinessProbe.httpGet.port | int | `9091` |  |
+| readinessProbe.initialDelaySeconds | int | `30` |  |
+| readinessProbe.timeoutSeconds | int | `10` |  |
+| replicaCount | int | `2` |  |
+| resources.limits.cpu | string | `"500m"` |  |
+| resources.limits.memory | string | `"1Gi"` |  |
+| resources.requests.cpu | string | `"100m"` |  |
+| resources.requests.memory | string | `"300Mi"` |  |
+| service.name | string | `"http"` |  |
+| service.port | int | `9091` |  |
+| service.targetPort | int | `9091` |  |
+| service.type | string | `"ClusterIP"` |  |
+| strategy.rollingUpdate.maxSurge | string | `"50%"` |  |
+| strategy.rollingUpdate.maxUnavailable | string | `"50%"` |  |
+| strategy.type | string | `"RollingUpdate"` |  |
+| tolerations | list | `[]` |  |
 
-## 📦 Services & Infrastructure
-- `REDIS_URL` – Redis cache connection URL
-
----
-
-## 📡 Proxy Config
-- `PROXY_USERNAME`
-- `PROXY_PASSWORD`
-- `PROXY_SERVER`
-
----
-
-## 📢 Integrations
-- `SLACK_ALERT_ROOM_WEBHOOK_URL` – Slack alert channel webhook
-
----
-
-## 🔑 Auth & Tokens
-- `NEXTJS_AUTH_TOKEN` – Auth token for Next.js proxy
-- `SIERRA_TOKEN` – Sierra integration token
-- `SIERRA_RELEASE` – Sierra release version
-
----
-
-## Notes
-- Keep secrets in **AWS Secret Store** or Vault.
-- Never commit `.env` files with values.
-- For local dev, copy `.env.example` and fill manually.
-
-
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

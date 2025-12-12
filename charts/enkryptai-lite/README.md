@@ -1,87 +1,450 @@
+# enkryptai-lite
 
+![Version: 1.0.6](https://img.shields.io/badge/Version-1.0.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.6](https://img.shields.io/badge/AppVersion-1.0.6-informational?style=flat-square)
 
-# EnkryptAI Lite Installation Guide
+Enkryptai redteaming and guardrails
 
-This guide walks you through installing **EnkryptAI Lite** using Helm and applying necessary CRDs.
+## Requirements
 
----
+| Repository | Name | Version |
+|------------|------|---------|
+| file://./charts/argo-workflow | argo-workflow(argo-workflow) | 1.0.0 |
+| file://./charts/ingress-nginx | ingress-nginx(ingress-nginx) | 1.0.0 |
+| https://enapter.github.io/charts/ | keydb(keydb) | 0.48.0 |
+| https://helm.ngc.nvidia.com/nvidia | gpu-operator(gpu-operator) | v24.9.0 |
+| https://nats-io.github.io/k8s/helm/charts/ | nack(nack) | 0.29.2 |
+| https://nats-io.github.io/k8s/helm/charts | nats(nats) | 1.3.14 |
 
-## Prerequisites
+## Values
 
-- Kubernetes cluster (v1.20+ recommended)
-- Helm 3 installed
-- `kubectl` configured to access your cluster
-- This chart requires you to have Kubernetes secret for keys/bucket. Kindly check ../../test-enkrytai-lite-secret.yaml for example
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.bucketName | string | `"test-bucket-red"` |  |
+| global.bucketSecret | string | `"s3-cred"` |  |
+| global.platform | string | `"aws"` |  |
+| gpu-operator.enabled | bool | `true` |  |
+| gpu-operator.toolkit.version | string | `"v1.13.1-ubi8"` |  |
+| guardrails.affinity | object | `{}` |  |
+| guardrails.autoscaling.enabled | bool | `true` |  |
+| guardrails.autoscaling.maxReplicas | int | `2` |  |
+| guardrails.autoscaling.minReplicas | int | `1` |  |
+| guardrails.autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| guardrails.enabled | bool | `false` |  |
+| guardrails.externalSecret.enabled | bool | `false` |  |
+| guardrails.externalSecret.repoName | string | `"enkryptaivpc/guardrails"` |  |
+| guardrails.externalSecret.secretName | string | `"guardrails-env-secret"` |  |
+| guardrails.externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
+| guardrails.fullnameOverride | string | `"guardrails"` |  |
+| guardrails.image.pullPolicy | string | `"IfNotPresent"` |  |
+| guardrails.image.repository | string | `"188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/guardrails"` |  |
+| guardrails.image.tag | string | `"1754290105"` |  |
+| guardrails.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
+| guardrails.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
+| guardrails.ingress.className | string | `"nginx"` |  |
+| guardrails.ingress.enabled | bool | `true` |  |
+| guardrails.ingress.hosts[0].host | string | `"app.dev.enkryptai.com"` |  |
+| guardrails.ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| guardrails.ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
+| guardrails.ingress.tls[0].hosts[0] | string | `"app.dev.enkryptai.com"` |  |
+| guardrails.ingress.tls[0].secretName | string | `"frontend-tls"` |  |
+| guardrails.livenessProbe.enabled | bool | `true` |  |
+| guardrails.livenessProbe.httpGet.path | string | `"/health"` |  |
+| guardrails.livenessProbe.httpGet.port | int | `80` |  |
+| guardrails.livenessProbe.initialDelaySeconds | int | `90` |  |
+| guardrails.livenessProbe.timeoutSeconds | int | `10` |  |
+| guardrails.nameOverride | string | `""` |  |
+| guardrails.nodeSelector | object | `{}` |  |
+| guardrails.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| guardrails.podLabels.app | string | `"guardrails"` |  |
+| guardrails.readinessProbe.enabled | bool | `true` |  |
+| guardrails.readinessProbe.httpGet.path | string | `"/health"` |  |
+| guardrails.readinessProbe.httpGet.port | int | `80` |  |
+| guardrails.readinessProbe.initialDelaySeconds | int | `120` |  |
+| guardrails.readinessProbe.timeoutSeconds | int | `30` |  |
+| guardrails.replicaCount | int | `1` |  |
+| guardrails.resources.limits."nvidia.com/gpu" | int | `1` |  |
+| guardrails.resources.requests."nvidia.com/gpu" | int | `1` |  |
+| guardrails.service.name | string | `"http"` |  |
+| guardrails.service.port | int | `80` |  |
+| guardrails.service.targetPort | int | `80` |  |
+| guardrails.service.type | string | `"ClusterIP"` |  |
+| guardrails.strategy.rollingUpdate.maxSurge | int | `1` |  |
+| guardrails.strategy.rollingUpdate.maxUnavailable | int | `1` |  |
+| guardrails.strategy.type | string | `"RollingUpdate"` |  |
+| guardrails.tolerations | list | `[]` |  |
+| ingress-nginx.enabled | bool | `true` |  |
+| keydb.activeReplicas | string | `"yes"` |  |
+| keydb.annotations | object | `{}` |  |
+| keydb.appendonly | string | `"no"` |  |
+| keydb.enabled | bool | `true` |  |
+| keydb.existingSecret | string | `""` |  |
+| keydb.existingSecretPasswordKey | string | `"password"` |  |
+| keydb.exporter.enabled | bool | `false` |  |
+| keydb.exporter.extraArgs | list | `[]` |  |
+| keydb.exporter.imageRepository | string | `"oliver006/redis_exporter"` |  |
+| keydb.exporter.imageTag | string | `"v1.48.0-alpine"` |  |
+| keydb.exporter.livenessProbe.httpGet.path | string | `"/health"` |  |
+| keydb.exporter.livenessProbe.httpGet.port | string | `"redis-exporter"` |  |
+| keydb.exporter.port | int | `9121` |  |
+| keydb.exporter.portName | string | `"redis-exporter"` |  |
+| keydb.exporter.pullPolicy | string | `"IfNotPresent"` |  |
+| keydb.exporter.readinessProbe.httpGet.path | string | `"/health"` |  |
+| keydb.exporter.readinessProbe.httpGet.port | string | `"redis-exporter"` |  |
+| keydb.exporter.resources | object | `{}` |  |
+| keydb.exporter.scrapePath | string | `"/metrics"` |  |
+| keydb.exporter.securityContext | object | `{}` |  |
+| keydb.exporter.startupProbe.failureThreshold | int | `24` |  |
+| keydb.exporter.startupProbe.httpGet.path | string | `"/health"` |  |
+| keydb.exporter.startupProbe.httpGet.port | string | `"redis-exporter"` |  |
+| keydb.exporter.startupProbe.periodSeconds | int | `5` |  |
+| keydb.fullnameOverride | string | `"keydb"` |  |
+| keydb.imagePullPolicy | string | `"IfNotPresent"` |  |
+| keydb.imageRepository | string | `"eqalpha/keydb"` |  |
+| keydb.imageTag | string | `"x86_64_v6.3.2"` |  |
+| keydb.internalPort | int | `6379` |  |
+| keydb.internalPortName | string | `"keydb"` |  |
+| keydb.keydb.securityContext | object | `{}` |  |
+| keydb.lifecycle | object | `{}` |  |
+| keydb.livenessProbe.custom | object | `{}` |  |
+| keydb.livenessProbe.enabled | bool | `true` |  |
+| keydb.livenessProbe.failureThreshold | int | `5` |  |
+| keydb.livenessProbe.initialDelaySeconds | int | `20` |  |
+| keydb.livenessProbe.periodSeconds | int | `5` |  |
+| keydb.livenessProbe.successThreshold | int | `1` |  |
+| keydb.livenessProbe.timeoutSeconds | int | `5` |  |
+| keydb.loadBalancer.annotations | object | `{}` |  |
+| keydb.loadBalancer.enabled | bool | `false` |  |
+| keydb.loadBalancer.extraSpec | object | `{}` |  |
+| keydb.multiMaster | string | `"yes"` |  |
+| keydb.nameOverride | string | `"keydb"` |  |
+| keydb.nodes | int | `3` |  |
+| keydb.password | string | `""` |  |
+| keydb.persistentVolume.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| keydb.persistentVolume.emptyDir | object | `{}` |  |
+| keydb.persistentVolume.enabled | bool | `true` |  |
+| keydb.persistentVolume.selector | object | `{}` |  |
+| keydb.persistentVolume.size | string | `"1Gi"` |  |
+| keydb.podDisruptionBudget.enabled | bool | `true` |  |
+| keydb.podDisruptionBudget.maxUnavailable | int | `100` |  |
+| keydb.port | int | `6379` |  |
+| keydb.portName | string | `"server"` |  |
+| keydb.protectedMode | string | `"no"` |  |
+| keydb.readinessProbe.custom | object | `{}` |  |
+| keydb.readinessProbe.enabled | bool | `true` |  |
+| keydb.readinessProbe.failureThreshold | int | `5` |  |
+| keydb.readinessProbe.initialDelaySeconds | int | `20` |  |
+| keydb.readinessProbe.periodSeconds | int | `5` |  |
+| keydb.readinessProbe.successThreshold | int | `1` |  |
+| keydb.readinessProbe.timeoutSeconds | int | `1` |  |
+| keydb.readinessProbeRandomUuid | string | `"90f717dd-0e68-43b8-9363-fddaad00d6c9"` |  |
+| keydb.resources | object | `{}` |  |
+| keydb.scripts.cleanupCoredumps.enabled | bool | `false` |  |
+| keydb.scripts.cleanupCoredumps.minutes | int | `1440` |  |
+| keydb.scripts.cleanupTempfiles.enabled | bool | `true` |  |
+| keydb.scripts.cleanupTempfiles.minutes | int | `90` |  |
+| keydb.scripts.enabled | bool | `false` |  |
+| keydb.scripts.resources | object | `{}` |  |
+| keydb.scripts.securityContext | object | `{}` |  |
+| keydb.securityContext | object | `{}` |  |
+| keydb.service.annotations | object | `{}` |  |
+| keydb.service.appProtocol.enabled | bool | `false` |  |
+| keydb.serviceAccount.create | bool | `true` |  |
+| keydb.serviceAccount.enabled | bool | `false` |  |
+| keydb.serviceAccount.extraSpec | object | `{}` |  |
+| keydb.serviceAccount.name | string | `""` |  |
+| keydb.serviceMonitor.annotations | string | `nil` |  |
+| keydb.serviceMonitor.enabled | bool | `false` |  |
+| keydb.serviceMonitor.interval | string | `"30s"` |  |
+| keydb.serviceMonitor.labels | string | `nil` |  |
+| keydb.startupProbe.custom | object | `{}` |  |
+| keydb.startupProbe.enabled | bool | `true` |  |
+| keydb.startupProbe.failureThreshold | int | `24` |  |
+| keydb.startupProbe.periodSeconds | int | `5` |  |
+| keydb.startupProbe.timeoutSeconds | int | `1` |  |
+| keydb.threads | int | `2` |  |
+| nack.enabled | bool | `true` |  |
+| nack.jetstream.tls.enabled | bool | `false` |  |
+| nack.nats.url | string | `"nats://nats:4222"` |  |
+| nats.config.cluster.enabled | bool | `false` |  |
+| nats.config.cluster.merge | object | `{}` |  |
+| nats.config.cluster.patch | list | `[]` |  |
+| nats.config.cluster.port | int | `6222` |  |
+| nats.config.cluster.replicas | int | `3` |  |
+| nats.config.cluster.routeURLs.k8sClusterDomain | string | `"cluster.local"` |  |
+| nats.config.cluster.routeURLs.password | string | `nil` |  |
+| nats.config.cluster.routeURLs.useFQDN | bool | `false` |  |
+| nats.config.cluster.routeURLs.user | string | `nil` |  |
+| nats.config.cluster.tls.cert | string | `"tls.crt"` |  |
+| nats.config.cluster.tls.dir | string | `"/etc/nats-certs/cluster"` |  |
+| nats.config.cluster.tls.enabled | bool | `false` |  |
+| nats.config.cluster.tls.key | string | `"tls.key"` |  |
+| nats.config.cluster.tls.merge | object | `{}` |  |
+| nats.config.cluster.tls.patch | list | `[]` |  |
+| nats.config.cluster.tls.secretName | string | `nil` |  |
+| nats.config.gateway.enabled | bool | `false` |  |
+| nats.config.gateway.merge | object | `{}` |  |
+| nats.config.gateway.patch | list | `[]` |  |
+| nats.config.gateway.port | int | `7222` |  |
+| nats.config.gateway.tls.cert | string | `"tls.crt"` |  |
+| nats.config.gateway.tls.dir | string | `"/etc/nats-certs/gateway"` |  |
+| nats.config.gateway.tls.enabled | bool | `false` |  |
+| nats.config.gateway.tls.key | string | `"tls.key"` |  |
+| nats.config.gateway.tls.merge | object | `{}` |  |
+| nats.config.gateway.tls.patch | list | `[]` |  |
+| nats.config.gateway.tls.secretName | string | `nil` |  |
+| nats.config.jetstream.enabled | bool | `true` |  |
+| nats.config.jetstream.fileStore.dir | string | `"/data"` |  |
+| nats.config.jetstream.fileStore.enabled | bool | `true` |  |
+| nats.config.jetstream.fileStore.maxSize | string | `nil` |  |
+| nats.config.jetstream.fileStore.pvc.enabled | bool | `true` |  |
+| nats.config.jetstream.fileStore.pvc.merge | object | `{}` |  |
+| nats.config.jetstream.fileStore.pvc.name | string | `nil` |  |
+| nats.config.jetstream.fileStore.pvc.patch | list | `[]` |  |
+| nats.config.jetstream.fileStore.pvc.size | string | `"20Gi"` |  |
+| nats.config.jetstream.fileStore.pvc.storageClassName | string | `nil` |  |
+| nats.config.jetstream.memoryStore.enabled | bool | `false` |  |
+| nats.config.jetstream.memoryStore.maxSize | string | `"1Gi"` |  |
+| nats.config.jetstream.merge | object | `{}` |  |
+| nats.config.jetstream.patch | list | `[]` |  |
+| nats.config.leafnodes.enabled | bool | `false` |  |
+| nats.config.leafnodes.merge | object | `{}` |  |
+| nats.config.leafnodes.patch | list | `[]` |  |
+| nats.config.leafnodes.port | int | `7422` |  |
+| nats.config.leafnodes.tls.cert | string | `"tls.crt"` |  |
+| nats.config.leafnodes.tls.dir | string | `"/etc/nats-certs/leafnodes"` |  |
+| nats.config.leafnodes.tls.enabled | bool | `false` |  |
+| nats.config.leafnodes.tls.key | string | `"tls.key"` |  |
+| nats.config.leafnodes.tls.merge | object | `{}` |  |
+| nats.config.leafnodes.tls.patch | list | `[]` |  |
+| nats.config.leafnodes.tls.secretName | string | `nil` |  |
+| nats.config.merge | object | `{}` |  |
+| nats.config.monitor.enabled | bool | `true` |  |
+| nats.config.monitor.port | int | `8222` |  |
+| nats.config.monitor.tls.enabled | bool | `false` |  |
+| nats.config.mqtt.enabled | bool | `false` |  |
+| nats.config.mqtt.merge | object | `{}` |  |
+| nats.config.mqtt.patch | list | `[]` |  |
+| nats.config.mqtt.port | int | `1883` |  |
+| nats.config.mqtt.tls.cert | string | `"tls.crt"` |  |
+| nats.config.mqtt.tls.dir | string | `"/etc/nats-certs/mqtt"` |  |
+| nats.config.mqtt.tls.enabled | bool | `false` |  |
+| nats.config.mqtt.tls.key | string | `"tls.key"` |  |
+| nats.config.mqtt.tls.merge | object | `{}` |  |
+| nats.config.mqtt.tls.patch | list | `[]` |  |
+| nats.config.mqtt.tls.secretName | string | `nil` |  |
+| nats.config.nats.port | int | `4222` |  |
+| nats.config.nats.tls.cert | string | `"tls.crt"` |  |
+| nats.config.nats.tls.dir | string | `"/etc/nats-certs/nats"` |  |
+| nats.config.nats.tls.enabled | bool | `false` |  |
+| nats.config.nats.tls.key | string | `"tls.key"` |  |
+| nats.config.nats.tls.merge | object | `{}` |  |
+| nats.config.nats.tls.patch | list | `[]` |  |
+| nats.config.nats.tls.secretName | string | `nil` |  |
+| nats.config.patch | list | `[]` |  |
+| nats.config.profiling.enabled | bool | `false` |  |
+| nats.config.profiling.port | int | `65432` |  |
+| nats.config.resolver.dir | string | `"/data/resolver"` |  |
+| nats.config.resolver.enabled | bool | `false` |  |
+| nats.config.resolver.merge | object | `{}` |  |
+| nats.config.resolver.patch | list | `[]` |  |
+| nats.config.resolver.pvc.enabled | bool | `true` |  |
+| nats.config.resolver.pvc.merge | object | `{}` |  |
+| nats.config.resolver.pvc.name | string | `nil` |  |
+| nats.config.resolver.pvc.patch | list | `[]` |  |
+| nats.config.resolver.pvc.size | string | `"1Gi"` |  |
+| nats.config.resolver.pvc.storageClassName | string | `nil` |  |
+| nats.config.serverNamePrefix | string | `""` |  |
+| nats.config.websocket.enabled | bool | `false` |  |
+| nats.config.websocket.ingress.className | string | `nil` |  |
+| nats.config.websocket.ingress.enabled | bool | `false` |  |
+| nats.config.websocket.ingress.hosts | list | `[]` |  |
+| nats.config.websocket.ingress.merge | object | `{}` |  |
+| nats.config.websocket.ingress.name | string | `nil` |  |
+| nats.config.websocket.ingress.patch | list | `[]` |  |
+| nats.config.websocket.ingress.path | string | `"/"` |  |
+| nats.config.websocket.ingress.pathType | string | `"Exact"` |  |
+| nats.config.websocket.ingress.tlsSecretName | string | `nil` |  |
+| nats.config.websocket.merge | object | `{}` |  |
+| nats.config.websocket.patch | list | `[]` |  |
+| nats.config.websocket.port | int | `8080` |  |
+| nats.config.websocket.tls.cert | string | `"tls.crt"` |  |
+| nats.config.websocket.tls.dir | string | `"/etc/nats-certs/websocket"` |  |
+| nats.config.websocket.tls.enabled | bool | `false` |  |
+| nats.config.websocket.tls.key | string | `"tls.key"` |  |
+| nats.config.websocket.tls.merge | object | `{}` |  |
+| nats.config.websocket.tls.patch | list | `[]` |  |
+| nats.config.websocket.tls.secretName | string | `nil` |  |
+| nats.configMap.merge | object | `{}` |  |
+| nats.configMap.name | string | `nil` |  |
+| nats.configMap.patch | list | `[]` |  |
+| nats.container.env | object | `{}` |  |
+| nats.container.image.digest | string | `nil` |  |
+| nats.container.image.fullImageName | string | `nil` |  |
+| nats.container.image.pullPolicy | string | `nil` |  |
+| nats.container.image.registry | string | `nil` |  |
+| nats.container.image.repository | string | `"nats"` |  |
+| nats.container.image.tag | string | `"2.11.8-alpine"` |  |
+| nats.container.merge | object | `{}` |  |
+| nats.container.patch | list | `[]` |  |
+| nats.container.ports.cluster | object | `{}` |  |
+| nats.container.ports.gateway | object | `{}` |  |
+| nats.container.ports.leafnodes | object | `{}` |  |
+| nats.container.ports.monitor | object | `{}` |  |
+| nats.container.ports.mqtt | object | `{}` |  |
+| nats.container.ports.nats | object | `{}` |  |
+| nats.container.ports.profiling | object | `{}` |  |
+| nats.container.ports.websocket | object | `{}` |  |
+| nats.enabled | bool | `true` |  |
+| nats.extraResources | list | `[]` |  |
+| nats.fullnameOverride | string | `"nats"` |  |
+| nats.global.image.pullPolicy | string | `nil` |  |
+| nats.global.image.pullSecretNames | list | `[]` |  |
+| nats.global.image.registry | string | `nil` |  |
+| nats.global.labels | object | `{}` |  |
+| nats.headlessService.merge | object | `{}` |  |
+| nats.headlessService.name | string | `nil` |  |
+| nats.headlessService.patch | list | `[]` |  |
+| nats.nameOverride | string | `"nats"` |  |
+| nats.namespaceOverride | string | `nil` |  |
+| nats.natsBox.container.env | object | `{}` |  |
+| nats.natsBox.container.image.digest | string | `nil` |  |
+| nats.natsBox.container.image.fullImageName | string | `nil` |  |
+| nats.natsBox.container.image.pullPolicy | string | `nil` |  |
+| nats.natsBox.container.image.registry | string | `nil` |  |
+| nats.natsBox.container.image.repository | string | `"natsio/nats-box"` |  |
+| nats.natsBox.container.image.tag | string | `"0.18.0"` |  |
+| nats.natsBox.container.merge | object | `{}` |  |
+| nats.natsBox.container.patch | list | `[]` |  |
+| nats.natsBox.contexts.default.creds.contents | string | `nil` |  |
+| nats.natsBox.contexts.default.creds.dir | string | `nil` |  |
+| nats.natsBox.contexts.default.creds.key | string | `"nats.creds"` |  |
+| nats.natsBox.contexts.default.creds.secretName | string | `nil` |  |
+| nats.natsBox.contexts.default.merge | object | `{}` |  |
+| nats.natsBox.contexts.default.nkey.contents | string | `nil` |  |
+| nats.natsBox.contexts.default.nkey.dir | string | `nil` |  |
+| nats.natsBox.contexts.default.nkey.key | string | `"nats.nk"` |  |
+| nats.natsBox.contexts.default.nkey.secretName | string | `nil` |  |
+| nats.natsBox.contexts.default.patch | list | `[]` |  |
+| nats.natsBox.contexts.default.tls.cert | string | `"tls.crt"` |  |
+| nats.natsBox.contexts.default.tls.dir | string | `nil` |  |
+| nats.natsBox.contexts.default.tls.key | string | `"tls.key"` |  |
+| nats.natsBox.contexts.default.tls.secretName | string | `nil` |  |
+| nats.natsBox.defaultContextName | string | `"default"` |  |
+| nats.natsBox.enabled | bool | `true` |  |
+| nats.podDisruptionBudget.enabled | bool | `true` |  |
+| nats.podDisruptionBudget.merge | object | `{}` |  |
+| nats.podDisruptionBudget.name | string | `nil` |  |
+| nats.podDisruptionBudget.patch | list | `[]` |  |
+| nats.podTemplate.configChecksumAnnotation | bool | `true` |  |
+| nats.podTemplate.merge | object | `{}` |  |
+| nats.podTemplate.patch | list | `[]` |  |
+| nats.podTemplate.topologySpreadConstraints | object | `{}` |  |
+| nats.promExporter.enabled | bool | `true` |  |
+| nats.promExporter.env | object | `{}` |  |
+| nats.promExporter.image.digest | string | `nil` |  |
+| nats.promExporter.image.fullImageName | string | `nil` |  |
+| nats.promExporter.image.pullPolicy | string | `nil` |  |
+| nats.promExporter.image.registry | string | `nil` |  |
+| nats.promExporter.image.repository | string | `"natsio/prometheus-nats-exporter"` |  |
+| nats.promExporter.image.tag | string | `"0.17.3"` |  |
+| nats.promExporter.merge | object | `{}` |  |
+| nats.promExporter.monitorDomain | string | `"localhost"` |  |
+| nats.promExporter.patch | list | `[]` |  |
+| nats.promExporter.podMonitor.enabled | bool | `false` |  |
+| nats.promExporter.podMonitor.merge | object | `{}` |  |
+| nats.promExporter.podMonitor.name | string | `nil` |  |
+| nats.promExporter.podMonitor.patch | list | `[]` |  |
+| nats.promExporter.port | int | `7777` |  |
+| nats.reloader.enabled | bool | `true` |  |
+| nats.reloader.env | object | `{}` |  |
+| nats.reloader.image.digest | string | `nil` |  |
+| nats.reloader.image.fullImageName | string | `nil` |  |
+| nats.reloader.image.pullPolicy | string | `nil` |  |
+| nats.reloader.image.registry | string | `nil` |  |
+| nats.reloader.image.repository | string | `"natsio/nats-server-config-reloader"` |  |
+| nats.reloader.image.tag | string | `"0.19.1"` |  |
+| nats.reloader.merge | object | `{}` |  |
+| nats.reloader.natsVolumeMountPrefixes[0] | string | `"/etc/"` |  |
+| nats.reloader.patch | list | `[]` |  |
+| nats.service.enabled | bool | `true` |  |
+| nats.service.merge | object | `{}` |  |
+| nats.service.name | string | `nil` |  |
+| nats.service.patch | list | `[]` |  |
+| nats.service.ports.cluster.enabled | bool | `false` |  |
+| nats.service.ports.gateway.enabled | bool | `false` |  |
+| nats.service.ports.leafnodes.enabled | bool | `true` |  |
+| nats.service.ports.monitor.enabled | bool | `false` |  |
+| nats.service.ports.mqtt.enabled | bool | `true` |  |
+| nats.service.ports.nats.enabled | bool | `true` |  |
+| nats.service.ports.profiling.enabled | bool | `false` |  |
+| nats.service.ports.websocket.enabled | bool | `true` |  |
+| nats.serviceAccount.enabled | bool | `false` |  |
+| nats.serviceAccount.merge | object | `{}` |  |
+| nats.serviceAccount.name | string | `nil` |  |
+| nats.serviceAccount.patch | list | `[]` |  |
+| nats.statefulSet.merge | object | `{}` |  |
+| nats.statefulSet.name | string | `nil` |  |
+| nats.statefulSet.patch | list | `[]` |  |
+| nats.tlsCA.configMapName | string | `nil` |  |
+| nats.tlsCA.dir | string | `"/etc/nats-ca-cert"` |  |
+| nats.tlsCA.enabled | bool | `false` |  |
+| nats.tlsCA.key | string | `"ca.crt"` |  |
+| nats.tlsCA.secretName | string | `nil` |  |
+| redteam-proxy.affinity | object | `{}` |  |
+| redteam-proxy.autoscaling.enabled | bool | `true` |  |
+| redteam-proxy.autoscaling.maxReplicas | int | `3` |  |
+| redteam-proxy.autoscaling.minReplicas | int | `2` |  |
+| redteam-proxy.autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| redteam-proxy.enabled | bool | `false` |  |
+| redteam-proxy.env[0].name | string | `"NATS_URL"` |  |
+| redteam-proxy.env[0].value | string | `"nats://nats:4222"` |  |
+| redteam-proxy.env[1].name | string | `"IS_PROXY_MODE"` |  |
+| redteam-proxy.env[1].value | string | `"true"` |  |
+| redteam-proxy.externalSecret.enabled | bool | `false` |  |
+| redteam-proxy.externalSecret.repoName | string | `"enkryptaivpc/redteam-proxy"` |  |
+| redteam-proxy.externalSecret.secretName | string | `"redteam-proxy-env-secret"` |  |
+| redteam-proxy.externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
+| redteam-proxy.fullnameOverride | string | `"redteam-proxy"` |  |
+| redteam-proxy.image.pullPolicy | string | `"IfNotPresent"` |  |
+| redteam-proxy.image.repository | string | `"188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy"` |  |
+| redteam-proxy.image.tag | string | `"fbab688"` |  |
+| redteam-proxy.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
+| redteam-proxy.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
+| redteam-proxy.ingress.className | string | `"nginx"` |  |
+| redteam-proxy.ingress.enabled | bool | `true` |  |
+| redteam-proxy.ingress.hosts[0].host | string | `"app.dev.enkryptai.com"` |  |
+| redteam-proxy.ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| redteam-proxy.ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
+| redteam-proxy.ingress.name | string | `"redteam"` |  |
+| redteam-proxy.ingress.tls[0].hosts[0] | string | `"app.dev.enkryptai.com"` |  |
+| redteam-proxy.ingress.tls[0].secretName | string | `"frontend-tls"` |  |
+| redteam-proxy.livenessProbe.enabled | bool | `true` |  |
+| redteam-proxy.livenessProbe.httpGet.path | string | `"/health"` |  |
+| redteam-proxy.livenessProbe.httpGet.port | int | `9091` |  |
+| redteam-proxy.livenessProbe.initialDelaySeconds | int | `90` |  |
+| redteam-proxy.livenessProbe.timeoutSeconds | int | `10` |  |
+| redteam-proxy.nameOverride | string | `""` |  |
+| redteam-proxy.nodeSelector | object | `{}` |  |
+| redteam-proxy.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| redteam-proxy.podLabels.app | string | `"redteam-proxy"` |  |
+| redteam-proxy.readinessProbe.enabled | bool | `true` |  |
+| redteam-proxy.readinessProbe.httpGet.path | string | `"/health"` |  |
+| redteam-proxy.readinessProbe.httpGet.port | int | `9091` |  |
+| redteam-proxy.readinessProbe.initialDelaySeconds | int | `30` |  |
+| redteam-proxy.readinessProbe.timeoutSeconds | int | `10` |  |
+| redteam-proxy.replicaCount | int | `2` |  |
+| redteam-proxy.resources.limits.cpu | string | `"500m"` |  |
+| redteam-proxy.resources.limits.memory | string | `"1Gi"` |  |
+| redteam-proxy.resources.requests.cpu | string | `"100m"` |  |
+| redteam-proxy.resources.requests.memory | string | `"300Mi"` |  |
+| redteam-proxy.service.name | string | `"http"` |  |
+| redteam-proxy.service.port | int | `9091` |  |
+| redteam-proxy.service.targetPort | int | `9091` |  |
+| redteam-proxy.service.type | string | `"ClusterIP"` |  |
+| redteam-proxy.strategy.rollingUpdate.maxSurge | string | `"50%"` |  |
+| redteam-proxy.strategy.rollingUpdate.maxUnavailable | string | `"50%"` |  |
+| redteam-proxy.strategy.type | string | `"RollingUpdate"` |  |
+| redteam-proxy.tolerations | list | `[]` |  |
 
----
-
-## Step 1: Add Helm Repository
-
-Add the Helm repository (replace `<repo_name>` and `<repo_url>` with the actual values):
-
-```bash
-helm repo add enkryptai https://enkryptai.github.io/helm-charts/
-helm repo update
-helm search repo enkryptai
-kubectl create ns enkryptai-stack
-````
-
----
-
-## Step 2: Apply Custom Resource Definitions (CRDs) (Optional)
-
-Apply the required CRDs only if you get error when installing below helm chart:
-
-```bash
-kubectl apply -f crds/
-```
-
----
-
-## Step 3: Install or Upgrade EnkryptAI Lite
-
-Install or upgrade the Helm release:
-
-**NOTE: Kindly use the latest release. Before apply ensure below secrets are present** 
-1. Name: `s3-cred` in Namespace: `enkryptai-stack`
-2. Name: `guardrails-env-secret` in Namespace: `enkryptai-stack`
-3. Name: `redteam-proxy-env-secret` in Namespace: `enkryptai-stack` and `redteam-jobs`
-
-Don't forget to pass `ENKRYPTAI_LITE_MODE: "true"` in `redteam-proxy-env-secret` to enabled EnkryptAI-LITE 
-
-Please ensure there is no trailing whitespace or Newline in secret
-
-Kindly update values file before applying
-
-```bash
-helm upgrade --install enkryptai-lite enkryptai/enkryptai-lite -n enkryptai-stack  --debug -f values.yaml
-```
-
-* `enkryptai-lite`: Name of the Helm release
-* `enkryptai-stack`: Namespace to deploy the release
-* `.`: Path to the Helm chart (current directory)
-* `--debug`: Enables debug output for troubleshooting
-
----
-
-## Step 4: Verify Installation
-
-Check that all pods and resources are running:
-
-```bash
-kubectl get all -n enkryptai-stack
-```
-
----
-
-## Notes
-
-* Ensure the namespace `enkryptai-stack` exists or create it:
-
-```bash
-kubectl create namespace enkryptai-stack
-```
-
-* Applying CRDs first is required; otherwise, the Helm chart may fail to install.
-
-
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

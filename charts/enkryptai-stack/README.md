@@ -1,63 +1,445 @@
-# Installation Steps
+# enkryptai-stack
 
-### 1️⃣ Install the **Platform Chart**
+![Version: 1.1.2](https://img.shields.io/badge/Version-1.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.2](https://img.shields.io/badge/AppVersion-1.1.2-informational?style=flat-square)
 
-## Note
+A Helm chart for Kubernetes
 
-The **values file** will be provided by the **EnkryptAI team**.
-Before installing any Helm chart, please ensure that all **required Kubernetes Secrets** are already created and available in the target namespace.
-For more info check https://enkryptai.github.io/helm-charts/
+## Requirements
 
-```bash
-helm repo add enkryptai  https://enkryptai.github.io/helm-charts/
-helm repo update
-helm upgrade --install platform enkryptai/platform-stack -n enkryptai-stack -f values.yaml --timeout 15m
-```
+| Repository | Name | Version |
+|------------|------|---------|
+| https://openfga.github.io/helm-charts | openfga(openfga) | 0.2.26 |
 
-### 2️⃣ Install the **EnkryptAI Stack Chart**
+## Values
 
-Don't forget to apply below configmap
-```
-kubectl apply -f https://raw.githubusercontent.com/enkryptai/helm-charts/refs/heads/main/charts/enkryptai-stack/gateway-temp-config-map.yaml
-```
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| busybox.repository | string | `"onprem/busybox"` |  |
+| busybox.tag | string | `"latest"` |  |
+| frontend.affinity | object | `{}` |  |
+| frontend.autoscaling.enabled | bool | `true` |  |
+| frontend.autoscaling.maxReplicas | int | `3` |  |
+| frontend.autoscaling.minReplicas | int | `1` |  |
+| frontend.autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| frontend.configMap.NEXT_PUBLIC_URL | string | `"app.anishs.xyz"` |  |
+| frontend.enabled | bool | `true` |  |
+| frontend.externalSecret.enabled | bool | `false` |  |
+| frontend.externalSecret.repoName | string | `"enkryptaivpc/frontend"` |  |
+| frontend.externalSecret.secretName | string | `"frontend-env-secret"` |  |
+| frontend.externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
+| frontend.image.pullPolicy | string | `"IfNotPresent"` |  |
+| frontend.image.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-dev/frontend"` |  |
+| frontend.image.tag | string | `"dev-1764326836"` |  |
+| frontend.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
+| frontend.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
+| frontend.ingress.className | string | `"nginx"` |  |
+| frontend.ingress.enabled | bool | `true` |  |
+| frontend.ingress.hosts[0].host | string | `"app.anishs.xyz"` |  |
+| frontend.ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| frontend.ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
+| frontend.ingress.tls[0].hosts[0] | string | `"app.anishs.xyz"` |  |
+| frontend.ingress.tls[0].secretName | string | `"frontend-tls"` |  |
+| frontend.livenessProbe.enabled | bool | `false` |  |
+| frontend.livenessProbe.httpGet.path | string | `"/api/health"` |  |
+| frontend.livenessProbe.httpGet.port | int | `3000` |  |
+| frontend.livenessProbe.initialDelaySeconds | int | `120` |  |
+| frontend.livenessProbe.timeoutSeconds | int | `10` |  |
+| frontend.nodeSelector | object | `{}` |  |
+| frontend.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| frontend.podLabels.app | string | `"frontend"` |  |
+| frontend.readinessProbe.enabled | bool | `true` |  |
+| frontend.readinessProbe.failureThreshold | int | `3` |  |
+| frontend.readinessProbe.httpGet.path | string | `"/api/health"` |  |
+| frontend.readinessProbe.httpGet.port | int | `3000` |  |
+| frontend.readinessProbe.httpGet.scheme | string | `"HTTP"` |  |
+| frontend.readinessProbe.initialDelaySeconds | int | `30` |  |
+| frontend.readinessProbe.periodSeconds | int | `10` |  |
+| frontend.readinessProbe.successThreshold | int | `1` |  |
+| frontend.readinessProbe.timeoutSeconds | int | `1` |  |
+| frontend.resources.limits.cpu | string | `"1700m"` |  |
+| frontend.resources.limits.memory | string | `"4Gi"` |  |
+| frontend.resources.requests.cpu | string | `"200m"` |  |
+| frontend.resources.requests.memory | string | `"512Mi"` |  |
+| frontend.service.name | string | `"http"` |  |
+| frontend.service.port | int | `3000` |  |
+| frontend.service.targetPort | int | `3000` |  |
+| frontend.service.type | string | `"ClusterIP"` |  |
+| frontend.serviceAccount.create | bool | `false` |  |
+| frontend.tolerations | list | `[]` |  |
+| gateway-kong.affinity | object | `{}` |  |
+| gateway-kong.autoscaling.enabled | bool | `true` |  |
+| gateway-kong.autoscaling.maxReplicas | int | `2` |  |
+| gateway-kong.autoscaling.minReplicas | int | `1` |  |
+| gateway-kong.autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| gateway-kong.configMaps.fluentBit.enabled | bool | `true` |  |
+| gateway-kong.configMaps.fluentBit.name | string | `"fluent-bit-config"` |  |
+| gateway-kong.configMaps.kongConfig.enabled | bool | `true` |  |
+| gateway-kong.configMaps.kongConfig.name | string | `"gateway-kong-temp-config"` |  |
+| gateway-kong.enabled | bool | `true` |  |
+| gateway-kong.externalSecret.repoName | string | `"enkryptaivpc/kong-gateway"` |  |
+| gateway-kong.externalSecrets.enabled | bool | `false` |  |
+| gateway-kong.externalSecrets.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
+| gateway-kong.fullnameOverride | string | `"gateway-kong"` |  |
+| gateway-kong.image.fluentBit.pullPolicy | string | `"IfNotPresent"` |  |
+| gateway-kong.image.fluentBit.repository | string | `"vpcdepoyment.azurecr.io/onprem/fluent-bit"` |  |
+| gateway-kong.image.fluentBit.tag | string | `"3.2.1"` |  |
+| gateway-kong.image.gateway.pullPolicy | string | `"IfNotPresent"` |  |
+| gateway-kong.image.gateway.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-dev/gateway"` |  |
+| gateway-kong.image.gateway.tag | string | `"c5cbd5f"` |  |
+| gateway-kong.image.sync.pullPolicy | string | `"IfNotPresent"` |  |
+| gateway-kong.image.sync.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-dev/gateway-sync"` |  |
+| gateway-kong.image.sync.tag | string | `"57df811"` |  |
+| gateway-kong.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
+| gateway-kong.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
+| gateway-kong.ingress.className | string | `"nginx"` |  |
+| gateway-kong.ingress.enabled | bool | `true` |  |
+| gateway-kong.ingress.hosts[0].host | string | `"api.anishs.xyz"` |  |
+| gateway-kong.ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| gateway-kong.ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
+| gateway-kong.ingress.tls[0].hosts[0] | string | `"api.anishs.xyz"` |  |
+| gateway-kong.ingress.tls[0].secretName | string | `"gateway-kong-tls"` |  |
+| gateway-kong.livenessProbe.enabled | bool | `true` |  |
+| gateway-kong.livenessProbe.exec.command[0] | string | `"kong"` |  |
+| gateway-kong.livenessProbe.exec.command[1] | string | `"health"` |  |
+| gateway-kong.livenessProbe.failureThreshold | int | `10` |  |
+| gateway-kong.livenessProbe.initialDelaySeconds | int | `10` |  |
+| gateway-kong.livenessProbe.periodSeconds | int | `10` |  |
+| gateway-kong.livenessProbe.successThreshold | int | `1` |  |
+| gateway-kong.livenessProbe.timeoutSeconds | int | `10` |  |
+| gateway-kong.nameOverride | string | `""` |  |
+| gateway-kong.nodeSelector | object | `{}` |  |
+| gateway-kong.replicaCount | int | `2` |  |
+| gateway-kong.resources.fluentBit.limits.cpu | string | `"0.5"` |  |
+| gateway-kong.resources.fluentBit.limits.memory | string | `"256Gi"` |  |
+| gateway-kong.resources.fluentBit.requests.cpu | string | `"0.1"` |  |
+| gateway-kong.resources.fluentBit.requests.memory | string | `"64Mi"` |  |
+| gateway-kong.resources.gateway.limits.cpu | string | `"2"` |  |
+| gateway-kong.resources.gateway.limits.memory | string | `"4Gi"` |  |
+| gateway-kong.resources.gateway.requests.cpu | string | `"0.5"` |  |
+| gateway-kong.resources.gateway.requests.memory | string | `"1.5Gi"` |  |
+| gateway-kong.resources.sync.limits.cpu | string | `"0.5"` |  |
+| gateway-kong.resources.sync.limits.memory | string | `"256Mi"` |  |
+| gateway-kong.resources.sync.requests.cpu | string | `"0.1"` |  |
+| gateway-kong.resources.sync.requests.memory | string | `"64Mi"` |  |
+| gateway-kong.service.ports.admin.port | int | `8001` |  |
+| gateway-kong.service.ports.admin.targetPort | int | `8001` |  |
+| gateway-kong.service.ports.adminGui.port | int | `8002` |  |
+| gateway-kong.service.ports.adminGui.targetPort | int | `8002` |  |
+| gateway-kong.service.ports.fluentBitAdmin.port | int | `5043` |  |
+| gateway-kong.service.ports.fluentBitAdmin.targetPort | int | `5043` |  |
+| gateway-kong.service.ports.fluentBitMetrics.port | int | `2020` |  |
+| gateway-kong.service.ports.fluentBitMetrics.targetPort | int | `2020` |  |
+| gateway-kong.service.ports.http.port | int | `80` |  |
+| gateway-kong.service.ports.http.targetPort | int | `8000` |  |
+| gateway-kong.service.ports.https.port | int | `443` |  |
+| gateway-kong.service.ports.https.targetPort | int | `8443` |  |
+| gateway-kong.service.type | string | `"ClusterIP"` |  |
+| gateway-kong.tolerations | list | `[]` |  |
+| global.domain | string | `"djj.enkryptai.com"` |  |
+| global.externalSecret | bool | `false` |  |
+| global.imagePullPolicy | string | `"IfNotPresent"` |  |
+| global.registry | string | `"vpcdepoyment.azurecr.io"` |  |
+| global.storageClass | string | `""` |  |
+| guardrails.affinity | object | `{}` |  |
+| guardrails.autoscaling.enabled | bool | `true` |  |
+| guardrails.autoscaling.maxReplicas | int | `2` |  |
+| guardrails.autoscaling.minReplicas | int | `1` |  |
+| guardrails.autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| guardrails.enabled | bool | `false` |  |
+| guardrails.externalSecret.enabled | bool | `false` |  |
+| guardrails.externalSecret.repoName | string | `"enkryptaivpc/guardrails"` |  |
+| guardrails.externalSecret.secretName | string | `"guardrails-env-secret"` |  |
+| guardrails.externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
+| guardrails.fullnameOverride | string | `"guardrails"` |  |
+| guardrails.image.pullPolicy | string | `"IfNotPresent"` |  |
+| guardrails.image.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-prod/guardrails"` |  |
+| guardrails.image.tag | string | `"aa2fdfb"` |  |
+| guardrails.livenessProbe.enabled | bool | `true` |  |
+| guardrails.livenessProbe.httpGet.path | string | `"/health"` |  |
+| guardrails.livenessProbe.httpGet.port | int | `80` |  |
+| guardrails.livenessProbe.initialDelaySeconds | int | `90` |  |
+| guardrails.livenessProbe.timeoutSeconds | int | `10` |  |
+| guardrails.nameOverride | string | `""` |  |
+| guardrails.nodeSelector | object | `{}` |  |
+| guardrails.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| guardrails.podLabels.app | string | `"guardrails"` |  |
+| guardrails.readinessProbe.enabled | bool | `true` |  |
+| guardrails.readinessProbe.httpGet.path | string | `"/health"` |  |
+| guardrails.readinessProbe.httpGet.port | int | `80` |  |
+| guardrails.readinessProbe.initialDelaySeconds | int | `120` |  |
+| guardrails.readinessProbe.timeoutSeconds | int | `30` |  |
+| guardrails.replicaCount | int | `1` |  |
+| guardrails.resources.limits."nvidia.com/gpu" | int | `1` |  |
+| guardrails.resources.requests."nvidia.com/gpu" | int | `1` |  |
+| guardrails.resources.requests.cpu | int | `4` |  |
+| guardrails.resources.requests.memory | string | `"16Gi"` |  |
+| guardrails.service.name | string | `"http"` |  |
+| guardrails.service.port | int | `80` |  |
+| guardrails.service.targetPort | int | `80` |  |
+| guardrails.service.type | string | `"ClusterIP"` |  |
+| guardrails.strategy.rollingUpdate.maxSurge | int | `1` |  |
+| guardrails.strategy.rollingUpdate.maxUnavailable | int | `1` |  |
+| guardrails.strategy.type | string | `"RollingUpdate"` |  |
+| guardrails.tolerations | list | `[]` |  |
+| nginxalpine.repository | string | `"onprem/nginx"` |  |
+| nginxalpine.tag | string | `"alpine"` |  |
+| openfga.affinity | object | `{}` |  |
+| openfga.allowEvaluating1_0Models | string | `nil` |  |
+| openfga.allowWriting1_0Models | string | `nil` |  |
+| openfga.annotations | object | `{}` |  |
+| openfga.authn.method | string | `"none"` |  |
+| openfga.authn.oidc.audience | string | `nil` |  |
+| openfga.authn.oidc.issuer | string | `nil` |  |
+| openfga.authn.preshared.keys | list | `[]` |  |
+| openfga.autoscaling.enabled | bool | `false` |  |
+| openfga.autoscaling.maxReplicas | int | `100` |  |
+| openfga.autoscaling.minReplicas | int | `1` |  |
+| openfga.autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| openfga.autoscaling.targetMemoryUtilizationPercentage | int | `80` |  |
+| openfga.changelogHorizonOffset | string | `nil` |  |
+| openfga.checkQueryCache.enabled | bool | `true` |  |
+| openfga.checkQueryCache.limit | int | `10000` |  |
+| openfga.checkQueryCache.ttl | string | `"1m"` |  |
+| openfga.commonLabels | object | `{}` |  |
+| openfga.customLivenessProbe | object | `{}` |  |
+| openfga.customReadinessProbe | object | `{}` |  |
+| openfga.customStartupProbe | object | `{}` |  |
+| openfga.datastore.applyMigrations | bool | `true` |  |
+| openfga.datastore.connMaxIdleTime | string | `"1m"` |  |
+| openfga.datastore.connMaxLifetime | string | `"1h"` |  |
+| openfga.datastore.engine | string | `"postgres"` |  |
+| openfga.datastore.maxCacheSize | int | `100000` |  |
+| openfga.datastore.maxIdleConns | int | `30` |  |
+| openfga.datastore.maxOpenConns | int | `70` |  |
+| openfga.datastore.migrationType | string | `"job"` |  |
+| openfga.datastore.migrations.image.pullPolicy | string | `"Always"` |  |
+| openfga.datastore.migrations.image.repository | string | `"vpcdepoyment.azurecr.io/onprem/k8s-wait-for"` |  |
+| openfga.datastore.migrations.image.tag | string | `"v2.0"` |  |
+| openfga.datastore.migrations.resources | object | `{}` |  |
+| openfga.datastore.uri | string | `nil` |  |
+| openfga.datastore.uriSecret | string | `"openfga-env-secret"` |  |
+| openfga.datastore.waitForMigrations | bool | `true` |  |
+| openfga.experimentals | list | `[]` |  |
+| openfga.extraEnvVars[0].name | string | `"OPENFGA_HTTP_TLS_ENABLED"` |  |
+| openfga.extraEnvVars[0].value | string | `"false"` |  |
+| openfga.extraEnvVars[10].name | string | `"OPENFGA_LIST_OBJECTS_DISPATCH_THROTTLING_ENABLED"` |  |
+| openfga.extraEnvVars[10].value | string | `"false"` |  |
+| openfga.extraEnvVars[11].name | string | `"OPENFGA_LIST_USERS_DISPATCH_THROTTLING_ENABLED"` |  |
+| openfga.extraEnvVars[11].value | string | `"false"` |  |
+| openfga.extraEnvVars[12].name | string | `"OPENFGA_TRACING_ENABLED"` |  |
+| openfga.extraEnvVars[12].value | string | `"false"` |  |
+| openfga.extraEnvVars[13].name | string | `"OPENFGA_TRACE_SERVICE_NAME"` |  |
+| openfga.extraEnvVars[13].value | string | `"openfga"` |  |
+| openfga.extraEnvVars[14].name | string | `"OPENFGA_ACCESS_CONTROL_ENABLED"` |  |
+| openfga.extraEnvVars[14].value | string | `"false"` |  |
+| openfga.extraEnvVars[1].name | string | `"OPENFGA_REQUEST_TIMEOUT"` |  |
+| openfga.extraEnvVars[1].value | string | `"3s"` |  |
+| openfga.extraEnvVars[2].name | string | `"OPENFGA_DATASTORE_METRICS_ENABLED"` |  |
+| openfga.extraEnvVars[2].value | string | `"true"` |  |
+| openfga.extraEnvVars[3].name | string | `"OPENFGA_CHECK_CACHE_LIMIT"` |  |
+| openfga.extraEnvVars[3].value | string | `"10000"` |  |
+| openfga.extraEnvVars[4].name | string | `"OPENFGA_CHECK_ITERATOR_CACHE_ENABLED"` |  |
+| openfga.extraEnvVars[4].value | string | `"true"` |  |
+| openfga.extraEnvVars[5].name | string | `"OPENFGA_CHECK_ITERATOR_CACHE_MAX_RESULTS"` |  |
+| openfga.extraEnvVars[5].value | string | `"10000"` |  |
+| openfga.extraEnvVars[6].name | string | `"OPENFGA_CHECK_ITERATOR_CACHE_TTL"` |  |
+| openfga.extraEnvVars[6].value | string | `"1m"` |  |
+| openfga.extraEnvVars[7].name | string | `"OPENFGA_CACHE_CONTROLLER_ENABLED"` |  |
+| openfga.extraEnvVars[7].value | string | `"true"` |  |
+| openfga.extraEnvVars[8].name | string | `"OPENFGA_CACHE_CONTROLLER_TTL"` |  |
+| openfga.extraEnvVars[8].value | string | `"30s"` |  |
+| openfga.extraEnvVars[9].name | string | `"OPENFGA_CHECK_DISPATCH_THROTTLING_ENABLED"` |  |
+| openfga.extraEnvVars[9].value | string | `"false"` |  |
+| openfga.extraInitContainers | list | `[]` |  |
+| openfga.extraObjects | list | `[]` |  |
+| openfga.extraVolumeMounts | list | `[]` |  |
+| openfga.extraVolumes | list | `[]` |  |
+| openfga.fullnameOverride | string | `"openfga"` |  |
+| openfga.grpc.addr | string | `"0.0.0.0:8081"` |  |
+| openfga.grpc.tls.ca | string | `nil` |  |
+| openfga.grpc.tls.cert | string | `nil` |  |
+| openfga.grpc.tls.enabled | bool | `false` |  |
+| openfga.grpc.tls.key | string | `nil` |  |
+| openfga.http.addr | string | `"0.0.0.0:8080"` |  |
+| openfga.http.corsAllowedHeaders[0] | string | `"*"` |  |
+| openfga.http.corsAllowedOrigins[0] | string | `"*"` |  |
+| openfga.http.enabled | bool | `true` |  |
+| openfga.http.tls.cert | string | `nil` |  |
+| openfga.http.tls.enabled | bool | `false` |  |
+| openfga.http.tls.key | string | `nil` |  |
+| openfga.http.upstreamTimeout | string | `nil` |  |
+| openfga.image.pullPolicy | string | `"Always"` |  |
+| openfga.image.repository | string | `"vpcdepoyment.azurecr.io/onprem/openfga"` |  |
+| openfga.image.tag | string | `"v1.8.9"` |  |
+| openfga.imagePullSecrets | list | `[]` |  |
+| openfga.ingress.annotations | object | `{}` |  |
+| openfga.ingress.className | string | `""` |  |
+| openfga.ingress.enabled | bool | `false` |  |
+| openfga.ingress.hosts[0].host | string | `"chart-example.local"` |  |
+| openfga.ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| openfga.ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
+| openfga.ingress.tls | list | `[]` |  |
+| openfga.initContainer.pullPolicy | string | `"IfNotPresent"` |  |
+| openfga.initContainer.repository | string | `"vpcdepoyment.azurecr.io/onprem/k8s-wait-for"` |  |
+| openfga.initContainer.tag | string | `"v2.0"` |  |
+| openfga.lifecycle | object | `{}` |  |
+| openfga.listObjectsDeadline | string | `"3s"` |  |
+| openfga.listObjectsMaxResults | int | `1000` |  |
+| openfga.listUsersDeadline | string | `"3s"` |  |
+| openfga.listUsersMaxResults | int | `1000` |  |
+| openfga.livenessProbe.enabled | bool | `false` |  |
+| openfga.livenessProbe.failureThreshold | int | `12` |  |
+| openfga.livenessProbe.initialDelaySeconds | int | `60` |  |
+| openfga.livenessProbe.periodSeconds | int | `10` |  |
+| openfga.livenessProbe.successThreshold | int | `1` |  |
+| openfga.livenessProbe.timeoutSeconds | int | `5` |  |
+| openfga.log.format | string | `"json"` |  |
+| openfga.log.level | string | `"info"` |  |
+| openfga.log.timestampFormat | string | `"Unix"` |  |
+| openfga.maxAuthorizationModelSizeInBytes | string | `nil` |  |
+| openfga.maxConcurrentReadsForCheck | string | `nil` |  |
+| openfga.maxConcurrentReadsForListObjects | string | `nil` |  |
+| openfga.maxConcurrentReadsForListUsers | string | `nil` |  |
+| openfga.maxTuplesPerWrite | string | `nil` |  |
+| openfga.maxTypesPerAuthorizationModel | string | `nil` |  |
+| openfga.migrate.annotations."helm.sh/hook" | string | `"post-install, post-upgrade"` |  |
+| openfga.migrate.annotations."helm.sh/hook-delete-policy" | string | `"before-hook-creation"` |  |
+| openfga.migrate.annotations."helm.sh/hook-weight" | string | `"-15"` |  |
+| openfga.migrate.extraInitContainers | list | `[]` |  |
+| openfga.migrate.extraVolumeMounts | list | `[]` |  |
+| openfga.migrate.extraVolumes | list | `[]` |  |
+| openfga.migrate.labels | object | `{}` |  |
+| openfga.migrate.sidecars | list | `[]` |  |
+| openfga.migrate.timeout | string | `nil` |  |
+| openfga.mysql.enabled | bool | `false` |  |
+| openfga.nameOverride | string | `"openfga"` |  |
+| openfga.nodeSelector | object | `{}` |  |
+| openfga.playground.enabled | bool | `false` |  |
+| openfga.playground.port | int | `3000` |  |
+| openfga.podAnnotations | object | `{}` |  |
+| openfga.podExtraLabels | object | `{}` |  |
+| openfga.podSecurityContext | object | `{}` |  |
+| openfga.postgresql.enabled | bool | `false` |  |
+| openfga.profiler.addr | string | `"0.0.0.0:3001"` |  |
+| openfga.profiler.enabled | bool | `false` |  |
+| openfga.readinessProbe.enabled | bool | `true` |  |
+| openfga.readinessProbe.failureThreshold | int | `6` |  |
+| openfga.readinessProbe.initialDelaySeconds | int | `5` |  |
+| openfga.readinessProbe.periodSeconds | int | `10` |  |
+| openfga.readinessProbe.successThreshold | int | `1` |  |
+| openfga.readinessProbe.timeoutSeconds | int | `5` |  |
+| openfga.replicaCount | int | `1` |  |
+| openfga.requestDurationDatastoreQueryCountBuckets[0] | int | `50` |  |
+| openfga.requestDurationDatastoreQueryCountBuckets[1] | int | `200` |  |
+| openfga.resolveNodeBreadthLimit | string | `nil` |  |
+| openfga.resolveNodeLimit | string | `nil` |  |
+| openfga.resources | object | `{}` |  |
+| openfga.securityContext | object | `{}` |  |
+| openfga.service.annotations | object | `{}` |  |
+| openfga.service.port | int | `8080` |  |
+| openfga.service.type | string | `"ClusterIP"` |  |
+| openfga.serviceAccount.annotations | object | `{}` |  |
+| openfga.serviceAccount.create | bool | `true` |  |
+| openfga.serviceAccount.name | string | `""` |  |
+| openfga.sidecars | list | `[]` |  |
+| openfga.startupProbe.enabled | bool | `false` |  |
+| openfga.startupProbe.failureThreshold | int | `30` |  |
+| openfga.startupProbe.initialDelaySeconds | int | `60` |  |
+| openfga.startupProbe.periodSeconds | int | `10` |  |
+| openfga.startupProbe.successThreshold | int | `1` |  |
+| openfga.startupProbe.timeoutSeconds | int | `5` |  |
+| openfga.telemetry.metrics.addr | string | `"0.0.0.0:2112"` |  |
+| openfga.telemetry.metrics.enableRPCHistograms | string | `nil` |  |
+| openfga.telemetry.metrics.enabled | bool | `true` |  |
+| openfga.telemetry.metrics.podAnnotations."prometheus.io/scrape" | string | `"true"` |  |
+| openfga.telemetry.metrics.serviceMonitor.additionalLabels | object | `{}` |  |
+| openfga.telemetry.metrics.serviceMonitor.annotations | object | `{}` |  |
+| openfga.telemetry.metrics.serviceMonitor.enabled | bool | `false` |  |
+| openfga.telemetry.metrics.serviceMonitor.jobLabel | string | `"app.kubernetes.io/name"` |  |
+| openfga.telemetry.metrics.serviceMonitor.metricRelabelings | list | `[]` |  |
+| openfga.telemetry.metrics.serviceMonitor.namespace | string | `""` |  |
+| openfga.telemetry.metrics.serviceMonitor.namespaceSelector | object | `{}` |  |
+| openfga.telemetry.metrics.serviceMonitor.relabelings | list | `[]` |  |
+| openfga.telemetry.metrics.serviceMonitor.scrapeInterval | string | `"30s"` |  |
+| openfga.telemetry.metrics.serviceMonitor.scrapeTimeout | string | `"10s"` |  |
+| openfga.telemetry.metrics.serviceMonitor.targetLabels | list | `[]` |  |
+| openfga.telemetry.trace.enabled | bool | `false` |  |
+| openfga.telemetry.trace.otlp.endpoint | string | `nil` |  |
+| openfga.telemetry.trace.otlp.tls.enabled | bool | `false` |  |
+| openfga.telemetry.trace.sampleRatio | float | `0.3` |  |
+| openfga.testContainerSpec | object | `{}` |  |
+| openfga.testPodSpec | object | `{}` |  |
+| openfga.tolerations | list | `[]` |  |
+| openfga.topologySpreadConstraints | list | `[]` |  |
+| openfgaSyncJob.repository | string | `"enkryptai-prod/openfga-sync"` |  |
+| openfgaSyncJob.tag | string | `"v1.3.0"` |  |
+| openfgaconfig.externalSecret.keys[0].property | string | `"uri"` |  |
+| openfgaconfig.externalSecret.keys[0].secretKey | string | `"uri"` |  |
+| openfgaconfig.externalSecret.keys[1].property | string | `"username"` |  |
+| openfgaconfig.externalSecret.keys[1].secretKey | string | `"username"` |  |
+| openfgaconfig.externalSecret.keys[2].property | string | `"password"` |  |
+| openfgaconfig.externalSecret.keys[2].secretKey | string | `"password"` |  |
+| openfgaconfig.externalSecret.name | string | `"openfga-env-secret"` |  |
+| openfgaconfig.externalSecret.refreshInterval | string | `"15m"` |  |
+| openfgaconfig.externalSecret.remoteSecretKey | string | `"enkryptaivpc/openfga"` |  |
+| openfgaconfig.externalSecret.secretStoreKind | string | `"ClusterSecretStore"` |  |
+| openfgaconfig.externalSecret.secretStoreName | string | `"enkryptai-clustersecret-store"` |  |
+| redteam-proxy.affinity | object | `{}` |  |
+| redteam-proxy.autoscaling.enabled | bool | `true` |  |
+| redteam-proxy.autoscaling.maxReplicas | int | `3` |  |
+| redteam-proxy.autoscaling.minReplicas | int | `2` |  |
+| redteam-proxy.autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| redteam-proxy.enabled | bool | `false` |  |
+| redteam-proxy.env[0].name | string | `"NATS_URL"` |  |
+| redteam-proxy.env[0].value | string | `"nats://nats:4222"` |  |
+| redteam-proxy.env[1].name | string | `"IS_PROXY_MODE"` |  |
+| redteam-proxy.env[1].value | string | `"true"` |  |
+| redteam-proxy.externalSecret.enabled | bool | `false` |  |
+| redteam-proxy.externalSecret.repoName | string | `"enkryptaivpc/redteam-proxy"` |  |
+| redteam-proxy.externalSecret.secretName | string | `"redteam-proxy-env-secret"` |  |
+| redteam-proxy.externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
+| redteam-proxy.fullnameOverride | string | `"redteam-proxy"` |  |
+| redteam-proxy.image.pullPolicy | string | `"IfNotPresent"` |  |
+| redteam-proxy.image.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-dev/redteam-proxy"` |  |
+| redteam-proxy.image.tag | string | `"dev-v1.1.127-1764130957"` |  |
+| redteam-proxy.livenessProbe.enabled | bool | `true` |  |
+| redteam-proxy.livenessProbe.httpGet.path | string | `"/health"` |  |
+| redteam-proxy.livenessProbe.httpGet.port | int | `9091` |  |
+| redteam-proxy.livenessProbe.initialDelaySeconds | int | `90` |  |
+| redteam-proxy.livenessProbe.timeoutSeconds | int | `10` |  |
+| redteam-proxy.nameOverride | string | `""` |  |
+| redteam-proxy.nodeSelector | object | `{}` |  |
+| redteam-proxy.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| redteam-proxy.podLabels.app | string | `"redteam-proxy"` |  |
+| redteam-proxy.readinessProbe.enabled | bool | `true` |  |
+| redteam-proxy.readinessProbe.httpGet.path | string | `"/health"` |  |
+| redteam-proxy.readinessProbe.httpGet.port | int | `9091` |  |
+| redteam-proxy.readinessProbe.initialDelaySeconds | int | `30` |  |
+| redteam-proxy.readinessProbe.timeoutSeconds | int | `10` |  |
+| redteam-proxy.replicaCount | int | `2` |  |
+| redteam-proxy.resources.limits.cpu | string | `"500m"` |  |
+| redteam-proxy.resources.limits.memory | string | `"1Gi"` |  |
+| redteam-proxy.resources.requests.cpu | string | `"100m"` |  |
+| redteam-proxy.resources.requests.memory | string | `"300Mi"` |  |
+| redteam-proxy.service.name | string | `"http"` |  |
+| redteam-proxy.service.port | int | `9091` |  |
+| redteam-proxy.service.targetPort | int | `9091` |  |
+| redteam-proxy.service.type | string | `"ClusterIP"` |  |
+| redteam-proxy.strategy.rollingUpdate.maxSurge | string | `"50%"` |  |
+| redteam-proxy.strategy.rollingUpdate.maxUnavailable | string | `"50%"` |  |
+| redteam-proxy.strategy.type | string | `"RollingUpdate"` |  |
+| redteam-proxy.tolerations | list | `[]` |  |
+| supabase.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
+| supabase.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
+| supabase.ingress.className | string | `"nginx"` |  |
+| supabase.ingress.enabled | bool | `true` |  |
+| supabase.ingress.hosts[0].host | string | `"auth.anishs.xyz"` |  |
+| supabase.ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| supabase.ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
+| supabase.ingress.tls[0].hosts[0] | string | `"auth.anishs.xyz"` |  |
+| supabase.ingress.tls[0].secretName | string | `"supabase-tls"` |  |
+| supabaseinitdb.repository | string | `"onprem/supabase-initdb"` |  |
+| supabaseinitdb.tag | string | `"latest"` |  |
 
-```bash
-helm repo add enkryptai  https://enkryptai.github.io/helm-charts/
-helm repo update
-helm upgrade --install enkryptai enkryptai/enkryptai-stack -n enkryptai-stack -f values.yaml --timeout 15m
-```
-
-###  Post-Installation: Update Required Secrets
-
-Once **both charts** have been successfully installed, you’ll need to update the following **Kubernetes secrets** with your OpenFGA configuration values.
-
-> You can find `authorization_model_id` and `store_id` in the **OpenFGA logs**.
-
-#### 1. Frontend
-
-**Secret Name:** `frontend-env-secret`
-Update the following environment variables:
-
-```
-FGA_STORE_ID=<store_id>
-FGA_MODEL_ID=<authorization_model_id>
-```
-
-#### 2. Gateway (Kong)
-
-**Secret Name:** `gateway-env-secret`
-Update the following environment variables:
-
-```
-DECK_OPENFGA_STORE_ID=<store_id>
-DECK_OPENFGA_AUTHORIZATION_MODEL_ID=<authorization_model_id>
-```
-### Note: Restart Deployments After Updating Secrets
-Once the secrets have been updated, restart the deployments to ensure the new environment variables are loaded.
-Run the following commands:
-```sh
-kubectl rollout restart deployment frontend -n enkryptai-stack
-kubectl rollout restart deployment gateway-kong -n enkryptai-stack
-```
-
-
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

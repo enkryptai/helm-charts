@@ -1,125 +1,81 @@
-# Gateway Environment Variables
+# gateway-kong
 
-These variables are required for **Gateway Migration** and **Gateway** services.  
-All values are stored in remote secrets (`dev/enkryptai/gateway`).
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: dev](https://img.shields.io/badge/AppVersion-dev-informational?style=flat-square)
 
----
+A Helm chart for EnkryptAI Kong Gateway
 
-## ⚙️ Core Kong Configuration
-- `KONG_LOG_LEVEL`
-- `KONG_PROXY_LISTEN`
-- `KONG_ADMIN_LISTEN`
-- `KONG_DATABASE`
-- `KONG_PROXY_ACCESS_LOG`
-- `KONG_SSL_PROTOCOLS`
+## Values
 
----
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` |  |
+| autoscaling.enabled | bool | `true` |  |
+| autoscaling.maxReplicas | int | `2` |  |
+| autoscaling.minReplicas | int | `1` |  |
+| autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| configMaps.fluentBit.enabled | bool | `true` |  |
+| configMaps.fluentBit.name | string | `"fluent-bit-config"` |  |
+| configMaps.kongConfig.enabled | bool | `true` |  |
+| configMaps.kongConfig.name | string | `"gateway-kong-temp-config"` |  |
+| externalSecrets.enabled | bool | `true` |  |
+| externalSecrets.repoName | string | `"enkryptai/gateway"` |  |
+| externalSecrets.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
+| fullnameOverride | string | `"gateway-kong"` |  |
+| image.fluentBit.pullPolicy | string | `"IfNotPresent"` |  |
+| image.fluentBit.repository | string | `"fluent/fluent-bit"` |  |
+| image.fluentBit.tag | string | `"3.2.1"` |  |
+| image.gateway.pullPolicy | string | `"IfNotPresent"` |  |
+| image.gateway.repository | string | `"188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway"` |  |
+| image.gateway.tag | string | `"dev"` |  |
+| image.sync.pullPolicy | string | `"IfNotPresent"` |  |
+| image.sync.repository | string | `"188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway-sync"` |  |
+| image.sync.tag | string | `"dev"` |  |
+| ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
+| ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
+| ingress.className | string | `"nginx"` |  |
+| ingress.enabled | bool | `true` |  |
+| ingress.hosts[0].host | string | `"api.dev.enkryptai.com"` |  |
+| ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
+| ingress.tls[0].hosts[0] | string | `"api.dev.enkryptai.com"` |  |
+| ingress.tls[0].secretName | string | `"gateway-kong-tls"` |  |
+| livenessProbe.enabled | bool | `true` |  |
+| livenessProbe.exec.command[0] | string | `"kong"` |  |
+| livenessProbe.exec.command[1] | string | `"health"` |  |
+| livenessProbe.failureThreshold | int | `10` |  |
+| livenessProbe.initialDelaySeconds | int | `10` |  |
+| livenessProbe.periodSeconds | int | `10` |  |
+| livenessProbe.successThreshold | int | `1` |  |
+| livenessProbe.timeoutSeconds | int | `10` |  |
+| nameOverride | string | `""` |  |
+| nodeSelector | object | `{}` |  |
+| replicaCount | int | `2` |  |
+| resources.fluentBit.limits.cpu | string | `"0.5"` |  |
+| resources.fluentBit.limits.memory | string | `"256Gi"` |  |
+| resources.fluentBit.requests.cpu | string | `"0.1"` |  |
+| resources.fluentBit.requests.memory | string | `"64Mi"` |  |
+| resources.gateway.limits.cpu | string | `"2"` |  |
+| resources.gateway.limits.memory | string | `"4Gi"` |  |
+| resources.gateway.requests.cpu | string | `"0.5"` |  |
+| resources.gateway.requests.memory | string | `"1.5Gi"` |  |
+| resources.sync.limits.cpu | string | `"0.5"` |  |
+| resources.sync.limits.memory | string | `"256Mi"` |  |
+| resources.sync.requests.cpu | string | `"0.1"` |  |
+| resources.sync.requests.memory | string | `"64Mi"` |  |
+| service.ports.admin.port | int | `8001` |  |
+| service.ports.admin.targetPort | int | `8001` |  |
+| service.ports.adminGui.port | int | `8002` |  |
+| service.ports.adminGui.targetPort | int | `8002` |  |
+| service.ports.fluentBitAdmin.port | int | `5043` |  |
+| service.ports.fluentBitAdmin.targetPort | int | `5043` |  |
+| service.ports.fluentBitMetrics.port | int | `2020` |  |
+| service.ports.fluentBitMetrics.targetPort | int | `2020` |  |
+| service.ports.http.port | int | `80` |  |
+| service.ports.http.targetPort | int | `8000` |  |
+| service.ports.https.port | int | `443` |  |
+| service.ports.https.targetPort | int | `8443` |  |
+| service.type | string | `"ClusterIP"` |  |
+| tolerations | list | `[]` |  |
 
-## 🗄️ Postgres Configuration
-- `KONG_PG_DATABASE`
-- `KONG_PG_HOST`
-- `KONG_PG_PORT`
-- `KONG_PG_USER`
-- `KONG_PG_PASSWORD`
-- `KONG_PG_SSL`
-- `KONG_PG_SSL_VERSION`
-- `KONG_PG_SSL_REQUIRED`
-- `KONG_PG_SSL_VERIFY`
-
----
-
-## 🚦 Performance & Nginx
-- `KONG_NGINX_HTTP_CLIENT_BODY_BUFFER_SIZE`
-- `KONG_NGINX_HTTP_KEEPALIVE_REQUESTS`
-- `KONG_MEM_CACHE_SIZE`
-- `KONG_UPSTREAM_KEEPALIVE_MAX_REQUESTS`
-
----
-
-## 📊 Tracing & Observability
-- `KONG_TRACING_INSTRUMENTATIONS`
-- `KONG_TRACING_SAMPLING_RATE`
-
----
-
-## 🔒 OpenFGA Config
-- `DECK_OPENFGA_URL`
-- `DECK_OPENFGA_STORE_ID`
-- `DECK_OPENFGA_AUTHORIZATION_MODEL_ID`
-
----
-
-## 🖥️ Dashboard Config
-- `DECK_APP_DASHBOARD_DOMAIN`
-- `DECK_APP_DASHBOARD_DOMAIN_URL`
-- `DECK_APP_DASHBOARD_PORT`
-- `DECK_APP_DASHBOARD_SCHEME`
-
----
-
-## 📡 Integrations & Services
-- `DECK_ELASTIC_HOST`
-- `DECK_ENKRYPT_ENVIRONMENT`
-- `DECK_FLUENT_BIT_HOST`
-- `DECK_GUARDRAILS_HOST`
-- `DECK_GUARDRAILS_PORT`
-- `DECK_GUARDRAILS_SCHEME`
-
----
-
-## 👤 Kong Admin Credentials
-- `DECK_INTERNAL_KONG_ADMIN_EMAIL`
-- `DECK_INTERNAL_KONG_ADMIN_USERNAME`
-- `DECK_INTERNAL_KONG_ADMIN_PASSWORD`
-
----
-
-## 🔑 KeyDB / Redis
-- `DECK_KEYDB_HOST`
-
----
-
-## 🛠️ Kong Deck
-- `DECK_KONG_ADDR`
-- `DECK_KONG_LOGS_PLUGIN_ELASTIC_BASIC_AUTH`
-
----
-
-## 🏆 Leaderboard Config
-- `DECK_LEADERBOARD_AUTH`
-- `DECK_LEADERBOARD_CORS_ORIGIN`
-- `DECK_LEADERBOARD_DETAILS_PASSWORD`
-- `DECK_LEADERBOARD_HOST`
-- `DECK_LEADERBOARD_PORT`
-- `DECK_LEADERBOARD_PUBLIC_CONSUMER_API_KEY`
-- `DECK_LEADERBOARD_PUBLIC_CONSUMER_EMAIL`
-- `DECK_LEADERBOARD_SCHEME`
-
----
-
-## 🌐 Frontend / Next.js
-- `DECK_NEXT_JS_BASIC_AUTH`
-- `DECK_VERCEL_PROTECTION_AUTH`
-
----
-
-## 🧪 Red Teaming
-- `DECK_RED_TEAMING_HOST`
-- `DECK_RED_TEAMING_PORT`
-- `DECK_RED_TEAMING_SCHEME`
-- `DECK_RED_TEAMING_URL`
-
----
-
-## 🧩 Sample Models
-- `DECK_INITIAL_SAMPLE_MODEL_PASSWORD`
-- `DECK_SAMPLE_MODEL_REAL_APIKEY`
-
----
-
-## Notes
-- Keep all values in **AWS Secrets Store** or Vault.
-- Never commit secrets to `.env`.
-- For local dev, copy `.env.example` and fill values.
-
-
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

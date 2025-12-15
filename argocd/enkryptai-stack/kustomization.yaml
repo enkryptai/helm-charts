@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: enkryptai
+
+helmCharts:
+  - name: enkryptai-stack
+    repo: https://enkryptai.github.io/helm-charts  
+    version: 1.1.2
+    releaseName: enkryptai
+    namespace: enkryptai
+    valuesFile: values.yaml

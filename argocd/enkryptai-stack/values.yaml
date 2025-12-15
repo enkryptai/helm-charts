@@ -1,0 +1,675 @@
+global:
+  # imagePullSecrets: 
+    # - core-app-pullsecret
+  storageClass: ""
+  imagePullPolicy: "IfNotPresent"
+  externalSecret: false
+  domain: "djj.enkryptai.com"
+  registry: vpcdepoyment.azurecr.io
+
+supabaseinitdb:
+  repository: onprem/supabase-initdb
+  tag: "latest"
+nginxalpine:
+  repository: onprem/nginx
+  tag: "alpine"
+openfgaSyncJob:
+  repository: enkryptai-prod/openfga-sync
+  tag: v1.3.0
+busybox:
+  repository: onprem/busybox
+  tag: "latest"
+ 
+frontend:
+  enabled: true
+  image:
+    repository: vpcdepoyment.azurecr.io/enkryptai-dev/frontend
+    pullPolicy: IfNotPresent
+    tag: "dev-1764326836"
+
+  serviceAccount:
+    create: false
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+
+  podLabels:
+    app: frontend
+
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+    name: http
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    hosts:
+      - host: app.anishs.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: frontend-tls
+        hosts:
+          - app.anishs.xyz
+
+  resources:
+    limits:
+      cpu: 1700m
+      memory: 4Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+  livenessProbe:
+    enabled: false
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 120
+    timeoutSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /api/health
+      port: 3000
+      scheme: HTTP
+    failureThreshold: 3
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  configMap:
+    NEXT_PUBLIC_URL: "app.anishs.xyz"
+
+  externalSecret:
+    enabled: false
+    secretName: frontend-env-secret
+    secretStoreRefName: enkryptai-clustersecret-store
+    repoName: enkryptaivpc/frontend
+
+################GATEWAY_KONG########################### 
+gateway-kong: 
+  enabled: true
+  replicaCount: 2
+  image:
+    gateway:
+      repository: vpcdepoyment.azurecr.io/enkryptai-dev/gateway
+      tag: "c5cbd5f"
+      pullPolicy: IfNotPresent
+    sync:
+      repository: vpcdepoyment.azurecr.io/enkryptai-dev/gateway-sync
+      tag: "57df811"
+      pullPolicy: IfNotPresent
+    fluentBit:
+      repository: vpcdepoyment.azurecr.io/onprem/fluent-bit
+      tag: "3.2.1"
+      pullPolicy: IfNotPresent
+
+  nameOverride: ""
+  fullnameOverride: "gateway-kong"
+
+  service:
+    type: ClusterIP
+    ports:
+      http:
+        port: 80
+        targetPort: 8000
+      https:
+        port: 443
+        targetPort: 8443
+      admin:
+        port: 8001
+        targetPort: 8001
+      adminGui:
+        port: 8002
+        targetPort: 8002
+      fluentBitMetrics:
+        port: 2020
+        targetPort: 2020
+      fluentBitAdmin:
+        port: 5043
+        targetPort: 5043
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    hosts:
+      - host: api.anishs.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: gateway-kong-tls
+        hosts:
+          - api.anishs.xyz
+
+  resources:
+    gateway:
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+      requests:
+        cpu: "0.5"
+        memory: "1.5Gi"
+    sync:
+      limits:
+        cpu: "0.5"
+        memory: "256Mi"
+      requests:
+        cpu: "0.1"
+        memory: "64Mi"
+    fluentBit:
+      limits:
+        cpu: "0.5"
+        memory: "256Gi"
+      requests:
+        cpu: "0.1"
+        memory: "64Mi"
+
+  livenessProbe:
+    enabled: true
+    exec:
+      command:
+        - kong
+        - health
+    failureThreshold: 10
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 10
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+
+  externalSecrets:
+    enabled: false
+    secretStoreRefName: enkryptai-clustersecret-store
+  externalSecret:
+    repoName: enkryptaivpc/kong-gateway
+
+  configMaps:
+    kongConfig:
+      enabled: true
+      name: gateway-kong-temp-config
+    fluentBit:
+      enabled: true
+      name: fluent-bit-config
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  
+
+################REDTEAMING###########################
+redteam-proxy: 
+  enabled: false
+  replicaCount: 2
+
+  image:
+    repository: vpcdepoyment.azurecr.io/enkryptai-dev/redteam-proxy
+    pullPolicy: IfNotPresent
+    tag: "dev-v1.1.127-1764130957"
+
+  nameOverride: ""
+  fullnameOverride: "redteam-proxy"
+
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+
+  podLabels:
+    app: redteam-proxy
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+
+  service:
+    type: ClusterIP
+    port: 9091
+    targetPort: 9091
+    name: http
+
+  env:
+    - name: NATS_URL
+      value: "nats://nats:4222"
+    - name: IS_PROXY_MODE
+      value: "true"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 300Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 9091
+    initialDelaySeconds: 90
+    timeoutSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 9091
+    initialDelaySeconds: 30
+    timeoutSeconds: 10
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+  externalSecret:
+    enabled: false
+    secretName: redteam-proxy-env-secret
+    secretStoreRefName: enkryptai-clustersecret-store
+    repoName: enkryptaivpc/redteam-proxy
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+################GUARDRAILS###########################
+guardrails: 
+  enabled: false
+  replicaCount: 1
+  image:
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrails
+    pullPolicy: IfNotPresent
+    tag: "aa2fdfb"
+
+  nameOverride: ""
+  fullnameOverride: "guardrails"
+
+  podAnnotations:
+    reloader.stakater.com/auto: "true"
+
+  podLabels:
+    app: guardrails
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+    name: http
+
+  resources:
+    requests:
+      cpu: 4
+      memory: 16Gi
+      nvidia.com/gpu: 1
+    limits:
+      nvidia.com/gpu: 1
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 90
+    timeoutSeconds: 10
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 120
+    timeoutSeconds: 30
+
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+
+  externalSecret:
+    enabled: false
+    secretName: guardrails-env-secret
+    secretStoreRefName: enkryptai-clustersecret-store
+    repoName: enkryptaivpc/guardrails
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+
+supabase:
+
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    hosts:
+      - host: auth.anishs.xyz
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: supabase-tls
+        hosts:
+          - auth.anishs.xyz
+
+openfgaconfig:
+  externalSecret:
+    name: openfga-env-secret
+    refreshInterval: "15m"
+    secretStoreName: enkryptai-clustersecret-store
+    secretStoreKind: ClusterSecretStore
+    remoteSecretKey: enkryptaivpc/openfga
+    keys:
+      - secretKey: uri
+        property: uri
+      - secretKey: username 
+        property: username 
+      - secretKey: password 
+        property: password
+openfga:
+  replicaCount: 1 
+  image:
+    repository: vpcdepoyment.azurecr.io/onprem/openfga
+    pullPolicy: Always
+    tag: "v1.8.9"
+
+  imagePullSecrets: []
+  nameOverride: "openfga"
+  fullnameOverride: "openfga"
+
+  commonLabels: {}
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  annotations: {} 
+
+  podAnnotations: {} 
+  podExtraLabels: {}
+
+  extraEnvVars:
+    - name: OPENFGA_HTTP_TLS_ENABLED
+      value: "false"
+    - name: OPENFGA_REQUEST_TIMEOUT
+      value: "3s"
+    - name: OPENFGA_DATASTORE_METRICS_ENABLED
+      value: "true"
+    - name: OPENFGA_CHECK_CACHE_LIMIT
+      value: "10000"
+    - name: OPENFGA_CHECK_ITERATOR_CACHE_ENABLED
+      value: "true"
+    - name: OPENFGA_CHECK_ITERATOR_CACHE_MAX_RESULTS
+      value: "10000"
+    - name: OPENFGA_CHECK_ITERATOR_CACHE_TTL
+      value: "1m"
+    - name: OPENFGA_CACHE_CONTROLLER_ENABLED
+      value: "true"
+    - name: OPENFGA_CACHE_CONTROLLER_TTL
+      value: "30s"
+    - name: OPENFGA_CHECK_DISPATCH_THROTTLING_ENABLED
+      value: "false"
+    - name: OPENFGA_LIST_OBJECTS_DISPATCH_THROTTLING_ENABLED
+      value: "false"
+    - name: OPENFGA_LIST_USERS_DISPATCH_THROTTLING_ENABLED
+      value: "false"
+    - name: OPENFGA_TRACING_ENABLED
+      value: "false"
+    - name: OPENFGA_TRACE_SERVICE_NAME
+      value: "openfga"
+    - name: OPENFGA_ACCESS_CONTROL_ENABLED
+      value: "false"
+
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraInitContainers: []
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  initContainer:
+    repository: vpcdepoyment.azurecr.io/onprem/k8s-wait-for
+    tag: "v2.0"
+    pullPolicy: IfNotPresent
+
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 12
+    successThreshold: 1
+
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 6
+    successThreshold: 1
+
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+    successThreshold: 1
+
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+  customStartupProbe: {}
+
+  service:
+    annotations: {}
+    type: ClusterIP
+    port: 8080
+
+  telemetry:
+    trace:
+      enabled: false
+      otlp:
+        endpoint:
+        tls:
+          enabled: false
+      sampleRatio: 0.3
+
+    metrics:
+      enabled: true
+
+      serviceMonitor:
+        enabled: false
+        additionalLabels: {}
+        annotations: {}
+        jobLabel: "app.kubernetes.io/name"
+        namespace: ""
+        namespaceSelector: {}
+        scrapeInterval: 30s
+        scrapeTimeout: 10s
+        targetLabels: []
+        relabelings: []
+        metricRelabelings: []
+
+      addr: 0.0.0.0:2112
+      enableRPCHistograms:
+      podAnnotations:
+        prometheus.io/scrape: "true"
+  datastore:
+    engine: postgres
+    uri:
+    uriSecret: openfga-env-secret
+    maxCacheSize: 100000
+    maxOpenConns: 70
+    maxIdleConns: 30
+    connMaxIdleTime: 1m
+    connMaxLifetime: 1h
+    applyMigrations: true
+    waitForMigrations: true
+    migrationType: job
+    migrations:
+      resources: {}
+      image:
+        repository: vpcdepoyment.azurecr.io/onprem/k8s-wait-for
+        pullPolicy: Always
+        tag: "v2.0"
+
+  postgresql:
+    enabled: false
+
+  mysql:
+    enabled: false
+
+  grpc:
+    addr: 0.0.0.0:8081
+    tls:
+      enabled: false
+      cert:
+      key:
+      ca:
+
+  http:
+    enabled: true
+    addr: 0.0.0.0:8080
+    tls:
+      enabled: false
+      cert:
+      key:
+    upstreamTimeout:
+    corsAllowedOrigins: ["*"]
+    corsAllowedHeaders: ["*"]
+
+  authn:
+    method: none
+    preshared:
+      keys: []
+    oidc:
+      audience:
+      issuer:
+
+  playground:
+    enabled: false
+    port: 3000
+
+  profiler:
+    enabled: false
+    addr: 0.0.0.0:3001
+
+  log:
+    level: info
+    format: json
+    timestampFormat: Unix
+
+  checkQueryCache:
+    enabled: true
+    limit: 10000
+    ttl: 1m
+
+  experimentals: []
+
+  maxTuplesPerWrite:
+  maxTypesPerAuthorizationModel:
+  maxAuthorizationModelSizeInBytes:
+  maxConcurrentReadsForCheck:
+  maxConcurrentReadsForListObjects:
+  maxConcurrentReadsForListUsers:
+  changelogHorizonOffset:
+  resolveNodeLimit:
+  resolveNodeBreadthLimit:
+  listObjectsDeadline: 3s
+  listObjectsMaxResults: 1000
+  listUsersDeadline: 3s
+  listUsersMaxResults: 1000
+  requestDurationDatastoreQueryCountBuckets: [50, 200]
+  allowWriting1_0Models:
+  allowEvaluating1_0Models:
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+
+  resources: {}
+
+  lifecycle: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  affinity: {}
+  sidecars: []
+
+  migrate:
+    extraVolumes: []
+    extraVolumeMounts: []
+    extraInitContainers: []
+    sidecars: []
+    annotations:
+      helm.sh/hook-weight: "-15"
+    labels: {}
+    timeout:
+
+  testPodSpec: {}
+  testContainerSpec: {}
+  extraObjects: []
+

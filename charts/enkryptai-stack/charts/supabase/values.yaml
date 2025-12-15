@@ -58,7 +58,6 @@ db:
     name: ""
   podAnnotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -111,7 +110,6 @@ studio:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "5"
-    "helm.sh/hook": post-install
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -148,7 +146,6 @@ auth:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -184,7 +181,6 @@ rest:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -221,7 +217,6 @@ realtime:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -269,7 +264,6 @@ meta:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -306,7 +300,6 @@ storage:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -406,7 +399,6 @@ kong:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -459,7 +451,6 @@ analytics:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -539,7 +530,6 @@ functions:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:
@@ -580,7 +570,6 @@ minio:
     name: ""
   podAnnotations: 
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
   securityContext: {}
   service:

@@ -5,8 +5,6 @@ metadata:
   name: openfga-sync
   annotations:
     "helm.sh/hook-weight": "-6"
-    "helm.sh/hook": post-install
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   backoffLimit: 5
   template:

@@ -4,7 +4,6 @@ metadata:
   name: supabase-cluster
   annotations:
     "helm.sh/hook-weight": "20"
-    "helm.sh/hook": post-install
 
 spec:
   imageName: {{ .Values.global.registry }}/{{ .Values.supabase.repository }}:{{ .Values.supabase.tag }}

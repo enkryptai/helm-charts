@@ -6,7 +6,6 @@ metadata:
   name: admin-index-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   name: admin-index-template
   opensearchCluster:
@@ -227,7 +226,6 @@ metadata:
   name: ai-proxy-index-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   name: ai-proxy-index-template
   opensearchCluster:
@@ -844,7 +842,6 @@ metadata:
   name: guardrails-index-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   name: guardrails-index-template
   opensearchCluster:
@@ -1150,7 +1147,6 @@ metadata:
   name: leaderboard-index-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   name: leaderboard-index-template
   opensearchCluster:

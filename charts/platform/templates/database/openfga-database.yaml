@@ -4,7 +4,6 @@ metadata:
   name: cluster-openfga
   annotations:
     "helm.sh/hook-weight": "20"
-    "helm.sh/hook": post-install
 spec:
   imageName: {{ .Values.global.registry }}/{{ .Values.openfga.repository }}:{{ .Values.openfga.tag }}
   postgresGID: 26

@@ -4,7 +4,6 @@ metadata:
   name: enkryptai-opensearch
   annotations:
     "helm.sh/hook-weight": "10"
-    "helm.sh/hook": post-install
 spec:
   security:
     tls:
@@ -45,7 +44,6 @@ spec:
           storageClass: gp3-encrypted
           accessModes:
           - ReadWriteOnce
-      NodeSelector:
       resources:
          requests:
             memory: "2Gi"

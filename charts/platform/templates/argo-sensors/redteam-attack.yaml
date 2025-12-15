@@ -4,7 +4,6 @@ metadata:
   name: redteam-attack-sensor
   namespace: argo-events
   annotations:
-    "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "10"
 spec:
   dependencies:

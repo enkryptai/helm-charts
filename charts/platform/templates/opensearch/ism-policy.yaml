@@ -4,7 +4,6 @@ metadata:
   name: rollbar-policy
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }} 

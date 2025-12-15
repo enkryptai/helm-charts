@@ -4,7 +4,6 @@ metadata:
   name: workflows
   namespace: argo-events
   annotations:
-    "helm.sh/hook": post-install
     "helm.sh/hook-weight": "10"
 spec:
   name: REDTEAM
@@ -31,7 +30,6 @@ metadata:
   name: workflows-logs
   namespace: argo-events
   annotations:
-    "helm.sh/hook": post-install
     "helm.sh/hook-weight": "10"
 spec:
   name: REDTEAM-LOGS

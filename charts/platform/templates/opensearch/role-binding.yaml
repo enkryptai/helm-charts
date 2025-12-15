@@ -4,7 +4,6 @@ metadata:
   name: all-access
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -20,7 +19,6 @@ metadata:
   name: own-index
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -36,7 +34,6 @@ metadata:
   name: readall
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -52,7 +49,6 @@ metadata:
   name: manage-snapshots
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -68,7 +64,6 @@ metadata:
   name: dashboard-server
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}

@@ -5,7 +5,6 @@ metadata:
   name: alerting-read-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -22,7 +21,6 @@ metadata:
   name: alerting-ack-alerts
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -36,7 +34,6 @@ metadata:
   name: alerting-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -58,7 +55,6 @@ metadata:
   name: anomaly-read-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -78,7 +74,6 @@ metadata:
   name: anomaly-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -100,7 +95,6 @@ metadata:
   name: notebooks-read-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -115,7 +109,6 @@ metadata:
   name: notebooks-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -134,7 +127,6 @@ metadata:
   name: observability-read-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -148,7 +140,6 @@ metadata:
   name: observability-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -166,7 +157,6 @@ metadata:
   name: reports-read-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -184,7 +174,6 @@ metadata:
   name: reports-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -207,7 +196,6 @@ metadata:
   name: asynchronous-search-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -225,7 +213,6 @@ metadata:
   name: asynchronous-search-read-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -240,7 +227,6 @@ metadata:
   name: index-management-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -261,7 +247,6 @@ metadata:
   name: cross-cluster-replication-leader-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -280,7 +265,6 @@ metadata:
   name: cross-cluster-replication-follower-full-access
   annotations:
     "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}

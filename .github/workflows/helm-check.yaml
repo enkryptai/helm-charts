@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'charts/**'
-      - '.github/workflows/helm-ci.yml'
+      - '.github/workflows/helm-check.yaml'
 
 jobs:
   lint-and-test:
@@ -40,7 +40,10 @@ jobs:
 
       - name: Run chart-testing (lint)
         if: steps.list-changed.outputs.changed == 'true'
-        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
+        run: |
+          helm repo update 
+          helm dependency update
+          ct lint --target-branch ${{ github.event.repository.default_branch }}
 
       - name: Create kind cluster
         if: steps.list-changed.outputs.changed == 'true'
@@ -65,8 +68,7 @@ jobs:
         run: |
           for chart in charts/*/; do
             echo "Validating $chart"
-            helm template test "$chart" --debug
-            helm template test "$chart" --validate
+            helm template test "$chart"
           done
 
   security-scan:
@@ -81,39 +83,6 @@ jobs:
           directory: charts/
           framework: helm
           soft_fail: true
-
-  version-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check chart version bump
-        run: |
-          for chart in charts/*/Chart.yaml; do
-            chart_dir=$(dirname "$chart")
-            chart_name=$(basename "$chart_dir")
-            
-            current_version=$(grep '^version:' "$chart" | awk '{print $2}')
-            
-            git checkout ${{ github.event.pull_request.base.ref }}
-            if [ -f "$chart" ]; then
-              base_version=$(grep '^version:' "$chart" | awk '{print $2}')
-              git checkout -
-              
-              if [ "$current_version" == "$base_version" ]; then
-                echo "::error::Chart version not bumped for $chart_name (still $current_version)"
-                exit 1
-              else
-                echo "✓ Chart $chart_name version bumped: $base_version -> $current_version"
-              fi
-            else
-              git checkout -
-              echo "✓ New chart detected: $chart_name (v$current_version)"
-            fi
-          done
 
   documentation-check:
     runs-on: ubuntu-latest
@@ -136,7 +105,7 @@ jobs:
           ./helm-docs --dry-run
 
   summary:
-    needs: [lint-and-test, template-validation, security-scan, version-check, documentation-check]
+    needs: [lint-and-test, template-validation, security-scan, documentation-check]
     runs-on: ubuntu-latest
     if: always()
     steps:

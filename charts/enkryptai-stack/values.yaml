@@ -384,13 +384,11 @@ supabase:
   storage:
     enabled: true
     image:
-      repository: enkryptcontainerreg.azurecr.io/onprem/storage-api
+      repository: vpcdepoyment.azurecr.io/onprem/storage-api
       pullPolicy: IfNotPresent
       tag: "v1.19.1"
-  miniomc:
-    enabled: true
-    image:
-      repository: enkryptcontainerreg.azurecr.io/onprem/minio
+    miniomc:
+      image: onprem/mc:latest
 
   ingress:
     enabled: true

@@ -1,11 +1,12 @@
 {{- if .Values.storage.enabled -}}
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "supabase.storage.fullname" . }}
   labels:
     {{- include "supabase.labels" . | nindent 4 }}
 spec:
+  serviceName: {{ include "supabase.storage.fullname" . }}
   {{- if not .Values.storage.autoscaling.enabled }}
   replicas: {{ .Values.storage.replicaCount }}
   {{- end }}
@@ -234,16 +235,25 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if not .Values.storage.persistence.enabled }}
       volumes:
         - name: storage-data
-          {{- if .Values.storage.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ include "supabase.storage.fullname" . }}-pvc
-          {{- else }}
           emptyDir:
             medium: ""
-          {{- end }}
         {{- with .Values.storage.volumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
+      {{- end }}
+  {{- if .Values.storage.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: storage-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: {{ .Values.storage.persistence.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.persistence.size }}
+  {{- end }}
 {{- end }}

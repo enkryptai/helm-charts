@@ -71,7 +71,7 @@ spec:
                   name: {{ .Values.secret.onprem.name }}
                   key: S3_PROTOCOL_ACCESS_KEY_SECRET
           name: init-bucket
-          image: {{$.Values.minio.image.repository}}:{{$.Values.minio.image.tag}}
+          image: {{$.Values.global.registry}}/{{$.Values.storage.miniomc.image}}
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh

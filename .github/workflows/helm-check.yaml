@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'charts/**'
-      - '.github/workflows/helm-ci.yml'
+      - '.github/workflows/helm-check.yaml'
 
 jobs:
   lint-and-test:

@@ -314,7 +314,7 @@ guardrails:
   image:
     repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrails
     pullPolicy: IfNotPresent
-    tag: "aa2fdfb"
+    tag: "prodgr-v0.0.5"
 
   nameOverride: ""
   fullnameOverride: "guardrails"
@@ -361,6 +361,10 @@ guardrails:
     initialDelaySeconds: 120
     timeoutSeconds: 30
 
+  extraEnv:
+    - name: LOCAL_GUARDRAILS
+      value: "true"
+    
   autoscaling:
     enabled: true
     minReplicas: 1
@@ -381,6 +385,8 @@ guardrails:
 
 
 supabase:
+  customtemplate:
+    enabled: false
   storage:
     enabled: true
     image:

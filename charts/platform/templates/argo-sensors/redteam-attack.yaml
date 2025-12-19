@@ -52,9 +52,6 @@ spec:
               entrypoint: process-order
               templates:
               - container:
-                  command:
-                    - python
-                    - job/job_service_sync_all.py
                   env:
                   - name: WORKER_TYPE 
                     value: "combined"

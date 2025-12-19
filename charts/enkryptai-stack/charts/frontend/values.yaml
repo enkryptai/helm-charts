@@ -18,6 +18,9 @@ podAnnotations:
 podLabels:
   app: frontend
 
+env:
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+
 service:
   type: ClusterIP
   port: 3000

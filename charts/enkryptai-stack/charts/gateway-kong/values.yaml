@@ -2,12 +2,12 @@ replicaCount: 2
 
 image:
   gateway:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway
-    tag: "dev"
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
+    tag: "ec1a9d9"
     pullPolicy: IfNotPresent
   sync:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway-sync
-    tag: "dev"
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
+    tag: "ec1a9d9"
     pullPolicy: IfNotPresent
   fluentBit:
     repository: fluent/fluent-bit

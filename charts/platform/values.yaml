@@ -20,8 +20,8 @@ migrationjob:
   tag: 15
 sensor: 
   natsURL: "nats://nats.enkryptai-stack:4222"
-  jobversion: "dev-v1.1.76" 
-  jobImage: vpcdepoyment.azurecr.io/enkryptai-dev/redteam-job 
+  jobversion: "prod-v1.0.29"
+  jobImage: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-job 
 
 adminpassword: 
   secretName: "opensearch-cred"
@@ -286,7 +286,7 @@ platform-core:
       image:
         registry: vpcdepoyment.azurecr.io
         repository: onprem/argoexec
-        tag: "v3.6.14"
+        tag: "v3.6.13"
         pullPolicy: ""
       resources: {}
       args: []

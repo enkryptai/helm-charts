@@ -23,9 +23,9 @@ busybox:
 frontend:
   enabled: true
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-dev/frontend
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
-    tag: "dev-1764326836"
+    tag: "91d6764"
 
   serviceAccount:
     create: false
@@ -112,12 +112,12 @@ gateway-kong:
   replicaCount: 2
   image:
     gateway:
-      repository: vpcdepoyment.azurecr.io/enkryptai-dev/gateway
-      tag: "c5cbd5f"
+      repository: vpcdepoyment.azurecr.io/enkryptai-prod/gateway
+      tag: "ec1a9d9"
       pullPolicy: IfNotPresent
     sync:
-      repository: vpcdepoyment.azurecr.io/enkryptai-dev/gateway-sync
-      tag: "57df811"
+      repository: vpcdepoyment.azurecr.io/enkryptai-prod/gateway-sync
+      tag: "a8a9b2c"
       pullPolicy: IfNotPresent
     fluentBit:
       repository: vpcdepoyment.azurecr.io/onprem/fluent-bit
@@ -234,9 +234,9 @@ redteam-proxy:
   replicaCount: 2
 
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-dev/redteam-proxy
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "dev-v1.1.127-1764130957"
+    tag: "da62bf6"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"

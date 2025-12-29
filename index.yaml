@@ -3,7 +3,7 @@ entries:
   enkryptai-lite:
   - apiVersion: v2
     appVersion: 1.0.6
-    created: "2025-12-26T11:29:27.994854942+05:30"
+    created: "2025-12-29T22:21:21.822278163+05:30"
     dependencies:
     - alias: argo-workflow
       condition: argo-workflow.enabled
@@ -45,7 +45,7 @@ entries:
   enkryptai-stack:
   - apiVersion: v2
     appVersion: 1.1.7
-    created: "2025-12-26T11:29:28.129215548+05:30"
+    created: "2025-12-29T22:21:22.070077933+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -60,7 +60,7 @@ entries:
     version: 1.1.7
   - apiVersion: v2
     appVersion: 1.1.6
-    created: "2025-12-26T11:29:28.110825892+05:30"
+    created: "2025-12-29T22:21:22.039766867+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -75,7 +75,7 @@ entries:
     version: 1.1.6
   - apiVersion: v2
     appVersion: 1.1.5
-    created: "2025-12-26T11:29:28.096201693+05:30"
+    created: "2025-12-29T22:21:22.018777159+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -90,7 +90,7 @@ entries:
     version: 1.1.5
   - apiVersion: v2
     appVersion: 1.1.4
-    created: "2025-12-26T11:29:28.08155626+05:30"
+    created: "2025-12-29T22:21:21.991024322+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -105,7 +105,7 @@ entries:
     version: 1.1.4
   - apiVersion: v2
     appVersion: 1.1.3
-    created: "2025-12-26T11:29:28.065713938+05:30"
+    created: "2025-12-29T22:21:21.972603363+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -120,7 +120,7 @@ entries:
     version: 1.1.3
   - apiVersion: v2
     appVersion: 1.1.2
-    created: "2025-12-26T11:29:28.049967476+05:30"
+    created: "2025-12-29T22:21:21.932640441+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -135,7 +135,7 @@ entries:
     version: 1.1.2
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-26T11:29:28.036951367+05:30"
+    created: "2025-12-29T22:21:21.898860991+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -150,7 +150,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.2
-    created: "2025-12-26T11:29:28.023464939+05:30"
+    created: "2025-12-29T22:21:21.864870978+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -165,7 +165,7 @@ entries:
     version: 1.0.2
   - apiVersion: v2
     appVersion: 1.0.1
-    created: "2025-12-26T11:29:28.008589366+05:30"
+    created: "2025-12-29T22:21:21.835506648+05:30"
     dependencies:
     - alias: openfga
       name: openfga
@@ -181,7 +181,7 @@ entries:
   platform-core:
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-26T11:29:28.186263057+05:30"
+    created: "2025-12-29T22:21:22.134669867+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -232,7 +232,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.4
-    created: "2025-12-26T11:29:28.168543983+05:30"
+    created: "2025-12-29T22:21:22.118175368+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -283,7 +283,7 @@ entries:
     version: 1.0.4
   - apiVersion: v2
     appVersion: 1.0.3
-    created: "2025-12-26T11:29:28.153122555+05:30"
+    created: "2025-12-29T22:21:22.102832015+05:30"
     dependencies:
     - alias: argo-events
       name: argo-events
@@ -349,8 +349,22 @@ entries:
     version: 1.0.3
   platform-stack:
   - apiVersion: v2
+    appVersion: 1.1.7
+    created: "2025-12-29T22:21:22.370834544+05:30"
+    dependencies:
+    - alias: platform-core
+      name: platform-core
+      repository: https://enkryptai.github.io/helm-charts
+      version: 1.1.0
+    description: Complete platform infrastructure stack
+    digest: 65a6225c1dc9ad4d3f02c6ce98565627011d763af4f5a4e4428e71813c7c7acf
+    name: platform-stack
+    urls:
+    - https://enkryptai.github.io/helm-charts/helm-release/platform-stack-1.1.7.tgz
+    version: 1.1.7
+  - apiVersion: v2
     appVersion: 1.1.6
-    created: "2025-12-26T11:29:28.372838113+05:30"
+    created: "2025-12-29T22:21:22.345985188+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -364,7 +378,7 @@ entries:
     version: 1.1.6
   - apiVersion: v2
     appVersion: 1.1.5
-    created: "2025-12-26T11:29:28.346046875+05:30"
+    created: "2025-12-29T22:21:22.310408868+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -378,7 +392,7 @@ entries:
     version: 1.1.5
   - apiVersion: v2
     appVersion: 1.1.4
-    created: "2025-12-26T11:29:28.3290429+05:30"
+    created: "2025-12-29T22:21:22.277221027+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -392,7 +406,7 @@ entries:
     version: 1.1.4
   - apiVersion: v2
     appVersion: 1.1.3
-    created: "2025-12-26T11:29:28.306601964+05:30"
+    created: "2025-12-29T22:21:22.2503879+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -406,7 +420,7 @@ entries:
     version: 1.1.3
   - apiVersion: v2
     appVersion: 1.1.2
-    created: "2025-12-26T11:29:28.279914387+05:30"
+    created: "2025-12-29T22:21:22.228442625+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -420,7 +434,7 @@ entries:
     version: 1.1.2
   - apiVersion: v2
     appVersion: 1.1.1
-    created: "2025-12-26T11:29:28.262458607+05:30"
+    created: "2025-12-29T22:21:22.209419895+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -434,7 +448,7 @@ entries:
     version: 1.1.1
   - apiVersion: v2
     appVersion: 1.1.0
-    created: "2025-12-26T11:29:28.246685622+05:30"
+    created: "2025-12-29T22:21:22.192805949+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -448,7 +462,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 1.0.3
-    created: "2025-12-26T11:29:28.227986404+05:30"
+    created: "2025-12-29T22:21:22.174572162+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -462,7 +476,7 @@ entries:
     version: 1.0.3
   - apiVersion: v2
     appVersion: 1.0.2
-    created: "2025-12-26T11:29:28.211139907+05:30"
+    created: "2025-12-29T22:21:22.156972807+05:30"
     dependencies:
     - alias: platform-core
       name: platform-core
@@ -474,4 +488,4 @@ entries:
     urls:
     - https://enkryptai.github.io/helm-charts/helm-release/platform-stack-1.0.2.tgz
     version: 1.0.2
-generated: "2025-12-26T11:29:27.982398288+05:30"
+generated: "2025-12-29T22:21:21.798243107+05:30"

@@ -25,7 +25,7 @@ frontend:
   image:
     repository: vpcdepoyment.azurecr.io/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
-    tag: "91d6764"
+    tag: "a56784b"
 
   serviceAccount:
     create: false
@@ -45,17 +45,17 @@ frontend:
     enabled: true
     className: nginx
     annotations:
-      cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     hosts:
       - host: app.anishs.xyz
         paths:
           - path: /
             pathType: Prefix
+    
     tls:
-      - secretName: frontend-tls
-        hosts:
-          - app.anishs.xyz
+    - hosts:
+      - app.anishs.xyz
+      secretName: custom-cert-front
 
   resources:
     limits:
@@ -113,7 +113,7 @@ gateway-kong:
   image:
     gateway:
       repository: vpcdepoyment.azurecr.io/enkryptai-prod/gateway
-      tag: "ec1a9d9"
+      tag: "dev-1767798930"
       pullPolicy: IfNotPresent
     sync:
       repository: vpcdepoyment.azurecr.io/enkryptai-prod/gateway-sync
@@ -161,9 +161,9 @@ gateway-kong:
           - path: /
             pathType: Prefix
     tls:
-      - secretName: gateway-kong-tls
-        hosts:
-          - api.anishs.xyz
+    - hosts:
+      - api.anishs.xyz
+      secretName: custom-cert-front
 
   resources:
     gateway:
@@ -236,7 +236,7 @@ redteam-proxy:
   image:
     repository: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "da62bf6"
+    tag: "dev-v1.1.164"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"
@@ -408,10 +408,9 @@ supabase:
           - path: /
             pathType: Prefix
     tls:
-      - secretName: supabase-tls
-        hosts:
-          - auth.anishs.xyz
-
+    - hosts:
+      - auth.anishs.xyz
+      secretName: custom-cert-front
 openfgaconfig:
   externalSecret:
     name: openfga-env-secret

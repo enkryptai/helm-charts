@@ -44,4 +44,3 @@ spec:
         - name: supabase-migration
           configMap:
             name: supabase-migration
-

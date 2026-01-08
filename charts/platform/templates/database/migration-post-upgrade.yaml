@@ -1,0 +1,78 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    "helm.sh/hook-weight": "21"
+    "helm.sh/hook": post-install,post-upgrade
+  name: db-migration-post-upgrade
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-db
+          image: {{ .Values.global.registry }}/{{ .Values.databasekong.repository }}:{{ .Values.databasekong.tag }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER"; do
+                echo "Waiting for DB at $DB_HOST:$DB_PORT...";
+                sleep 10;
+              done
+          envFrom:
+            - secretRef:
+                name: superuser-secret
+      containers:
+        - name: run-sql
+          image: {{ .Values.global.registry }}/{{ .Values.migrationjob.repository }}:{{ .Values.migrationjob.tag  }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              export PGPASSWORD="$DB_PASSWORD"
+              
+              # Create migration tracking table if it doesn't exist
+              psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
+                CREATE TABLE IF NOT EXISTS public.supabase_migration_history (
+                  migration_name VARCHAR(255) PRIMARY KEY,
+                  applied_at TIMESTAMPTZ DEFAULT NOW()
+                );
+              EOSQL
+              
+              # Process each SQL file in order
+              for f in $(ls -1 /sql-scripts/*.sql | sort); do
+                migration_name=$(basename "$f")
+                echo "Checking migration: $migration_name"
+                
+                # Check if migration has already been applied
+                applied=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c \
+                  "SELECT COUNT(*) FROM public.supabase_migration_history WHERE migration_name = '$migration_name';" | tr -d ' ')
+                
+                if [ "$applied" = "0" ]; then
+                  echo "Running new migration: $migration_name"
+                  if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$f"; then
+                    # Record successful migration
+                    psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c \
+                      "INSERT INTO public.supabase_migration_history (migration_name) VALUES ('$migration_name') ON CONFLICT (migration_name) DO NOTHING;"
+                    echo "Successfully applied migration: $migration_name"
+                  else
+                    echo "ERROR: Failed to apply migration: $migration_name"
+                    exit 1
+                  fi
+                else
+                  echo "Skipping already applied migration: $migration_name"
+                fi
+              done
+              
+              echo "Migration check complete"
+          envFrom:
+            - secretRef:
+                name: superuser-secret
+          volumeMounts:
+            - name: supabase-migration
+              mountPath: /sql-scripts
+      volumes:
+        - name: supabase-migration
+          configMap:
+            name: supabase-migration
+

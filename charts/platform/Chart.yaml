@@ -1,10 +1,10 @@
 apiVersion: v2
-name: platform-stack
-description: Complete platform infrastructure stack
-version: 1.1.8
-appVersion: "1.1.8"
+appVersion: 1.1.9
 dependencies:
-  - name: platform-core
-    version: 1.1.0
-    alias: platform-core
-    repository: "https://enkryptai.github.io/helm-charts"
+- alias: platform-core
+  name: platform-core
+  repository: https://enkryptai.github.io/helm-charts
+  version: 1.1.0
+description: Complete platform infrastructure stack
+name: platform-stack
+version: 1.1.9

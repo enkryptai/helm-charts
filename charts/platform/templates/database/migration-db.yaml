@@ -3734,7 +3734,76 @@ data:
       --
       -- Migration Complete
       --
-  019-reload-schema.sql: | 
+  019-add-latest-config-column.sql: |
+      --
+      -- Migration: 003_add_latest_config_column
+      -- Description: Add latest_config JSONB column to invitations table for tracking current role/group configuration
+      --
+
+      -- ============================================================================
+      -- Column: latest_config
+      -- Description: Stores the current/latest roles and groups configuration for an invitation
+      -- ============================================================================
+
+      BEGIN;
+
+      --
+      -- Add latest_config column
+      --
+
+      ALTER TABLE public.invitations
+      ADD COLUMN IF NOT EXISTS latest_config JSONB DEFAULT NULL;
+
+      --
+      -- Column Comment
+      --
+
+      COMMENT ON COLUMN public.invitations.latest_config IS
+      'Current/latest configuration for the invitation: {
+      "roles": [
+          {
+          "role": "viewer|editor|admin|...",
+          "project": "project_name or * for all projects"
+          }
+      ],
+      "groups": ["group1", "group2", ...]
+      }
+      Note: This can be updated post-invitation (e.g., when roles change), 
+      unlike config which stores the original invitation configuration.';
+
+      --
+      -- GIN Index for query performance on JSONB queries
+      --
+
+      CREATE INDEX IF NOT EXISTS idx_invitations_latest_config
+      ON public.invitations USING GIN (latest_config);
+
+      --
+      -- Verify the column was added
+      --
+
+      DO $$
+      BEGIN
+      IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_schema = 'public'
+          AND table_name = 'invitations'
+          AND column_name = 'latest_config'
+      ) THEN
+          RAISE NOTICE 'SUCCESS: latest_config column added successfully';
+      ELSE
+          RAISE EXCEPTION 'FAILED: latest_config column was not added';
+      END IF;
+      END $$;
+
+      COMMIT;
+
+      --
+      -- Migration Complete
+      -- 
+
+  020-reload-schema.sql: | 
     NOTIFY pgrst, 'reload schema'
 
 kind: ConfigMap

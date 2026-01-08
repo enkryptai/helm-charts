@@ -20,7 +20,7 @@ migrationjob:
   tag: 15
 sensor: 
   natsURL: "nats://nats.enkryptai-stack:4222"
-  jobversion: "prod-v1.0.29"
+  jobversion: "dev-v1.1.164"
   jobImage: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-job 
 
 adminpassword: 
@@ -297,10 +297,10 @@ platform-core:
         registry: vpcdepoyment.azurecr.io
         repository: onprem/workflow-controller
         tag: "v3.7.1"
-      namespaceParallelism: "10"
+      namespaceParallelism: "100"
       retentionPolicy:
-        completed: 10
-        failed: 3
-        errored: 3
+        completed: 100
+        failed: 100
+        errored: 100
 externalSecret:
   enabled: false

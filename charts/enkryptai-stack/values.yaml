@@ -25,7 +25,7 @@ frontend:
   image:
     repository: vpcdepoyment.azurecr.io/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
-    tag: "a56784b"
+    tag: "7961f95"
 
   serviceAccount:
     create: false
@@ -236,7 +236,7 @@ redteam-proxy:
   image:
     repository: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "dev-v1.1.164"
+    tag: "prod-v1.0.34"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"

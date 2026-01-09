@@ -84,6 +84,11 @@ opensearch:
     dashboardAnnotations: 
       owner: enkryptai
       cost-center: ""
+  ism:
+    # enabled: true
+      policyName: "otel-logs-lifecycle"
+      indexPattern: "otel-logs-*"
+      retentionDays: 15d
   initHelper:
     image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/busybox:latest"
   security:
@@ -514,3 +519,229 @@ openSearchAnnotations:
   owner: enkryptai
   cost-center: ""
 
+# ------------------------------------------------
+# OTEL CONFIG
+# -----------------------------------------------
+otel:
+  enabled: false
+  mode: daemonset
+  annotations: 
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "20"
+  ports:
+    otlp:
+      enabled: true
+      containerPort: 4317
+      hostPort: null
+
+    otlp-http:
+      enabled: true
+      containerPort: 4318
+      hostPort: null
+
+    jaeger-compact:
+      enabled: false
+
+    jaeger-grpc:
+      enabled: false
+
+    jaeger-thrift:
+      enabled: false
+
+    zipkin:
+      enabled: false
+  image:
+    repository: otel/opentelemetry-collector-contrib
+
+  clusterRole:
+    create: true
+    rules:
+    - apiGroups: [""]
+      resources: ["pods", "namespaces", "nodes"]
+      verbs: ["get", "list", "watch"]
+
+    - apiGroups: ["apps"]
+      resources: ["replicasets", "deployments", "statefulsets", "daemonsets"]
+      verbs: ["get", "list", "watch"]
+
+    - apiGroups: ["batch"]
+      resources: ["jobs", "cronjobs"]
+      verbs: ["get", "list", "watch"]
+
+  tolerations:
+  - key: "app"
+    operator: "Equal"
+    value: "redteaming"
+    effect: "NoSchedule"
+    
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+  
+  extraEnvs:
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    - name: OPENSEARCH_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: opensearch-cred
+          key: username
+    - name: OPENSEARCH_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: opensearch-cred
+          key: password
+  
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      
+      filelog:
+        include: [/var/log/pods/*/*/*.log]
+        exclude: [/var/log/pods/*/otel-*/*.log]
+        start_at: beginning
+        include_file_path: true
+        operators:
+          - type: container
+            id: container-parser
+
+    processors:
+
+      batch:
+        timeout: 10s
+        send_batch_size: 256
+        send_batch_max_size: 512
+      
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 800
+      
+      resource:
+        attributes:
+          - key: deployment.environment
+            value: test
+            action: insert
+      
+      resourcedetection:
+        detectors: [env, system]
+        timeout: 5s
+      
+      k8sattributes:
+        auth_type: "serviceAccount"
+        passthrough: false
+        filter:
+          node_from_env_var: NODE_NAME
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.deployment.name
+            - k8s.statefulset.name
+            - k8s.daemonset.name
+            - k8s.cronjob.name
+            - k8s.job.name
+            - k8s.node.name
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.pod.start_time
+            - k8s.pod.hostname
+            - k8s.pod.ip
+            - k8s.replicaset.uid
+            - k8s.replicaset.name
+            - k8s.deployment.uid
+            - k8s.daemonset.uid
+            - k8s.statefulset.uid
+            - k8s.cronjob.uid
+            - k8s.job.uid
+            - k8s.cluster.uid
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.ip
+          - sources:
+              - from: connection
+    extensions:
+      health_check:
+        endpoint: ${env:POD_IP}:13133
+      basicauth/os:
+        client_auth:
+          username: ${env:OPENSEARCH_USERNAME}
+          password: ${env:OPENSEARCH_PASSWORD}
+
+    exporters:
+      # debug:
+      #   verbosity: basic
+      
+      opensearch:
+        http:
+          endpoint: https://enkryptai-opensearch-cluster:9200
+          auth:
+            authenticator: basicauth/os
+          # tls:
+          #   insecure_skip_verify: true
+          tls:
+            ca_file: /etc/opensearch/certs/ca.crt
+          max_idle_conns: 100
+          idle_conn_timeout: 90s
+        
+        logs_index: "otel-logs"
+        traces_index: "otel-traces"
+
+        sending_queue:
+          enabled: true
+          num_consumers: 5
+          queue_size: 1000
+        
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+        
+        timeout: 60s
+
+    service:
+      extensions: [health_check, basicauth/os]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, resourcedetection, k8sattributes, resource, batch]
+          exporters: [debug, opensearch]
+
+        logs:
+          receivers: [otlp, filelog]
+          processors: [memory_limiter, resourcedetection, k8sattributes, resource, batch]
+          exporters: [debug, opensearch]
+
+  extraVolumes:
+    - name: varlog
+      hostPath:
+        path: /var/log
+    - name: opensearch-ca
+      secret:
+        secretName: enkryptai-opensearch-ca
+        items:
+          - key: ca.crt
+            path: ca.crt
+
+  extraVolumeMounts:
+    - name: varlog
+      mountPath: /var/log
+      readOnly: true
+    - name: opensearch-ca
+      mountPath: /etc/opensearch/certs
+      readOnly: true

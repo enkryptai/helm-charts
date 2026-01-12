@@ -1330,6 +1330,8 @@ spec:
   name: red_teaming_template
   indexPatterns:
     - "red_teaming"
+  dataStream: {} 
+
   template:
     settings:
       number_of_shards: 1

@@ -658,32 +658,29 @@ openfga:
   resources: {}
 
   lifecycle: {}
-
+  
   autoscaling:
     enabled: false
     minReplicas: 1
     maxReplicas: 100
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 80
-
   nodeSelector: {}
   tolerations: []
   topologySpreadConstraints: []
   affinity: {}
   sidecars: []
-
   migrate:
     extraVolumes: []
     extraVolumeMounts: []
     extraInitContainers: []
     sidecars: []
     annotations:
-      helm.sh/hook: "post-install, post-upgrade"
-      helm.sh/hook-weight: "-15"
+      helm.sh/hook: "post-install, post-upgrade, post-rollback, post-delete"
+      helm.sh/hook-weight: "-5"
       helm.sh/hook-delete-policy: "before-hook-creation"
     labels: {}
     timeout:
-
   testPodSpec: {}
   testContainerSpec: {}
   extraObjects: []

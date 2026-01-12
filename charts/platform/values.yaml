@@ -20,7 +20,7 @@ migrationjob:
   tag: 15
 sensor: 
   natsURL: "nats://nats.enkryptai-stack:4222"
-  jobversion: "prod-v1.0.29"
+  jobversion: "prod-v1.0.34"
   jobImage: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-job 
 
 adminpassword: 

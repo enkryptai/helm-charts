@@ -12,7 +12,7 @@ spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
   indexPatterns:
-    - "admin"
+    - "admin*"
   priority: 500
   template:
     settings:
@@ -233,7 +233,7 @@ spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
   indexPatterns:
-    - "ai-proxy"
+    - "ai-proxy*"
   template:
     settings:
       number_of_shards: 1
@@ -850,7 +850,7 @@ spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
   indexPatterns:
-    - "guardrails"
+    - "guardrails*"
   template:
     settings:
       number_of_shards: 1
@@ -1320,67 +1320,61 @@ spec:
 apiVersion: opensearch.opster.io/v1
 kind: OpensearchIndexTemplate
 metadata:
-  name: red-teaming-template
   annotations:
-    "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install, post-upgrade
+    helm.sh/hook: post-install, post-upgrade
+    helm.sh/hook-weight: "18"
+  name: red-teaming-template
 spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
-  name: red_teaming_template
   indexPatterns:
-    - "red_teaming"
-  dataStream: {} 
-
+  - red_teaming*
+  name: red_teaming_template
+  opensearchCluster:
+    name: enkryptai-opensearch
   template:
-    settings:
-      number_of_shards: 1
-      number_of_replicas: 0
-      opendistro.index_state_management.policy_id: "rollover_policy"
-      plugins.index_state_management.rollover_alias: "rollover_policy"
-      mapping.total_fields.limit: "2000"
     mappings:
       dynamic: "false"
-      dynamicTemplates:
-        - attack_method_params:
-            path_match: "request.body.redteam_test_configurations.*.attack_methods.*.*.params"
-            mapping:
-              type: flat_object
-        - attack_method_names:
-            path_match: "request.body.redteam_test_configurations.*.attack_methods.*.*"
-            match_pattern: regex
-            unmatch: "^params$"
-            mapping:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
+      dynamic_templates:
+      - attack_method_params:
+          path_match: request.body.redteam_test_configurations.*.attack_methods.*.*.params
+          mapping:
+            type: flat_object
+      - attack_method_names:
+          path_match: request.body.redteam_test_configurations.*.attack_methods.*.*
+          match_pattern: regex
+          unmatch: ^params$
+          mapping:
+            type: text
+            fields:
+              keyword:
+                type: keyword
+                ignore_above: 256
       properties:
-        "@timestamp":
+        '@timestamp':
           type: date
-        started_at:
-          type: long
-        correlation_id:
-          type: text
-          fields:
-            keyword:
-              type: keyword
-              ignore_above: 256
-        route:
+        authenticated_entity:
           properties:
-            name:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-            paths:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
+            id:
+              type: keyword
+        client_ip:
+          type: keyword
+        consumer:
+          properties:
+            created_at:
+              type: long
+            custom_id:
+              type: keyword
+            id:
+              type: keyword
+            org_id:
+              type: keyword
+            project_name:
+              type: keyword
+            updated_at:
+              type: long
+            username:
+              type: keyword
+        correlation_id:
+          type: keyword
         latencies:
           properties:
             kong:
@@ -1389,490 +1383,342 @@ spec:
               type: long
             request:
               type: long
-        client_ip:
-          type: text
-          fields:
-            keyword:
-              type: keyword
-              ignore_above: 256
-        upstream_uri:
-          type: text
-          fields:
-            keyword:
-              type: keyword
-              ignore_above: 256
-        authenticated_entity:
-          properties:
-            id:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-        consumer:
-          properties:
-            created_at:
-              type: long
-            custom_id:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-            id:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-            updated_at:
-              type: long
-            username:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-            org_id:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-            project_name:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
         request:
           properties:
-            is_public:
-              type: boolean
-            type:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-            coc_policy_id:
-              type: long
-            model_id:
-              type: long
-            deployment_id:
-              type: long
-            is_playground:
-              type: boolean
-            exit_time:
-              type: float
-            id:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-            method:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
-            ngx_req_id:
-              type: text
-              fields:
-                keyword:
-                  type: keyword
-                  ignore_above: 256
             body:
               properties:
                 attacks:
-                  type: text
-                  fields:
-                    keyword:
-                      type: keyword
-                      ignore_above: 256
-                target_model_configuration:
+                  type: keyword
+                metadata:
                   properties:
-                    model_name:
-                      type: text
-                      fields:
-                        keyword:
-                          type: keyword
-                          ignore_above: 256
-                    testing_for:
-                      type: text
-                      fields:
-                        keyword:
-                          type: keyword
-                          ignore_above: 256
-                    model_provider:
-                      type: text
-                      fields:
-                        keyword:
-                          type: keyword
-                          ignore_above: 256
-                    metadata:
-                      properties:
-                        enkryptai:
-                          properties:
-                            deployment_name:
-                              type: text
-                              fields:
-                                keyword:
-                                  type: keyword
-                                  ignore_above: 256
-                            project:
-                              type: text
-                              fields:
-                                keyword:
-                                  type: keyword
-                                  ignore_above: 256
+                    email_id:
+                      type: keyword
+                    user_id:
+                      type: keyword
                 redteam_test_configurations:
                   properties:
-                    jailbreak:
+                    access_control_and_permissions_test:
                       properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
                         sample_percentage:
                           type: long
-                        test_methods:
-                          type: text
-                          fields:
-                            keyword:
-                              type: keyword
-                              ignore_above: 256
-                    malware:
+                    access_control_test:
                       properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
                         sample_percentage:
                           type: long
-                        test_methods:
-                          type: text
-                          fields:
-                            keyword:
-                              type: keyword
-                              ignore_above: 256
-                    privacy_attack:
+                    adv_bias_test:
                       properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
                         sample_percentage:
                           type: long
-                        test_methods:
-                          type: text
-                          fields:
-                            keyword:
-                              type: keyword
-                              ignore_above: 256
-                    hallucination:
+                    adv_command_test:
                       properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
                         sample_percentage:
                           type: long
-                        test_methods:
-                          type: text
-                          fields:
-                            keyword:
-                              type: keyword
-                              ignore_above: 256
-                    toxicity:
+                    adv_competitor_test:
                       properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
                         sample_percentage:
                           type: long
-                        test_methods:
-                          type: text
-                          fields:
-                            keyword:
-                              type: keyword
-                              ignore_above: 256
+                    adv_info_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    adv_pii_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    adv_tool_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    agent_behaviour_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    agent_output_quality_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    alignment_and_governance_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
                     bias:
                       properties:
                         sample_percentage:
                           type: long
                         test_methods:
-                          type: text
-                          fields:
-                            keyword:
-                              type: keyword
-                              ignore_above: 256
+                          type: keyword
                     bias_test:
                       properties:
-                        sample_percentage:
-                          type: long
                         attack_methods:
                           type: object
-                          dynamic: true
+                          enabled: true
+                        sample_percentage:
+                          type: long
                     cbrn_test:
                       properties:
-                        sample_percentage:
-                          type: long
                         attack_methods:
                           type: object
-                          dynamic: true
-                    harmful_test:
-                      properties:
+                          enabled: true
                         sample_percentage:
                           type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    insecure_code_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    toxicity_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    pii_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    copyright_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    misinformation_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    system_prompt_extractions_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    sponge_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
                     competitor_test:
                       properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
                         competitors_list:
-                          type: text
-                          fields:
-                            keyword:
-                              type: keyword
-                              ignore_above: 256
+                          type: keyword
                         sample_percentage:
                           type: long
+                    copyright_test:
+                      properties:
                         attack_methods:
                           type: object
-                          dynamic: true
-                    adv_bias_test:
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    custom_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    governance_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    hallucination:
                       properties:
                         sample_percentage:
                           type: long
+                        test_methods:
+                          type: keyword
+                    harmful_test:
+                      properties:
                         attack_methods:
                           type: object
-                          dynamic: true
-                    adv_info_test:
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    human_factors_and_societal_impact_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    infrastructure_and_integration_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    input_and_content_integrity_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    insecure_code_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    jailbreak:
                       properties:
                         sample_percentage:
                           type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    adv_tool_test:
+                        test_methods:
+                          type: keyword
+                    malware:
                       properties:
                         sample_percentage:
                           type: long
+                        test_methods:
+                          type: keyword
+                    misinformation_test:
+                      properties:
                         attack_methods:
                           type: object
-                          dynamic: true
-                    adv_command_test:
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    physical_and_actuation_safety_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    pii_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    privacy_attack:
                       properties:
                         sample_percentage:
                           type: long
+                        test_methods:
+                          type: keyword
+                    privacy_test:
+                      properties:
                         attack_methods:
                           type: object
-                          dynamic: true
-                    adv_pii_test:
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    reliability_and_monitoring_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    reliability_and_observability_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    security_and_privacy_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    sponge_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    system_prompt_extractions_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    tool_extraction_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    tool_misuse_test:
+                      properties:
+                        attack_methods:
+                          type: object
+                          enabled: true
+                        sample_percentage:
+                          type: long
+                    toxicity:
                       properties:
                         sample_percentage:
                           type: long
+                        test_methods:
+                          type: keyword
+                    toxicity_test:
+                      properties:
                         attack_methods:
                           type: object
-                          dynamic: true
+                          enabled: true
+                        sample_percentage:
+                          type: long
                     toxicityexploitation:
                       properties:
                         sample_percentage:
                           type: long
                         test_methods:
-                          type: text
-                          fields:
-                            keyword:
-                              type: keyword
-                              ignore_above: 256
-                    adv_competitor_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    custom_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    alignment_and_governance_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    input_and_content_integrity_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    infrastructure_and_integration_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    security_and_privacy_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    human_factors_and_societal_impact_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    access_control_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    physical_and_actuation_safety_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    reliability_and_monitoring_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    governance_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    agent_output_quality_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    tool_misuse_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    privacy_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    reliability_and_observability_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    agent_behaviour_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    access_control_and_permissions_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                    tool_extraction_test:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        attack_methods:
-                          type: object
-                          dynamic: true
-                metadata:
+                          type: keyword
+                target_model_configuration:
                   properties:
-                    user_id:
-                      type: text
-                      fields:
-                        keyword:
-                          type: keyword
-                          ignore_above: 256
-                    email_id:
-                      type: text
-                      fields:
-                        keyword:
-                          type: keyword
-                          ignore_above: 256
+                    metadata:
+                      properties:
+                        enkryptai:
+                          properties:
+                            deployment_name:
+                              type: keyword
+                            project:
+                              type: keyword
+                    model_name:
+                      type: keyword
+                    model_provider:
+                      type: keyword
+                    testing_for:
+                      type: keyword
+            coc_policy_id:
+              type: long
+            deployment_id:
+              type: long
+            exit_time:
+              type: float
+            id:
+              type: keyword
+            is_playground:
+              type: boolean
+            is_public:
+              type: boolean
+            method:
+              type: keyword
+            model_id:
+              type: long
+            ngx_req_id:
+              type: keyword
+            type:
+              type: keyword
         response:
           properties:
-            status:
-              type: long
             body:
               properties:
-                task_id:
-                  type: text
-                  fields:
-                    keyword:
-                      type: keyword
-                      ignore_above: 256
-                single_shot:
-                  properties:
-                    success:
-                      type: long
                 iterative:
                   properties:
                     success:
@@ -1881,3 +1727,25 @@ spec:
                   properties:
                     success:
                       type: long
+                single_shot:
+                  properties:
+                    success:
+                      type: long
+                task_id:
+                  type: keyword
+            status:
+              type: long
+        route:
+          properties:
+            name:
+              type: keyword
+            paths:
+              type: keyword
+        started_at:
+          type: long
+        upstream_uri:
+          type: keyword
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 0
+      "index.mapping.total_fields.limit": 3000

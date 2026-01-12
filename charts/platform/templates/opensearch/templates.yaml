@@ -6,7 +6,7 @@ metadata:
   name: admin-index-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install, post-upgrade
 spec:
   name: admin-index-template
   opensearchCluster:
@@ -227,7 +227,7 @@ metadata:
   name: ai-proxy-index-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install, post-upgrade
 spec:
   name: ai-proxy-index-template
   opensearchCluster:
@@ -844,7 +844,7 @@ metadata:
   name: guardrails-index-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install, post-upgrade
 spec:
   name: guardrails-index-template
   opensearchCluster:
@@ -1150,7 +1150,7 @@ metadata:
   name: leaderboard-index-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install, post-upgrade
 spec:
   name: leaderboard-index-template
   opensearchCluster:
@@ -1323,7 +1323,7 @@ metadata:
   name: red-teaming-template
   annotations:
     "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install, post-upgrade
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}

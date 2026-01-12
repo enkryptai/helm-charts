@@ -1317,6 +1317,7 @@ spec:
                       ignore_above: 256
   dataStream: {}
 ---
+
 apiVersion: opensearch.opster.io/v1
 kind: OpensearchIndexTemplate
 metadata:
@@ -1324,30 +1325,33 @@ metadata:
     helm.sh/hook: post-install, post-upgrade
     helm.sh/hook-weight: "18"
   name: red-teaming-template
+  namespace: enkryptai-stack
 spec:
   indexPatterns:
   - red_teaming*
   name: red_teaming_template
   opensearchCluster:
     name: enkryptai-opensearch
+  # Enable data stream mode
+  dataStream: {}
   template:
     mappings:
       dynamic: "false"
       dynamic_templates:
       - attack_method_params:
-          path_match: request.body.redteam_test_configurations.*.attack_methods.*.*.params
           mapping:
             type: flat_object
+          path_match: request.body.redteam_test_configurations.*.attack_methods.*.*.params
       - attack_method_names:
-          path_match: request.body.redteam_test_configurations.*.attack_methods.*.*
-          match_pattern: regex
-          unmatch: ^params$
           mapping:
-            type: text
             fields:
               keyword:
-                type: keyword
                 ignore_above: 256
+                type: keyword
+            type: text
+          match_pattern: regex
+          path_match: request.body.redteam_test_configurations.*.attack_methods.*.*
+          unmatch: ^params$
       properties:
         '@timestamp':
           type: date
@@ -1400,78 +1404,78 @@ spec:
                     access_control_and_permissions_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     access_control_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     adv_bias_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     adv_command_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     adv_competitor_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     adv_info_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     adv_pii_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     adv_tool_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     agent_behaviour_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     agent_output_quality_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     alignment_and_governance_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     bias:
@@ -1483,22 +1487,22 @@ spec:
                     bias_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     cbrn_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     competitor_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         competitors_list:
                           type: keyword
                         sample_percentage:
@@ -1506,22 +1510,22 @@ spec:
                     copyright_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     custom_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     governance_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     hallucination:
@@ -1533,36 +1537,36 @@ spec:
                     harmful_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     human_factors_and_societal_impact_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     infrastructure_and_integration_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     input_and_content_integrity_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     insecure_code_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     jailbreak:
@@ -1580,22 +1584,22 @@ spec:
                     misinformation_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     physical_and_actuation_safety_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     pii_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     privacy_attack:
@@ -1607,57 +1611,57 @@ spec:
                     privacy_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     reliability_and_monitoring_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     reliability_and_observability_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     security_and_privacy_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     sponge_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     system_prompt_extractions_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     tool_extraction_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     tool_misuse_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     toxicity:
@@ -1669,8 +1673,8 @@ spec:
                     toxicity_test:
                       properties:
                         attack_methods:
-                          type: object
                           enabled: true
+                          type: object
                         sample_percentage:
                           type: long
                     toxicityexploitation:
@@ -1746,6 +1750,6 @@ spec:
         upstream_uri:
           type: keyword
     settings:
-      number_of_shards: 1
+      index.mapping.total_fields.limit: 3000
       number_of_replicas: 0
-      "index.mapping.total_fields.limit": 3000
+      number_of_shards: 1

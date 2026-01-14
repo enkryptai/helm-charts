@@ -34,19 +34,19 @@ jobs:
         run: |
           set -e
           helm dependency update
-          helm template test ./charts/platform-core
+          helm template test charts/platform-core
 
       - name: validate helm template for platform 
         run: |
           set -e
           helm dependency update
-          helm template test ./charts/platform
+          helm template test charts/platform
 
       - name: validate helm template for enkryptai-stack 
         run: |
           set -e
           helm dependency update
-          helm template test ./charts/enkryptai-stack 
+          helm template test charts/enkryptai-stack 
       
 
   security-scan:

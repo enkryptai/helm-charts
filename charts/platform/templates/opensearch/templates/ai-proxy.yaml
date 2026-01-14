@@ -1,0 +1,615 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchIndexTemplate
+metadata:
+  name: ai-proxy-index-template
+  annotations:
+    "helm.sh/hook-weight": "18"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  name: ai-proxy-index-template
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  indexPatterns:
+    - "ai-proxy*"
+  template:
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 0
+      opendistro.index_state_management.policy_id: "rollover_policy"
+      plugins.index_state_management.rollover_alias: "rollover_policy"
+      mapping.total_fields.limit: "2000"
+    mappings:
+      dynamic: "false"
+      properties:
+        "@timestamp":
+          type: date
+        started_at:
+          type: long
+        correlation_id:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        route:
+          properties:
+            name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            paths:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        latencies:
+          properties:
+            kong:
+              type: long
+            proxy:
+              type: long
+            request:
+              type: long
+        client_ip:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        upstream_uri:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        authenticated_entity:
+          properties:
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        consumer:
+          properties:
+            created_at:
+              type: long
+            custom_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            updated_at:
+              type: long
+            username:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            org_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            project_name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        ai:
+          properties:
+            proxy:
+              properties:
+                usage:
+                  properties:
+                    prompt_tokens:
+                      type: long
+                    cost:
+                      type: long
+                    time_per_token:
+                      type: long
+                    total_tokens:
+                      type: long
+                    completion_tokens:
+                      type: long
+        request:
+          properties:
+            type:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            is_playground:
+              type: boolean
+            exit_time:
+              type: float
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            method:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            ngx_req_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            headers:
+              properties:
+                x-enkrypt-deployment:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                x-enkrypt-refresh-cache:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+            enkrypt:
+              properties:
+                tags:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                context:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                body:
+                  properties:
+                    model:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    stream:
+                      type: boolean
+                input_guardrails:
+                  properties:
+                    is_req_blocked:
+                      type: boolean
+                    is_pii_redacted:
+                      type: boolean
+                    enabled_detectors:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    detected_detectors:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    blocked_detectors:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    detect_response:
+                      properties:
+                        summary:
+                          properties:
+                            system_prompt_similarity:
+                              type: long
+                            policy_violation:
+                              type: long
+                            bias:
+                              type: long
+                            copyright_ip:
+                              type: long
+                            on_topic:
+                              type: long
+                            nsfw:
+                              type: long
+                            injection_attack:
+                              type: long
+                            keyword_detected:
+                              type: long
+                            pii:
+                              type: long
+                            toxicity:
+                              type: text
+                              fields:
+                                keyword:
+                                  type: keyword
+                                  ignore_above: 256
+                            sponge_attack:
+                              type: long
+                        key:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              null_value: "NULL"
+                              ignore_above: 256
+                    policy:
+                      properties:
+                        policy_id:
+                          type: long
+                        detectors:
+                          properties:
+                            system_prompt:
+                              properties:
+                                enabled:
+                                  type: boolean
+                                index:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                            policy_violation:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            bias:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            copyright_ip:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            topic_detector:
+                              properties:
+                                enabled:
+                                  type: boolean
+                                topic:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                            nsfw:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            toxicity:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            pii:
+                              properties:
+                                enabled:
+                                  type: boolean
+                                entities:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                            injection_attack:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            keyword_detector:
+                              properties:
+                                enabled:
+                                  type: boolean
+                                banned_keywords:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                            sponge_attack:
+                              properties:
+                                enabled:
+                                  type: boolean
+                model:
+                  properties:
+                    model_name:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    testing_for:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    model_id:
+                      type: long
+                    model_config:
+                      properties:
+                        hosting_type:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                        model_provider:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                deployment:
+                  properties:
+                    name:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    deployment_id:
+                      type: long
+                    model_saved_name:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    model_version:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    input_guardrails_policy:
+                      properties:
+                        enabled:
+                          type: boolean
+                        policy_name:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                        block:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                        additional_config:
+                          properties:
+                            pii_redaction:
+                              type: boolean
+                    output_guardrails_policy:
+                      properties:
+                        enabled:
+                          type: boolean
+                        policy_name:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                        block:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                        additional_config:
+                          properties:
+                            hallucination:
+                              type: boolean
+                            adherence:
+                              type: boolean
+                            relevancy:
+                              type: boolean
+        response:
+          properties:
+            status:
+              type: long
+            headers:
+              properties:
+                x-kong-llm-model:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                content-encoding:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+            enkrypt:
+              properties:
+                metrics:
+                  properties:
+                    input_guardrails_latency:
+                      type: float
+                    output_guardrails_latency:
+                      type: float
+                    endpoint_latency:
+                      type: float
+                output_guardrails:
+                  properties:
+                    is_res_blocked:
+                      type: boolean
+                    is_pii_unredacted:
+                      type: boolean
+                    enabled_detectors:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    detected_detectors:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    blocked_detectors:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    skipped_detectors:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    relevancy_response:
+                      properties:
+                        summary:
+                          properties:
+                            relevancy_score:
+                              type: long
+                    hallucination_response:
+                      properties:
+                        summary:
+                          properties:
+                            is_hallucination:
+                              type: boolean
+                    adherence_response:
+                      properties:
+                        summary:
+                          properties:
+                            adherence_score:
+                              type: long
+                    detect_response:
+                      properties:
+                        summary:
+                          properties:
+                            system_prompt_similarity:
+                              type: long
+                            policy_violation:
+                              type: long
+                            bias:
+                              type: long
+                            copyright_ip:
+                              type: long
+                            on_topic:
+                              type: long
+                            nsfw:
+                              type: long
+                            injection_attack:
+                              type: long
+                            keyword_detected:
+                              type: long
+                            pii:
+                              type: long
+                            toxicity:
+                              type: text
+                              fields:
+                                keyword:
+                                  type: keyword
+                                  ignore_above: 256
+                            sponge_attack:
+                              type: long
+                        key:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              null_value: "NULL"
+                              ignore_above: 256
+                    policy:
+                      properties:
+                        policy_id:
+                          type: long
+                        detectors:
+                          properties:
+                            system_prompt:
+                              properties:
+                                enabled:
+                                  type: boolean
+                                index:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                            policy_violation:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            bias:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            copyright_ip:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            topic_detector:
+                              properties:
+                                enabled:
+                                  type: boolean
+                                topic:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                            nsfw:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            toxicity:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            pii:
+                              properties:
+                                enabled:
+                                  type: boolean
+                                entities:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                            injection_attack:
+                              properties:
+                                enabled:
+                                  type: boolean
+                            keyword_detector:
+                              properties:
+                                enabled:
+                                  type: boolean
+                                banned_keywords:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                            sponge_attack:
+                              properties:
+                                enabled:
+                                  type: boolean
+  dataStream: {}
+

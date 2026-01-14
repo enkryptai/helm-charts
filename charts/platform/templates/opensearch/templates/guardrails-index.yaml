@@ -1,0 +1,315 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchIndexTemplate
+metadata:
+  name: guardrails-index-template
+  annotations:
+    "helm.sh/hook-weight": "18"
+    "helm.sh/hook": post-install, post-upgrade 
+spec:
+  name: guardrails-index-template
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  indexPatterns:
+    - "guardrails*"
+  template:
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 0
+      opendistro.index_state_management.policy_id: "rollover_policy"
+      plugins.index_state_management.rollover_alias: "rollover_policy"
+      mapping.total_fields.limit: "2000"
+    mappings:
+      dynamic: "false"
+      properties:
+        "@timestamp":
+          type: date
+        started_at:
+          type: long
+        correlation_id:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        route:
+          properties:
+            name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            paths:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        latencies:
+          properties:
+            kong:
+              type: long
+            proxy:
+              type: long
+            request:
+              type: long
+        client_ip:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        upstream_uri:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        authenticated_entity:
+          properties:
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        consumer:
+          properties:
+            created_at:
+              type: long
+            custom_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            updated_at:
+              type: long
+            username:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            org_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            project_name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        request:
+          properties:
+            type:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            is_playground:
+              type: boolean
+            exit_time:
+              type: float
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            method:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            ngx_req_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            policy_id:
+              type: keyword
+              ignore_above: 256
+            coc_policy_id:
+              type: long
+            headers:
+              properties:
+                x-enkrypt-policy:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                x-enkrypt-refresh-cache:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                x-enkrypt-source-name:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                x-enkrypt-source-event:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+            body:
+              properties:
+                entities:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                detectors:
+                  properties:
+                    system_prompt:
+                      properties:
+                        enabled:
+                          type: boolean
+                        index:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    policy_violation:
+                      properties:
+                        enabled:
+                          type: boolean
+                    bias:
+                      properties:
+                        enabled:
+                          type: boolean
+                    copyright_ip:
+                      properties:
+                        enabled:
+                          type: boolean
+                    topic_detector:
+                      properties:
+                        enabled:
+                          type: boolean
+                        topic:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    nsfw:
+                      properties:
+                        enabled:
+                          type: boolean
+                    toxicity:
+                      properties:
+                        enabled:
+                          type: boolean
+                    pii:
+                      properties:
+                        enabled:
+                          type: boolean
+                        entities:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    injection_attack:
+                      properties:
+                        enabled:
+                          type: boolean
+                    keyword_detector:
+                      properties:
+                        enabled:
+                          type: boolean
+                        banned_keywords:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    sponge_attack:
+                      properties:
+                        enabled:
+                          type: boolean
+        response:
+          properties:
+            status:
+              type: long
+            headers:
+              properties:
+                x-enkrypt-cache-status:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                x-enkrypt-usage-exceeded:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-ratelimit-setting:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-ratelimit-identifier:
+                  type: keyword
+                  ignore_above: 256
+            body:
+              properties:
+                summary:
+                  properties:
+                    system_prompt_similarity:
+                      type: long
+                    policy_violation:
+                      type: long
+                    bias:
+                      type: long
+                    copyright_ip_similarity:
+                      type: long
+                    adherence_score:
+                      type: long
+                    relevancy_score:
+                      type: long
+                    on_topic:
+                      type: long
+                    nsfw:
+                      type: long
+                    injection_attack:
+                      type: long
+                    keyword_detected:
+                      type: long
+                    pii:
+                      type: long
+                    toxicity:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    is_hallucination:
+                      type: boolean
+                    sponge_attack:
+                      type: long
+                key:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      null_value: "NULL"
+                      ignore_above: 256
+  dataStream: {}

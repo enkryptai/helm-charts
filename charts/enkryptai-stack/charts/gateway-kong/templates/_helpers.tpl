@@ -68,3 +68,7 @@ imagePullSecrets:
   {{- end }}
 {{- end }}
 {{- end }}
+
+{{- define "gateway-kong.renderEnv" -}}
+{{- toYaml . | nindent 0 -}}
+{{- end -}}

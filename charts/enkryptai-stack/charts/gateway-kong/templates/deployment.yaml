@@ -106,9 +106,8 @@ spec:
               name: gateway-kong-temp-config
         - name: fluent-bit
           image: "{{ .Values.image.fluentBit.repository }}:{{ .Values.image.fluentBit.tag }}"
-          envFrom:
-            - secretRef:
-                name: elastic-env-secret
+          env:
+          {{- include "gateway-kong.renderEnv" .Values.fluentBit.env | nindent 12 }}
           ports:
             - containerPort: 2020
               protocol: TCP

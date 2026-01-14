@@ -229,28 +229,27 @@ data:
 
     echo "---------------------------------------------"
     exit $?
-  kong.yaml: "_format_version: \"3.0\"\nplugins:\n- name: opentelemetry\n  # instance_name:
-    opentelemetry\n  config:\n    traces_endpoint: http://tempo.monitoring:4318/v1/traces\n-
-    name: prometheus\n  # instance_name: prometheus\n  enabled: true\n  config:\n
-    \   per_consumer: false\n- name: correlation-id\n  # instance_name: correlation_id\n
-    \ enabled: true\n  config:\n    echo_downstream: false\n    generator: tracker\n
-    \   header_name: x-enkrypt-correlation-id\n  protocols:\n  - http\n  - https\nservices:\n-
-    name: enkrypt_db_proxy\n  enabled: true\n  host: ${{ env \"DECK_APP_DASHBOARD_DOMAIN\"
-    }}\n  connect_timeout: 60000\n  port: ${{ env \"DECK_APP_DASHBOARD_PORT\" }}\n
-    \ protocol: ${{ env \"DECK_APP_DASHBOARD_SCHEME\" }}\n  # read_timeout: 60000\n
-    \ # Assuming a worst case scenario of 0.1 MB/s download speed\n  # 10 MB / 0.1
-    MB/s = 100 s = 1 min 40 s\n  read_timeout: 180000 # 3 min\n  retries: 5\n  write_timeout:
-    60000\n  plugins:\n  # - name: cors\n  #   # instance_name: enkrypt_guardrails_cors\n
-    \ #   enabled: true\n  #   config:\n  #     credentials: false\n  #     exposed_headers:
-    []\n  #     headers: []\n  #     max_age: 86400\n  #     methods:\n  #     - GET\n
-    \ #     - POST\n  #     - OPTIONS\n  #     origins:\n  #     # # NOTE: This allows
-    only one origin\n  #     - https://enkryptai.com\n  #     preflight_continue:
-    false\n  #     private_network: false\n  #   protocols:\n  #   - https\n  - name:
-    enkrypt-db-proxy\n    # instance_name: enkrypt_db_proxy\n    enabled: true\n    config:\n
-    \     enkrypt_environment: ${{ env \"DECK_ENKRYPT_ENVIRONMENT\" }}\n      internal_kong_admin_email:
-    ${{ env \"DECK_INTERNAL_KONG_ADMIN_EMAIL\" }}\n      red_team_url: ${{ env \"DECK_RED_TEAMING_URL\"
-    }}\n      openfga_url: ${{ env \"DECK_OPENFGA_URL\" }}\n      fga_store_id: ${{
-    env \"DECK_OPENFGA_STORE_ID\" }}\n      fga_authorization_model_id: ${{ env \"DECK_OPENFGA_AUTHORIZATION_MODEL_ID\"
+  kong.yaml: "_format_version: \"3.0\"\nplugins:\n- name: prometheus\n  # instance_name:
+    prometheus\n  enabled: true\n  config:\n    per_consumer: false\n- name: correlation-id\n
+    \ # instance_name: correlation_id\n  enabled: true\n  config:\n    echo_downstream:
+    false\n    generator: tracker\n    header_name: x-enkrypt-correlation-id\n  protocols:\n
+    \ - http\n  - https\nservices:\n- name: enkrypt_db_proxy\n  enabled: true\n  host:
+    ${{ env \"DECK_APP_DASHBOARD_DOMAIN\" }}\n  connect_timeout: 60000\n  port: ${{
+    env \"DECK_APP_DASHBOARD_PORT\" }}\n  protocol: ${{ env \"DECK_APP_DASHBOARD_SCHEME\"
+    }}\n  # read_timeout: 60000\n  # Assuming a worst case scenario of 0.1 MB/s download
+    speed\n  # 10 MB / 0.1 MB/s = 100 s = 1 min 40 s\n  read_timeout: 180000 # 3 min\n
+    \ retries: 5\n  write_timeout: 60000\n  plugins:\n  # - name: cors\n  #   # instance_name:
+    enkrypt_guardrails_cors\n  #   enabled: true\n  #   config:\n  #     credentials:
+    false\n  #     exposed_headers: []\n  #     headers: []\n  #     max_age: 86400\n
+    \ #     methods:\n  #     - GET\n  #     - POST\n  #     - OPTIONS\n  #     origins:\n
+    \ #     # # NOTE: This allows only one origin\n  #     - https://enkryptai.com\n
+    \ #     preflight_continue: false\n  #     private_network: false\n  #   protocols:\n
+    \ #   - https\n  - name: enkrypt-db-proxy\n    # instance_name: enkrypt_db_proxy\n
+    \   enabled: true\n    config:\n      enkrypt_environment: ${{ env \"DECK_ENKRYPT_ENVIRONMENT\"
+    }}\n      internal_kong_admin_email: ${{ env \"DECK_INTERNAL_KONG_ADMIN_EMAIL\"
+    }}\n      red_team_url: ${{ env \"DECK_RED_TEAMING_URL\" }}\n      openfga_url:
+    ${{ env \"DECK_OPENFGA_URL\" }}\n      fga_store_id: ${{ env \"DECK_OPENFGA_STORE_ID\"
+    }}\n      fga_authorization_model_id: ${{ env \"DECK_OPENFGA_AUTHORIZATION_MODEL_ID\"
     }}\n      next_js_app_url: ${{ env \"DECK_APP_DASHBOARD_DOMAIN_URL\" }}\n      next_js_basic_auth:
     ${{ env \"DECK_NEXT_JS_BASIC_AUTH\" }}\n      vercel_protection_auth: ${{ env
     \"DECK_VERCEL_PROTECTION_AUTH\" }}\n      keydb_domain: ${{ env \"DECK_KEYDB_HOST\"

@@ -30,20 +30,24 @@ jobs:
           helm repo add enapter https://enapter.github.io/charts
           helm repo add openfga https://openfga.github.io/helm-charts
 
-      - name: validate helm template for enkryptai-stack 
-        run: |
-          set -e
-          helm template test ./charts/enkryptai-stack
-      
-      - name: validate helm template for platform 
-        run: |
-          set -e
-          helm template test ./charts/platform
-      
       - name: validate helm template for platform-core 
         run: |
           set -e
+          helm dependency update
           helm template test ./charts/platform-core
+
+      - name: validate helm template for platform 
+        run: |
+          set -e
+          helm dependency update
+          helm template test ./charts/platform
+
+      - name: validate helm template for enkryptai-stack 
+        run: |
+          set -e
+          helm dependency update
+          helm template test ./charts/enkryptai-stack 
+      
 
   security-scan:
     runs-on: ubuntu-latest

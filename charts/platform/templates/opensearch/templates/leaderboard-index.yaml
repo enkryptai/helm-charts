@@ -1,0 +1,173 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchIndexTemplate
+metadata:
+  name: leaderboard-index-template
+  annotations:
+    "helm.sh/hook-weight": "18"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  name: leaderboard-index-template
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  indexPatterns:
+    - "leaderboard"
+  template:
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 0
+      opendistro.index_state_management.policy_id: "rollover_policy"
+      plugins.index_state_management.rollover_alias: "rollover_policy"
+      mapping.total_fields.limit: "2000"
+    mappings:
+      dynamic: "false"
+      properties:
+        "@timestamp":
+          type: date
+        started_at:
+          type: long
+        correlation_id:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        route:
+          properties:
+            name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            paths:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        latencies:
+          properties:
+            kong:
+              type: long
+            proxy:
+              type: long
+            request:
+              type: long
+        client_ip:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        upstream_uri:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        authenticated_entity:
+          properties:
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        consumer:
+          properties:
+            created_at:
+              type: long
+            custom_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            updated_at:
+              type: long
+            username:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            org_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            project_name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        request:
+          properties:
+            is_public:
+              type: boolean
+            type:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            model:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            risk_type:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            sub_type:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            exit_time:
+              type: float
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            method:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            ngx_req_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        response:
+          properties:
+            status:
+              type: long
+            headers:
+              properties:
+                x-enkrypt-cache-status:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+  dataStream: {}
+

@@ -3,15 +3,16 @@ kind: OpenSearchISMPolicy
 metadata:
   name: rollbar-policy
   annotations:
-    "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    helm.sh/hook-weight: "18"
+    helm.sh/hook: "post-install,post-upgrade"
 spec:
   opensearchCluster:
-    name: {{ .Values.clustername }} 
+    name: {{ .Values.clustername }}
   description: "ISM policy equivalent to ES ILM"
-  defaultState: "hot"
+  defaultState: hot
   ismTemplate:
     indexPatterns:
+      - otel-*
       - admin
       - guardrails
       - ai-proxy
@@ -20,21 +21,30 @@ spec:
       - .ds-*
     priority: 999
   states:
-    - name: "hot"
+    - name: hot
       actions:
-      - rollover:
-          minIndexAge: "0d"
+        - rollover:
+            min_index_age: "1d"
+            min_size: "50gb"
+        - replica_count:
+            number_of_replicas: 1
       transitions:
         - stateName: warm
           conditions:
-            minIndexAge: 15d
+            minIndexAge: "15d"
+
     - name: warm
       actions:
-        - readOnly: {}
+        - read_only: {}
+        - force_merge:
+            max_num_segments: 1
+        - replica_count:
+            number_of_replicas: 0
       transitions:
         - stateName: delete
           conditions:
-            minIndexAge: 30d
+            minIndexAge: "{{ .Values.opensearch.ism.retentionDays }}d"
+
     - name: delete
       actions:
         - delete: {}

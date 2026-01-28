@@ -1,0 +1,19 @@
+{{- if eq .Values.grModelsMode "local" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: guardrails-model-svc
+  labels:
+    app: {{ .Values.labels.app }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ .Values.labels.app }}
+  ports:
+    {{- range .Values.service.ports }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .targetPort }}
+      protocol: TCP
+    {{- end }}
+{{- end }}

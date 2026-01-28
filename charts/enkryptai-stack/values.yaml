@@ -383,6 +383,125 @@ guardrails:
 
   affinity: {}
 
+################LITELLM###########################
+litellm:
+  enabled: true
+  replicaCount: 1
+  image:
+    registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    repository: enkryptai-dev/litellm-gateway
+    tag: dev
+    pullPolicy: IfNotPresent
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  service:
+    type: ClusterIP
+    port: 443
+    targetPort: 443
+    name: https
+
+  deployment:
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+
+  resources:
+    requests:
+      cpu: 1
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 2Gi
+
+  secretRef:
+    name: litellm-gateway-env-secret
+
+  annotations:
+    secret.reloader.stakater.com/reload: litellm-gateway-env-secret
+
+  labels:
+    app: litellm-gateway
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+################GUARDRAIL-LOCAL-MODEL###########################
+guardrail-local-model:
+  enabled: true
+  replicaCount: 1
+  image:
+    registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+    repository: enkryptai-dev/guardrail-model
+    tag: 02d81dc
+    pullPolicy: IfNotPresent
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  grModelsMode: local
+
+  runtimeClassName: nvidia
+
+  nodeSelector:
+    dedicated: llm-model-guardrail
+
+  tolerations:
+    - key: "instance"
+      operator: "Equal"
+      value: "llm-model-guardrail"
+      effect: "NoSchedule"
+
+  service:
+    type: ClusterIP
+    ports:
+      - name: nsfw
+        port: 8001
+        targetPort: 8001
+      - name: toxicity
+        port: 8002
+        targetPort: 8002
+      - name: promptinject
+        port: 8003
+        targetPort: 8003
+      - name: pii
+        port: 8004
+        targetPort: 8004
+      - name: llm
+        port: 8005
+        targetPort: 8005
+      - name: language
+        port: 8006
+        targetPort: 8006
+      - name: router
+        port: 8080
+        targetPort: 8080
+
+  resources:
+    requests:
+      cpu: 2
+      memory: 4Gi
+    limits:
+      cpu: 4
+      memory: 8Gi
+
+  secretRef:
+    name: guardrails-model-secret
+
+  annotations:
+    secret.reloader.stakater.com/reload: guardrails-model-secret
+
+  labels:
+    app: guardrails-model
+
+  affinity: {}
+
 
 supabase:
   customtemplate:

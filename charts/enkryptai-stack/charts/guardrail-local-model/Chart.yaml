@@ -1,0 +1,17 @@
+apiVersion: v2
+name: guardrail-local-model
+description: A Helm chart for deploying Guardrails Model locally
+type: application
+version: 1.0.0
+appVersion: "1.0"
+home: https://github.com/guardrails-ai/guardrails
+sources:
+  - https://github.com/guardrails-ai/guardrails
+keywords:
+  - guardrails
+  - model
+  - llm
+  - safety
+maintainers:
+  - name: Enkrypt AI
+    email: dev@enkryptai.com

@@ -1,0 +1,48 @@
+replicaCount: 1
+
+image:
+  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
+  repository: enkryptai-dev/litellm-gateway
+  tag: dev
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 443
+  targetPort: 443
+  name: https
+
+deployment:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+
+resources:
+  requests:
+    cpu: 0.5
+    memory: 1Gi
+  limits:
+    cpu: 1
+    memory: 2Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+secretRef:
+  name: litellm-gateway-env-secret
+
+# Annotations for the deployment
+annotations:
+  secret.reloader.stakater.com/reload: litellm-gateway-env-secret
+
+labels:
+  app: litellm-gateway

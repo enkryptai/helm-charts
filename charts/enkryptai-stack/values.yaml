@@ -31,7 +31,6 @@ frontend:
     create: false
   podAnnotations:
     reloader.stakater.com/auto: "true"
-
   podLabels:
     app: frontend
 
@@ -46,6 +45,7 @@ frontend:
     className: nginx
     annotations:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
       - host: app.anishs.xyz
         paths:
@@ -155,6 +155,7 @@ gateway-kong:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
       - host: api.anishs.xyz
         paths:
@@ -402,6 +403,7 @@ supabase:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
       - host: auth.anishs.xyz
         paths:

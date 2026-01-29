@@ -1,15 +1,17 @@
+{{- if .Values.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.labels.app }}
+  name: {{ include "litellm.fullname" . }}
   labels:
-    app: {{ .Values.labels.app }}
+    {{- include "litellm.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
-  selector:
-    app: {{ .Values.labels.app }}
   ports:
-    - name: {{ .Values.service.name }}
-      port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
+    - port: {{ .Values.service.port }}
+      targetPort: http
       protocol: TCP
+      name: {{ .Values.service.name }}
+  selector:
+    {{- include "litellm.selectorLabels" . | nindent 4 }}
+{{ end }}

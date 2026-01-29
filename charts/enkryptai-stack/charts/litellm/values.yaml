@@ -1,7 +1,6 @@
 replicaCount: 1
-
+enabled: true
 image:
-  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
   repository: enkryptai-dev/litellm-gateway
   tag: dev
   pullPolicy: IfNotPresent

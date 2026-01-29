@@ -1,16 +1,16 @@
-{{- if eq .Values.grModelsMode "local" }}
+{{- if .Values.localModel.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
   name: guardrails-model-svc
   labels:
-    app: {{ .Values.labels.app }}
+    app: {{ .Values.localModel.labels.app }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.localModel.service.type }}
   selector:
-    app: {{ .Values.labels.app }}
+    app: {{ .Values.localModel.labels.app }}
   ports:
-    {{- range .Values.service.ports }}
+    {{- range .Values.localModel.service.ports }}
     - name: {{ .name }}
       port: {{ .port }}
       targetPort: {{ .targetPort }}

@@ -1,0 +1,70 @@
+{{- if .Values.localModel.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.localModel.name }}
+  {{- with .Values.localModel.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- toYaml .Values.localModel.labels | nindent 4 }}
+spec:
+  replicas: {{ .Values.localModel.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.localModel.labels.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.localModel.labels.app }}
+    spec:
+      {{- if .Values.localModel.runtimeClassName }}
+      runtimeClassName: {{ .Values.localModel.runtimeClassName }}
+      {{- end }}
+
+      {{- if .Values.localModel.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.localModel.nodeSelector | nindent 8 }}
+      {{- end }}
+
+      {{- if .Values.localModel.tolerations }}
+      tolerations:
+        {{- toYaml .Values.localModel.tolerations | nindent 8 }}
+      {{- end }}
+
+      {{- if .Values.localModel.affinity }}
+      affinity:
+        {{- toYaml .Values.localModel.affinity | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: guardrails-model
+          image: "{{ .Values.localModel.image.registry }}/{{ .Values.localModel.image.repository }}:{{ .Values.localModel.image.tag }}"
+          imagePullPolicy: {{ .Values.localModel.image.pullPolicy }}
+
+          ports:
+            - name: nsfw
+              containerPort: 8001
+            - name: toxicity
+              containerPort: 8002
+            - name: promptinject
+              containerPort: 8003
+            - name: pii
+              containerPort: 8004
+            - name: llm
+              containerPort: 8005
+            - name: language
+              containerPort: 8006
+            - name: router
+              containerPort: 8080
+
+          resources:
+            {{- toYaml .Values.localModel.resources | nindent 12 }}
+
+          {{- if .Values.localModel.secretRef }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.localModel.secretRef.name }}
+          {{- end }}
+{{- end }}

@@ -3805,6 +3805,95 @@ data:
 
   020-reload-schema.sql: | 
     NOTIFY pgrst, 'reload schema'
+  021-add-playground-table.sql: |
+    --
+    -- Migration: 003_add_playground_table
+    -- Description: Add playground table for tracking playground attack job status
+    -- psql -h localhost -U postgres -d postgres -f database/dev/public/migrations/003_add_playground_table.sql
+    --
+
+    BEGIN;
+
+    -- ============================================================================
+    -- Table: playground
+    -- Description: Tracks playground (single-goal) attack jobs and their lifecycle
+    -- ============================================================================
+
+    CREATE TABLE IF NOT EXISTS public.playground (
+        id text NOT NULL,
+        job_id text NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        status text DEFAULT 'Queued'::text NOT NULL,
+        goal text,
+        model_name text,
+        location text,
+        started_at timestamp with time zone,
+        ended_at timestamp with time zone,
+        "error.json" jsonb
+    );
+
+    --
+    -- Table Comments
+    --
+
+    COMMENT ON TABLE public.playground IS 'Playground attack job tracking — single-goal attacks initiated from the playground UI';
+
+    COMMENT ON COLUMN public.playground.id IS 'User ID (from metadata.user_id)';
+    COMMENT ON COLUMN public.playground.job_id IS 'Celery task ID — unique identifier for the attack job';
+    COMMENT ON COLUMN public.playground.status IS 'Job lifecycle status: Queued → Running → Finished | Failed';
+    COMMENT ON COLUMN public.playground.goal IS 'Attack goal text';
+    COMMENT ON COLUMN public.playground.model_name IS 'Target model name (without provider prefix)';
+    COMMENT ON COLUMN public.playground.location IS 'Storage path: {user_id}/{job_id}';
+    COMMENT ON COLUMN public.playground.started_at IS 'Set by TaskLifecycleManager when job starts running';
+    COMMENT ON COLUMN public.playground.ended_at IS 'Set by TaskLifecycleManager on completion or failure';
+    COMMENT ON COLUMN public.playground."error.json" IS 'Error details on failure: {error, type, ...}';
+
+    --
+    -- Primary Key
+    --
+
+    ALTER TABLE ONLY public.playground
+        ADD CONSTRAINT playground_pkey PRIMARY KEY (job_id);
+
+    --
+    -- Row Level Security
+    --
+
+    ALTER TABLE public.playground ENABLE ROW LEVEL SECURITY;
+
+    --
+    -- Indexes for query performance
+    --
+
+    CREATE INDEX idx_playground_user_status
+        ON public.playground (id, status);
+
+    CREATE INDEX idx_playground_created_at
+        ON public.playground (created_at DESC);
+
+    --
+    -- Verify the table was created
+    --
+
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'playground'
+      ) THEN
+        RAISE NOTICE 'SUCCESS: playground table created successfully';
+      ELSE
+        RAISE EXCEPTION 'FAILED: playground table was not created';
+      END IF;
+    END $$;
+
+    COMMIT;
+
+    --
+    -- Migration Complete
+    --
 
 kind: ConfigMap
 metadata:

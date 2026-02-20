@@ -227,8 +227,6 @@ gateway-kong:
 
   affinity: {}
 
-  
-
 ################REDTEAMING###########################
 redteam-proxy: 
   enabled: false
@@ -311,6 +309,7 @@ redteam-proxy:
 ################GUARDRAILS###########################
 guardrails: 
   enabled: false
+
   replicaCount: 1
   image:
     repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrails
@@ -377,6 +376,62 @@ guardrails:
     secretName: guardrails-env-secret
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/guardrails
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  # guardrails local model 
+  locaModel:
+    enabled: true
+    tolerations:
+    - key: "instance"
+      operator: "Equal"
+      value: "llm-model-guardrail"
+      effect: "NoSchedule"
+    nodeSelector:
+      dedicated: llm-model-guardrail
+
+################LITELLM###########################
+litellm:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: enkryptai-dev/litellm-gateway
+    tag: dev
+    pullPolicy: IfNotPresent
+
+  nameOverride: ""
+  fullnameOverride: litellm
+
+  service:
+    type: ClusterIP
+    port: 443
+    targetPort: 443
+    name: https
+
+  deployment:
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+
+  resources:
+    requests:
+      cpu: 1
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 2Gi
+
+  secretRef:
+    name: litellm-gateway-env-secret
+
+  annotations: {}
+
+  labels:
+    app: litellm-gateway
 
   nodeSelector: {}
 

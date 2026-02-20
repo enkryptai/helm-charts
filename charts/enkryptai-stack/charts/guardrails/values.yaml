@@ -66,3 +66,69 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+localModel: 
+  enabled: true
+  replicaCount: 1
+  name: guardrails-model
+  labels:
+    app: guardrails-model
+  image:
+    repository: enkryptai-dev/guardrail-model
+    tag: 02d81dc
+    pullPolicy: IfNotPresent
+
+
+  # Runtime class for GPU workloads
+  runtimeClassName: nvidia
+
+  # Node selector for GPU nodes
+  nodeSelector: {}
+
+  # Tolerations for node taints
+  tolerations:
+    - key: "instance"
+      operator: "Equal"
+      value: "llm-model-guardrail"
+      effect: "NoSchedule"
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    ports:
+      - name: nsfw
+        port: 8001
+        targetPort: 8001
+      - name: toxicity
+        port: 8002
+        targetPort: 8002
+      - name: promptinject
+        port: 8003
+        targetPort: 8003
+      - name: pii
+        port: 8004
+        targetPort: 8004
+      - name: llm
+        port: 8005
+        targetPort: 8005
+      - name: language
+        port: 8006
+        targetPort: 8006
+      - name: router
+        port: 8080
+        targetPort: 8080
+
+  # Resource requests and limits
+  resources:
+    requests:
+      cpu: 2
+      memory: 4Gi
+      nvidia.com/gpu: 1
+    limits:
+      cpu: 4
+      memory: 8Gi
+
+  affinity: {}
+
+  secretRef:
+    name: guardrails-model-secret
+

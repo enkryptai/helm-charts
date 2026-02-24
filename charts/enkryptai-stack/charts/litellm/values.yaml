@@ -1,0 +1,58 @@
+# Default values for litellm.
+replicaCount: 1
+
+# labels and annotations
+labels:
+  app: litellm-gateway
+annotations: secret.reloader.stakater.com/reload:""
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: enkryptai-dev/litellm-gateway
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "dev"
+
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  type: ClusterIP
+  port: 443
+  targetPort: 443
+  name: https
+
+# resources information
+resources:
+  requests:
+    cpu: 0.5
+    memory: 1Gi
+  limits:
+    cpu: 1
+    memory: 2Gi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: https
+readinessProbe:
+  httpGet:
+    path: /
+    port: https
+autoscaling:
+  enabled: false
+
+envFrom:
+  - secretRef:
+      name: litellm-gateway-env-secret
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

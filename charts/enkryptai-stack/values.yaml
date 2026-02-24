@@ -1,6 +1,6 @@
 global:
-  # imagePullSecrets: 
-    # - core-app-pullsecret
+  # imagePullSecrets:
+  # - core-app-pullsecret
   storageClass: ""
   imagePullPolicy: "IfNotPresent"
   externalSecret: false
@@ -19,7 +19,7 @@ openfgaSyncJob:
 busybox:
   repository: onprem/busybox
   tag: "latest"
- 
+
 frontend:
   enabled: true
   image:
@@ -51,11 +51,11 @@ frontend:
         paths:
           - path: /
             pathType: Prefix
-    
+
     tls:
-    - hosts:
-      - app.anishs.xyz
-      secretName: custom-cert-front
+      - hosts:
+          - app.anishs.xyz
+        secretName: custom-cert-front
 
   resources:
     limits:
@@ -106,8 +106,8 @@ frontend:
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/frontend
 
-################GATEWAY_KONG########################### 
-gateway-kong: 
+################GATEWAY_KONG###########################
+gateway-kong:
   enabled: true
   replicaCount: 2
   image:
@@ -162,9 +162,9 @@ gateway-kong:
           - path: /
             pathType: Prefix
     tls:
-    - hosts:
-      - api.anishs.xyz
-      secretName: custom-cert-front
+      - hosts:
+          - api.anishs.xyz
+        secretName: custom-cert-front
 
   resources:
     gateway:
@@ -227,10 +227,8 @@ gateway-kong:
 
   affinity: {}
 
-  
-
 ################REDTEAMING###########################
-redteam-proxy: 
+redteam-proxy:
   enabled: false
   replicaCount: 2
 
@@ -309,7 +307,7 @@ redteam-proxy:
   affinity: {}
 
 ################GUARDRAILS###########################
-guardrails: 
+guardrails:
   enabled: false
   replicaCount: 1
   image:
@@ -365,7 +363,7 @@ guardrails:
   extraEnv:
     - name: LOCAL_GUARDRAILS
       value: "true"
-    
+
   autoscaling:
     enabled: true
     minReplicas: 1
@@ -383,7 +381,6 @@ guardrails:
   tolerations: []
 
   affinity: {}
-
 
 supabase:
   customtemplate:
@@ -410,9 +407,9 @@ supabase:
           - path: /
             pathType: Prefix
     tls:
-    - hosts:
-      - auth.anishs.xyz
-      secretName: custom-cert-front
+      - hosts:
+          - auth.anishs.xyz
+        secretName: custom-cert-front
 openfgaconfig:
   externalSecret:
     name: openfga-env-secret
@@ -423,12 +420,12 @@ openfgaconfig:
     keys:
       - secretKey: uri
         property: uri
-      - secretKey: username 
-        property: username 
-      - secretKey: password 
+      - secretKey: username
+        property: username
+      - secretKey: password
         property: password
 openfga:
-  replicaCount: 1 
+  replicaCount: 1
   image:
     repository: vpcdepoyment.azurecr.io/onprem/openfga
     pullPolicy: Always
@@ -445,9 +442,9 @@ openfga:
     annotations: {}
     name: ""
 
-  annotations: {} 
+  annotations: {}
 
-  podAnnotations: {} 
+  podAnnotations: {}
   podExtraLabels: {}
 
   extraEnvVars:
@@ -660,7 +657,7 @@ openfga:
   resources: {}
 
   lifecycle: {}
-  
+
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -686,4 +683,55 @@ openfga:
   testPodSpec: {}
   testContainerSpec: {}
   extraObjects: []
+litellm:
+  enabled: true
+  # Default values for litellm.
+  replicaCount: 1
 
+  # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+  image:
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/litellm-gateway
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "dev"
+
+  # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  imagePullSecrets: []
+  # This is to override the chart name.
+  nameOverride: ""
+  fullnameOverride: ""
+
+  # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+  service:
+    type: ClusterIP
+    port: 443
+    targetPort: 443
+    name: https
+  autoscaling:
+    enabled: false
+  # resources information
+  resources:
+    requests:
+      cpu: 0.5
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+
+  # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  livenessProbe:
+    httpGet:
+      path: /
+      port: https
+  readinessProbe:
+    httpGet:
+      path: /
+      port: https
+  envFrom:
+    - secretRef:
+        name: litellm-gateway-env-secret
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}

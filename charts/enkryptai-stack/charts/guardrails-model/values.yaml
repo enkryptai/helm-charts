@@ -10,10 +10,7 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: "dev"
 strategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxUnavailable: 0
-    maxSurge: 2
+  type: Recreate
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.

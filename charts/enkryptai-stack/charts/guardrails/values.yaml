@@ -30,8 +30,6 @@ resources:
   requests:
     cpu: 4
     memory: 16Gi
-  limits:
-    nvidia.com/gpu: 1
 
 livenessProbe:
   enabled: true

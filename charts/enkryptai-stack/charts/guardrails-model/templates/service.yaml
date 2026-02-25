@@ -1,0 +1,19 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "guardrails-model.fullname" . }}
+  labels:
+    {{- include "guardrails-model.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    {{- range .Values.ports }}
+    - name: {{ .name }}
+      port: {{ .containerPort }}
+      targetPort: {{ .name }}
+      protocol: TCP
+    {{- end }}
+  selector:
+    {{- include "guardrails-model.selectorLabels" . | nindent 4 }}
+{{- end }}

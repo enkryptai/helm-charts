@@ -325,10 +325,7 @@ guardrails:
     app: guardrails
 
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
+    type: Recreate
 
   service:
     type: ClusterIP
@@ -730,6 +727,58 @@ litellm:
   envFrom:
     - secretRef:
         name: litellm-gateway-env-secret
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+guardrails-model:
+  enabled: true
+  replicaCount: 1
+  labels:
+    app: guardrails-model
+  image:
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrail-model
+    pullPolicy: IfNotPresent
+    tag: "main-1771906796"
+  strategy:
+    type: Recreate
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
+  podLabels: {}
+  podAnnotations:
+  secret.reloader.stakater.com/reload: ""
+  service:
+    type: ClusterIP
+    ports:
+      - name: nsfw
+        containerPort: 8001
+      - name: toxicity
+        containerPort: 8002
+      - name: promptinject
+        containerPort: 8003
+      - name: pii
+        containerPort: 8004
+      - name: llm
+        containerPort: 8005
+      - name: language
+        containerPort: 8006
+      - name: router
+        containerPort: 8080
+  resources:
+    requests:
+      cpu: "1"
+      memory: "4Gi"
+      nvidia.com/gpu: 1
+    limits:
+      cpu: "3"
+      memory: "12Gi"
+      nvidia.com/gpu: 1
+
+  envFrom:
+    - secretRef:
+        name: guardrails-model-secret
   nodeSelector: {}
 
   tolerations: []

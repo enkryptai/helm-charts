@@ -15,10 +15,7 @@ podLabels:
   app: guardrails
 
 strategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxSurge: 1
-    maxUnavailable: 1
+  type: Recreate
 
 service:
   type: ClusterIP

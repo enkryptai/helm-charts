@@ -325,10 +325,7 @@ guardrails:
     app: guardrails
 
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
+    type: Recreate
 
   service:
     type: ClusterIP
@@ -745,10 +742,7 @@ guardrails-model:
     pullPolicy: IfNotPresent
     tag: "dev"
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 2
+    type: Recreate
   imagePullSecrets: []
   nameOverride: ""
   fullnameOverride: ""

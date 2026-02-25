@@ -740,7 +740,7 @@ guardrails-model:
   image:
     repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrail-model
     pullPolicy: IfNotPresent
-    tag: "dev"
+    tag: "main-1771906796"
   strategy:
     type: Recreate
   imagePullSecrets: []

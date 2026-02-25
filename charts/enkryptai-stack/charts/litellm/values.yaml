@@ -10,7 +10,7 @@ podAnnotations:
 image:
   repository: enkryptai-dev/litellm-gateway
   pullPolicy: IfNotPresent
-  tag: "dev"
+  tag: "main-1771906797"
 
 imagePullSecrets: []
 nameOverride: ""

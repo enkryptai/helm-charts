@@ -52,15 +52,10 @@ spec:
               entrypoint: process-order
               templates:
               - container:
+                  {{- if $.Values.sensor.env }}
                   env:
-                  - name: WORKER_TYPE 
-                    value: "combined"
-                  - name: NATS_URL
-                    value: {{ .Values.sensor.natsURL }}
-                  - name: IS_PROXY_MODE
-                    value: "true"
-                  - name: RT_NATS_PAYLOAD
-                    value: '{{"{{inputs.parameters.event-data}}"}}'
+                    {{- toYaml $.Values.sensor.env | nindent 20 }}
+                  {{- end }}
                   envFrom:
                   - secretRef:
                       name: redteam-proxy-env-secret

@@ -98,7 +98,7 @@ autoscaling:
 
 externalSecrets:
   enabled: true
-  secretStoreRefName: enkryptai-clustersecret-store 
+  secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/gateway
 
 configMaps:
@@ -114,23 +114,23 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
+        
 fluentBit:
   env:
-  - name: ELASTIC_HOST
-    valueFrom:
-      secretKeyRef:
-        name: "gateway-env-secret"  
-        key: "DECK_ELASTIC_HOST"
-  - name: ELASTIC_PORT
-    value: "9200"
-  - name: ELASTIC_USERNAME
-    valueFrom:
-      secretKeyRef:
-        name: "enkryptai-opensearch-admin-password"  
-        key: "username"
-  - name: ELASTIC_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: "enkryptai-opensearch-admin-password"  
-        key: "password"
+    - name: ELASTIC_HOST
+      valueFrom:
+        secretKeyRef:
+          name: "gateway-env-secret"
+          key: "DECK_ELASTIC_HOST"
+    - name: ELASTIC_PORT
+      value: "9200"
+    - name: ELASTIC_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: "enkryptai-opensearch-admin-password"
+          key: "username"
+    - name: ELASTIC_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: "enkryptai-opensearch-admin-password"
+          key: "password"

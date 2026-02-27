@@ -1,29 +1,46 @@
-global: 
+global:
   platform: azure
   registry: vpcdepoyment.azurecr.io
-aws: 
+aws:
   region: "us-west-2"
-backup: 
+backup:
   openfgsS3Bucket: "s3://vpc"
   supabaseS3Bucket: "s3://vpc"
 supabase:
-    repository: supabase
-    tag: 16.0.1
+  repository: supabase
+  tag: 16.0.1
 openfga:
-    repository: onprem/postgresql
-    tag: 17.4-8
+  repository: onprem/postgresql
+  tag: 17.4-8
 databasekong:
   repository: onprem/postgres
   tag: 16
 migrationjob:
   repository: onprem/postgres
   tag: 15
-sensor: 
+sensor:
   natsURL: "nats://nats.enkryptai-stack:4222"
   jobversion: "prod-v1.0.34"
-  jobImage: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-job 
+  jobImage: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-job
+  env:
+    - name: WORKER_TYPE
+      value: "combined"
+    - name: NATS_URL
+      value: "nats://nats.enkryptai-stack:4222"
+    - name: IS_PROXY_MODE
+      value: "true"
+    - name: RT_NATS_PAYLOAD
+      value: '{{"{{inputs.parameters.event-data}}"}}'
+    - name: GR_MODELS_MODE
+      value: "remote"
+    - name: SENTRY_LITELLM_GATEWAY_API_KEY
+      value: "sentry-litellm-gateway-secret-key"
+    - name: SENTRY_LITELLM_GATEWAY_TIMEOUT
+      value: "300"
+    - name: SENTRY_LITELLM_GATEWAY_URL
+      value: "http://enkryptai-litellm:443"
 
-adminpassword: 
+adminpassword:
   secretName: "opensearch-cred"
 clustername: "enkryptai-opensearch"
 opensearch:
@@ -82,9 +99,9 @@ platform-core:
         repository: vpcdepoyment.azurecr.io/onprem/node-feature-discovery
         tag: v0.16.6
     validator:
-        repository: vpcdepoyment.azurecr.io
-        image: onprem/gpu-operator-validator
-        version: v24.9.0
+      repository: vpcdepoyment.azurecr.io
+      image: onprem/gpu-operator-validator
+      version: v24.9.0
     toolkit:
       repository: vpcdepoyment.azurecr.io
       image: onprem/container-toolkit
@@ -97,7 +114,7 @@ platform-core:
       repository: vpcdepoyment.azurecr.io
       image: onprem/k8s-device-plugin
       version: v0.17.0-ubi9
-    driver: 
+    driver:
       repository: vpcdepoyment.azurecr.io
       image: onprem/nvidia-driver
       version: 525.85.12-ubi9
@@ -174,19 +191,19 @@ platform-core:
       image:
         repository: onprem/nats
         tag: 2.11.8-alpine
-    global: 
-      image: 
+    global:
+      image:
         registry: vpcdepoyment.azurecr.io
-  nack: 
+  nack:
     jetstream:
       enabled: true
       image:
         repository: onprem/jetstream-controller
         tag: 0.19.1
         registry: vpcdepoyment.azurecr.io
-    nats: 
+    nats:
       url: nats://nats:4222
-  argo-events: 
+  argo-events:
     namespaceOverride: "enkryptai-stack"
     configs:
       nats:
@@ -315,7 +332,7 @@ externalSecret:
 otel:
   enabled: false
   mode: daemonset
-  annotations: 
+  annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "20"
   ports:
@@ -346,24 +363,24 @@ otel:
   clusterRole:
     create: true
     rules:
-    - apiGroups: [""]
-      resources: ["pods", "namespaces", "nodes"]
-      verbs: ["get", "list", "watch"]
+      - apiGroups: [""]
+        resources: ["pods", "namespaces", "nodes"]
+        verbs: ["get", "list", "watch"]
 
-    - apiGroups: ["apps"]
-      resources: ["replicasets", "deployments", "statefulsets", "daemonsets"]
-      verbs: ["get", "list", "watch"]
+      - apiGroups: ["apps"]
+        resources: ["replicasets", "deployments", "statefulsets", "daemonsets"]
+        verbs: ["get", "list", "watch"]
 
-    - apiGroups: ["batch"]
-      resources: ["jobs", "cronjobs"]
-      verbs: ["get", "list", "watch"]
+      - apiGroups: ["batch"]
+        resources: ["jobs", "cronjobs"]
+        verbs: ["get", "list", "watch"]
 
   tolerations:
-  - key: "app"
-    operator: "Equal"
-    value: "redteaming"
-    effect: "NoSchedule"
-    
+    - key: "app"
+      operator: "Equal"
+      value: "redteaming"
+      effect: "NoSchedule"
+
   resources:
     limits:
       cpu: 1000m
@@ -371,7 +388,7 @@ otel:
     requests:
       cpu: 200m
       memory: 512Mi
-  
+
   extraEnvs:
     - name: NODE_NAME
       valueFrom:
@@ -391,7 +408,7 @@ otel:
         secretKeyRef:
           name: opensearch-cred
           key: password
-  
+
   config:
     receivers:
       otlp:
@@ -400,7 +417,7 @@ otel:
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
-      
+
       filelog:
         include: [/var/log/pods/*/*/*.log]
         exclude: [/var/log/pods/*/otel-*/*.log]
@@ -411,26 +428,25 @@ otel:
             id: container-parser
 
     processors:
-
       batch:
         timeout: 10s
         send_batch_size: 256
         send_batch_max_size: 512
-      
+
       memory_limiter:
         check_interval: 1s
         limit_mib: 800
-      
+
       resource:
         attributes:
           - key: deployment.environment
             value: test
             action: insert
-      
+
       resourcedetection:
         detectors: [env, system]
         timeout: 5s
-      
+
       k8sattributes:
         auth_type: "serviceAccount"
         passthrough: false
@@ -475,7 +491,7 @@ otel:
     exporters:
       # debug:
       #   verbosity: basic
-      
+
       opensearch:
         http:
           endpoint: https://enkryptai-opensearch-cluster:9200
@@ -487,7 +503,7 @@ otel:
             ca_file: /etc/opensearch/certs/ca.crt
           max_idle_conns: 100
           idle_conn_timeout: 90s
-        
+
         logs_index: "otel-logs"
         traces_index: "otel-traces"
 
@@ -495,13 +511,13 @@ otel:
           enabled: true
           num_consumers: 5
           queue_size: 1000
-        
+
         retry_on_failure:
           enabled: true
           initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
-        
+
         timeout: 60s
 
     service:
@@ -509,12 +525,14 @@ otel:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [memory_limiter, resourcedetection, k8sattributes, resource, batch]
+          processors:
+            [memory_limiter, resourcedetection, k8sattributes, resource, batch]
           exporters: [debug, opensearch]
 
         logs:
           receivers: [otlp, filelog]
-          processors: [memory_limiter, resourcedetection, k8sattributes, resource, batch]
+          processors:
+            [memory_limiter, resourcedetection, k8sattributes, resource, batch]
           exporters: [debug, opensearch]
 
   extraVolumes:

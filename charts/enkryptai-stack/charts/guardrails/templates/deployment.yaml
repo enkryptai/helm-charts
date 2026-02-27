@@ -39,10 +39,10 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.externalSecret.secretName }}
-          {{- with .Values.extraEnv }}
-          env:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+              {{- with .Values.extraEnv }}
+              env:
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             httpGet:

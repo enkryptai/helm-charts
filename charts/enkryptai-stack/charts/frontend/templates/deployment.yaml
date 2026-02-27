@@ -43,9 +43,6 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.externalSecret.secretName }}
-          {{- if $.Values.extraEnvFrom }}
-          {{- toYaml $.Values.extraEnvFrom | nindent 12 }}
-          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}

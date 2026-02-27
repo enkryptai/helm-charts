@@ -1,4 +1,4 @@
-apiVersion: v1
+  apiVersion: v1
 data:
   000-schema.sql: |
     -- Set up realtime
@@ -3899,5 +3899,5 @@ kind: ConfigMap
 metadata:
   name: supabase-migration
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook": pre-install,pre-upgrade,post-upgrade
     "helm.sh/hook-weight": "1"

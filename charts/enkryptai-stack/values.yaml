@@ -341,7 +341,6 @@ guardrails:
       cpu: 0.5
       memory: 500Mi
 
-
   livenessProbe:
     enabled: true
     httpGet:
@@ -357,10 +356,6 @@ guardrails:
       port: 80
     initialDelaySeconds: 120
     timeoutSeconds: 30
-
-  extraEnv:
-    - name: LOCAL_GUARDRAILS
-      value: "true"
 
   autoscaling:
     enabled: true

@@ -39,9 +39,6 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.externalSecret.secretName }}
-          {{- if $.Values.extraEnvFrom }}
-          {{- toYaml $.Values.extraEnvFrom | nindent 12 }}
-          {{- end }}
           {{- if .Values.env }}
           env:
             {{- toYaml .Values.env | nindent 12 }}

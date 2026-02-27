@@ -65,6 +65,8 @@ env:
     value: "300"
   - name: SENTRY_LITELLM_GATEWAY_URL
     value: "http://enkryptai-litellm:443"
+  - name: LOCAL_GUARDRAILS
+    value: "true"
 nodeSelector: {}
 
 tolerations: []

@@ -45,6 +45,9 @@ resources:
 envFrom:
   - secretRef:
       name: guardrails-model-secret
+
+env: []
+
 nodeSelector: {}
 
 tolerations: []

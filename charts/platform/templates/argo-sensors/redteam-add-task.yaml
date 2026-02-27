@@ -52,21 +52,16 @@ spec:
               entrypoint: process-order
               templates:
               - container:
-                  env:
-                  - name: WORKER_TYPE 
-                    value: "combined" 
-                  - name: NATS_URL 
-                    value: {{ .Values.sensor.natsURL }} 
-                  - name: IS_PROXY_MODE
-                    value: "true"
-                  - name: RT_NATS_PAYLOAD
-                    value: '{{"{{inputs.parameters.event-data}}"}}'
                   envFrom:
                   - secretRef:
                       name: redteam-proxy-env-secret
                   image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
                   imagePullPolicy: Always
                   command: ["python", "job/job_service_sync.py"]
+                  {{- if $.Values.sensor.env }}
+                  env:
+                    {{- toYaml $.Values.sensor.env | nindent 20 }}
+                  {{- end }}
                 inputs:
                   parameters:
                   - name: event-data

@@ -56,6 +56,17 @@ externalSecret:
   secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/guardrails
 
+env:
+  - name: GR_MODELS_MODE
+    value: "remote"
+  - name: SENTRY_LITELLM_GATEWAY_API_KEY
+    value: "sentry-litellm-gateway-secret-key"
+  - name: SENTRY_LITELLM_GATEWAY_TIMEOUT
+    value: "300"
+  - name: SENTRY_LITELLM_GATEWAY_URL
+    value: "http://enkryptai-litellm:443"
+  - name: LOCAL_GUARDRAILS
+    value: "true"
 nodeSelector: {}
 
 tolerations: []

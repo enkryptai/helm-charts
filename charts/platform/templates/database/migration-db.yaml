@@ -380,67 +380,66 @@ data:
         GRANT ALL ON ALL ROUTINES IN SCHEMA extensions TO dashboard_user;
 
         -- migrate:down
-  004-custom-access-hook.sql: | 
-      CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
-      RETURNS jsonb
-      LANGUAGE plpgsql
-      STABLE
-      AS $function$
-      DECLARE
-        claims JSONB;
-        user_id UUID;
-        user_subscription JSONB;
-        user_profile JSONB;
+  004-custom-access-hook.sql: |
+    CREATE OR REPLACE FUNCTION public.custom_access_token_hook(event jsonb)
+    RETURNS jsonb
+    LANGUAGE plpgsql
+    STABLE
+    AS $function$
+    DECLARE
+      claims JSONB;
+      user_id UUID;
+      user_subscription JSONB;
+      user_profile JSONB;
+    BEGIN
+      -- Extract user_id from the event
+      user_id := (event ->> 'user_id')::UUID;
+
+      -- Initialize claims
+      claims := event -> 'claims';
+
+      -- Try to get user subscription
       BEGIN
-        -- Extract user_id from the event
-        user_id := (event ->> 'user_id')::UUID;
-        
-        -- Initialize claims
-        claims := event -> 'claims';
-
-        -- Try to get user subscription
-        BEGIN
-          SELECT jsonb_build_object(
-            'consumer_id', consumer_id,
-            'plan_name', plan_name,
-            'org_id', org_id,
-            'are_samples_created', are_samples_created,
-            'red_team_usage_remaining', red_team_usage_remaining
-          )
-          INTO user_subscription
-          FROM public.subscription
-          WHERE id = user_id;
-        EXCEPTION 
-          WHEN NO_DATA_FOUND THEN
-            user_subscription := NULL;
-        END;
-
-        -- Try to get user profile
-        BEGIN
-          SELECT to_jsonb(p)
-          INTO user_profile
-          FROM public.profiles p
-          WHERE id = user_id;
-        EXCEPTION 
-          WHEN NO_DATA_FOUND THEN
-            user_profile := NULL;
-        END;
-
-        -- Set the claims, even if they're NULL
-        claims := jsonb_set(claims, '{user_subscription}', COALESCE(user_subscription, 'null'::jsonb));
-        claims := jsonb_set(claims, '{user_profile}', COALESCE(user_profile, 'null'::jsonb));
-
-        -- Update the 'claims' object in the original event
-        event := jsonb_set(event, '{claims}', claims);
-
-        -- Always return the event, even if no data was found
-        RETURN event;
+        SELECT jsonb_build_object(
+          'consumer_id', consumer_id,
+          'plan_name', plan_name,
+          'org_id', org_id,
+          'are_samples_created', are_samples_created,
+          'red_team_usage_remaining', red_team_usage_remaining
+        )
+        INTO user_subscription
+        FROM public.subscription
+        WHERE id = user_id;
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          user_subscription := NULL;
       END;
-      $function$;
 
+      -- Try to get user profile
+      BEGIN
+        SELECT to_jsonb(p)
+        INTO user_profile
+        FROM public.profiles p
+        WHERE id = user_id;
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          user_profile := NULL;
+      END;
+
+      -- Set the claims, even if they're NULL
+      claims := jsonb_set(claims, '{user_subscription}', COALESCE(user_subscription, 'null'::jsonb));
+      claims := jsonb_set(claims, '{user_profile}', COALESCE(user_profile, 'null'::jsonb));
+
+      -- Update the 'claims' object in the original event
+      event := jsonb_set(event, '{claims}', claims);
+
+      -- Always return the event, even if no data was found
+      RETURN event;
+    END;
+    $function$;
 
   006-create-kong.sql: |
-    
+
   007-bulk-decrypt-keys.sql: |+
     CREATE OR REPLACE FUNCTION public.bulk_decrypt_keys(encrypted_data text[], encryption_key text)
      RETURNS text[]
@@ -584,7 +583,7 @@ data:
     END;
     $function$
 
-  016-public-schema-supabase.sql: | 
+  016-public-schema-supabase.sql: |
     --
     -- PostgreSQL database dump
     --
@@ -3454,356 +3453,356 @@ data:
     ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO service_role;
 
   017-add-mcp-gateway-tables.sql: |
-      --
-      -- Migration: 001_add_mcp_gateway_tables
-      -- Description: Add MCP Registry Servers and MCP Gateways tables for Secure MCP Gateway feature
-      --
+    --
+    -- Migration: 001_add_mcp_gateway_tables
+    -- Description: Add MCP Registry Servers and MCP Gateways tables for Secure MCP Gateway feature
+    --
 
-      -- ============================================================================
-      -- Table: mcp_registry_servers
-      -- Description: Whitelisted MCP servers from MCP Hub, scoped per project
-      -- ============================================================================
+    -- ============================================================================
+    -- Table: mcp_registry_servers
+    -- Description: Whitelisted MCP servers from MCP Hub, scoped per project
+    -- ============================================================================
 
-      CREATE TABLE public.mcp_registry_servers (
-          id uuid NOT NULL,
-          created_at timestamp with time zone DEFAULT now() NOT NULL,
-          updated_at timestamp with time zone DEFAULT now() NOT NULL,
-          registry_server_id bigint NOT NULL,
-          registry_server_id_hash bigint,
-          saved_name text NOT NULL,
-          server_version text DEFAULT 'v1'::text NOT NULL,
-          project_name text DEFAULT 'default'::text NOT NULL,
-          job_id uuid NOT NULL,
-          source_url text,
-          source_version text,
-          server_name text,
-          description text,
-          mcp_config jsonb,
-          created_by uuid,
-          updated_by uuid,
-          is_sample boolean DEFAULT false,
-          is_deleted boolean DEFAULT false NOT NULL,
-          CONSTRAINT mcp_registry_servers_saved_name_check CHECK ((length(saved_name) < 33))
-      );
+    CREATE TABLE public.mcp_registry_servers (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        registry_server_id bigint NOT NULL,
+        registry_server_id_hash bigint,
+        saved_name text NOT NULL,
+        server_version text DEFAULT 'v1'::text NOT NULL,
+        project_name text DEFAULT 'default'::text NOT NULL,
+        job_id uuid NOT NULL,
+        source_url text,
+        source_version text,
+        server_name text,
+        description text,
+        mcp_config jsonb,
+        created_by uuid,
+        updated_by uuid,
+        is_sample boolean DEFAULT false,
+        is_deleted boolean DEFAULT false NOT NULL,
+        CONSTRAINT mcp_registry_servers_saved_name_check CHECK ((length(saved_name) < 33))
+    );
 
-      --
-      -- Table Comments
-      --
+    --
+    -- Table Comments
+    --
 
-      COMMENT ON TABLE public.mcp_registry_servers IS 'MCP Registry Servers whitelisted from MCP Hub';
+    COMMENT ON TABLE public.mcp_registry_servers IS 'MCP Registry Servers whitelisted from MCP Hub';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.id IS 'Supabase user_id or org_id if this belongs to an Org';
+    COMMENT ON COLUMN public.mcp_registry_servers.id IS 'Supabase user_id or org_id if this belongs to an Org';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.registry_server_id IS 'Registry Server ID';
+    COMMENT ON COLUMN public.mcp_registry_servers.registry_server_id IS 'Registry Server ID';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.registry_server_id_hash IS 'Hash of the ID';
+    COMMENT ON COLUMN public.mcp_registry_servers.registry_server_id_hash IS 'Hash of the ID';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.saved_name IS 'User-given name for the server, unique per project and version';
+    COMMENT ON COLUMN public.mcp_registry_servers.saved_name IS 'User-given name for the server, unique per project and version';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.server_version IS 'Server version (v1, v2, etc.)';
+    COMMENT ON COLUMN public.mcp_registry_servers.server_version IS 'Server version (v1, v2, etc.)';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.job_id IS 'MCP Hub server identifier (UUID)';
+    COMMENT ON COLUMN public.mcp_registry_servers.job_id IS 'MCP Hub server identifier (UUID)';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.source_url IS 'Source URL (e.g., GitHub link)';
+    COMMENT ON COLUMN public.mcp_registry_servers.source_url IS 'Source URL (e.g., GitHub link)';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.source_version IS 'Source version or commit hash';
+    COMMENT ON COLUMN public.mcp_registry_servers.source_version IS 'Source version or commit hash';
 
-      COMMENT ON COLUMN public.mcp_registry_servers.mcp_config IS 'Base server configuration template (command, args, OAuth, validation flags) - reusable across gateways';
+    COMMENT ON COLUMN public.mcp_registry_servers.mcp_config IS 'Base server configuration template (command, args, OAuth, validation flags) - reusable across gateways';
 
-      --
-      -- Sequence for registry_server_id
-      --
+    --
+    -- Sequence for registry_server_id
+    --
 
-      ALTER TABLE public.mcp_registry_servers ALTER COLUMN registry_server_id ADD GENERATED BY DEFAULT AS IDENTITY (
-          SEQUENCE NAME public.mcp_registry_servers_registry_server_id_seq
-          START WITH 1
-          INCREMENT BY 1
-          NO MINVALUE
-          NO MAXVALUE
-          CACHE 1
-      );
+    ALTER TABLE public.mcp_registry_servers ALTER COLUMN registry_server_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.mcp_registry_servers_registry_server_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
 
-      --
-      -- Primary Key and Unique Constraints
-      --
+    --
+    -- Primary Key and Unique Constraints
+    --
 
-      ALTER TABLE ONLY public.mcp_registry_servers
-          ADD CONSTRAINT mcp_registry_servers_pkey PRIMARY KEY (id, saved_name, server_version, project_name);
+    ALTER TABLE ONLY public.mcp_registry_servers
+        ADD CONSTRAINT mcp_registry_servers_pkey PRIMARY KEY (id, saved_name, server_version, project_name);
 
-      ALTER TABLE ONLY public.mcp_registry_servers
-          ADD CONSTRAINT mcp_registry_servers_registry_server_id_key UNIQUE (registry_server_id);
+    ALTER TABLE ONLY public.mcp_registry_servers
+        ADD CONSTRAINT mcp_registry_servers_registry_server_id_key UNIQUE (registry_server_id);
 
-      --
-      -- Foreign Key Constraints
-      --
+    --
+    -- Foreign Key Constraints
+    --
 
-      ALTER TABLE ONLY public.mcp_registry_servers
-          ADD CONSTRAINT mcp_registry_servers_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE ONLY public.mcp_registry_servers
+        ADD CONSTRAINT mcp_registry_servers_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-      ALTER TABLE ONLY public.mcp_registry_servers
-          ADD CONSTRAINT mcp_registry_servers_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+    ALTER TABLE ONLY public.mcp_registry_servers
+        ADD CONSTRAINT mcp_registry_servers_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
 
-      ALTER TABLE ONLY public.mcp_registry_servers
-          ADD CONSTRAINT mcp_registry_servers_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+    ALTER TABLE ONLY public.mcp_registry_servers
+        ADD CONSTRAINT mcp_registry_servers_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
 
-      --
-      -- Row Level Security
-      --
+    --
+    -- Row Level Security
+    --
 
-      ALTER TABLE public.mcp_registry_servers ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.mcp_registry_servers ENABLE ROW LEVEL SECURITY;
 
-      --
-      -- Indexes for query performance
-      --
+    --
+    -- Indexes for query performance
+    --
 
-      CREATE INDEX idx_mcp_registry_servers_user_project
-          ON public.mcp_registry_servers (id, project_name)
-          WHERE is_deleted = false;
+    CREATE INDEX idx_mcp_registry_servers_user_project
+        ON public.mcp_registry_servers (id, project_name)
+        WHERE is_deleted = false;
 
-      CREATE INDEX idx_mcp_registry_servers_is_deleted
-          ON public.mcp_registry_servers (is_deleted);
+    CREATE INDEX idx_mcp_registry_servers_is_deleted
+        ON public.mcp_registry_servers (is_deleted);
 
 
-      -- ============================================================================
-      -- Table: mcp_gateways
-      -- Description: MCP Gateway configurations with server references
-      -- ============================================================================
+    -- ============================================================================
+    -- Table: mcp_gateways
+    -- Description: MCP Gateway configurations with server references
+    -- ============================================================================
 
-      CREATE TABLE public.mcp_gateways (
-          id uuid NOT NULL,
-          created_at timestamp with time zone DEFAULT now() NOT NULL,
-          updated_at timestamp with time zone DEFAULT now() NOT NULL,
-          gateway_id bigint NOT NULL,
-          gateway_id_hash bigint,
-          gateway_saved_name text NOT NULL,
-          gateway_version text DEFAULT 'v1'::text NOT NULL,
-          project_name text DEFAULT 'default'::text NOT NULL,
-          servers_config jsonb,
-          created_by uuid,
-          updated_by uuid,
-          is_sample boolean DEFAULT false,
-          is_deleted boolean DEFAULT false NOT NULL,
-          CONSTRAINT mcp_gateways_gateway_saved_name_check CHECK ((length(gateway_saved_name) < 33))
-      );
+    CREATE TABLE public.mcp_gateways (
+        id uuid NOT NULL,
+        created_at timestamp with time zone DEFAULT now() NOT NULL,
+        updated_at timestamp with time zone DEFAULT now() NOT NULL,
+        gateway_id bigint NOT NULL,
+        gateway_id_hash bigint,
+        gateway_saved_name text NOT NULL,
+        gateway_version text DEFAULT 'v1'::text NOT NULL,
+        project_name text DEFAULT 'default'::text NOT NULL,
+        servers_config jsonb,
+        created_by uuid,
+        updated_by uuid,
+        is_sample boolean DEFAULT false,
+        is_deleted boolean DEFAULT false NOT NULL,
+        CONSTRAINT mcp_gateways_gateway_saved_name_check CHECK ((length(gateway_saved_name) < 33))
+    );
 
-      --
-      -- Table Comments
-      --
+    --
+    -- Table Comments
+    --
 
-      COMMENT ON TABLE public.mcp_gateways IS 'MCP Gateway configurations';
+    COMMENT ON TABLE public.mcp_gateways IS 'MCP Gateway configurations';
 
-      COMMENT ON COLUMN public.mcp_gateways.id IS 'Supabase user_id or org_id if this belongs to an Org';
+    COMMENT ON COLUMN public.mcp_gateways.id IS 'Supabase user_id or org_id if this belongs to an Org';
 
-      COMMENT ON COLUMN public.mcp_gateways.gateway_id IS 'Gateway ID';
+    COMMENT ON COLUMN public.mcp_gateways.gateway_id IS 'Gateway ID';
 
-      COMMENT ON COLUMN public.mcp_gateways.gateway_id_hash IS 'Hash of the ID';
+    COMMENT ON COLUMN public.mcp_gateways.gateway_id_hash IS 'Hash of the ID';
 
-      COMMENT ON COLUMN public.mcp_gateways.gateway_saved_name IS 'User-given name for the gateway';
+    COMMENT ON COLUMN public.mcp_gateways.gateway_saved_name IS 'User-given name for the gateway';
 
-      COMMENT ON COLUMN public.mcp_gateways.gateway_version IS 'Gateway version (v1, v2, etc.)';
+    COMMENT ON COLUMN public.mcp_gateways.gateway_version IS 'Gateway version (v1, v2, etc.)';
 
-      COMMENT ON COLUMN public.mcp_gateways.servers_config IS 'Array of server references (by saved_name) with overrides: input_guardrails, output_guardrails, and other gateway-specific settings';
+    COMMENT ON COLUMN public.mcp_gateways.servers_config IS 'Array of server references (by saved_name) with overrides: input_guardrails, output_guardrails, and other gateway-specific settings';
 
-      --
-      -- Sequence for gateway_id
-      --
+    --
+    -- Sequence for gateway_id
+    --
 
-      ALTER TABLE public.mcp_gateways ALTER COLUMN gateway_id ADD GENERATED BY DEFAULT AS IDENTITY (
-          SEQUENCE NAME public.mcp_gateways_gateway_id_seq
-          START WITH 1
-          INCREMENT BY 1
-          NO MINVALUE
-          NO MAXVALUE
-          CACHE 1
-      );
+    ALTER TABLE public.mcp_gateways ALTER COLUMN gateway_id ADD GENERATED BY DEFAULT AS IDENTITY (
+        SEQUENCE NAME public.mcp_gateways_gateway_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+    );
 
-      --
-      -- Primary Key and Unique Constraints
-      --
+    --
+    -- Primary Key and Unique Constraints
+    --
 
-      ALTER TABLE ONLY public.mcp_gateways
-          ADD CONSTRAINT mcp_gateways_pkey PRIMARY KEY (id, gateway_saved_name, gateway_version, project_name);
+    ALTER TABLE ONLY public.mcp_gateways
+        ADD CONSTRAINT mcp_gateways_pkey PRIMARY KEY (id, gateway_saved_name, gateway_version, project_name);
 
-      ALTER TABLE ONLY public.mcp_gateways
-          ADD CONSTRAINT mcp_gateways_gateway_id_key UNIQUE (gateway_id);
+    ALTER TABLE ONLY public.mcp_gateways
+        ADD CONSTRAINT mcp_gateways_gateway_id_key UNIQUE (gateway_id);
 
-      --
-      -- Foreign Key Constraints
-      --
+    --
+    -- Foreign Key Constraints
+    --
 
-      ALTER TABLE ONLY public.mcp_gateways
-          ADD CONSTRAINT mcp_gateways_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE ONLY public.mcp_gateways
+        ADD CONSTRAINT mcp_gateways_id_fkey FOREIGN KEY (id) REFERENCES public.profiles(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-      ALTER TABLE ONLY public.mcp_gateways
-          ADD CONSTRAINT mcp_gateways_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+    ALTER TABLE ONLY public.mcp_gateways
+        ADD CONSTRAINT mcp_gateways_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
 
-      ALTER TABLE ONLY public.mcp_gateways
-          ADD CONSTRAINT mcp_gateways_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
+    ALTER TABLE ONLY public.mcp_gateways
+        ADD CONSTRAINT mcp_gateways_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.profiles(id) ON UPDATE CASCADE;
 
-      --
-      -- Row Level Security
-      --
+    --
+    -- Row Level Security
+    --
 
-      ALTER TABLE public.mcp_gateways ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE public.mcp_gateways ENABLE ROW LEVEL SECURITY;
 
-      --
-      -- Indexes for query performance
-      --
+    --
+    -- Indexes for query performance
+    --
 
-      CREATE INDEX idx_mcp_gateways_user_project
-          ON public.mcp_gateways (id, project_name)
-          WHERE is_deleted = false;
+    CREATE INDEX idx_mcp_gateways_user_project
+        ON public.mcp_gateways (id, project_name)
+        WHERE is_deleted = false;
 
-      CREATE INDEX idx_mcp_gateways_is_deleted
-          ON public.mcp_gateways (is_deleted);
+    CREATE INDEX idx_mcp_gateways_is_deleted
+        ON public.mcp_gateways (is_deleted);
 
-      CREATE INDEX idx_mcp_gateways_servers_config_gin
-          ON public.mcp_gateways USING GIN (servers_config);
+    CREATE INDEX idx_mcp_gateways_servers_config_gin
+        ON public.mcp_gateways USING GIN (servers_config);
 
-      --
-      -- Migration Complete
-      --
+    --
+    -- Migration Complete
+    --
   018-add-test-statuses-column.sql: |
-      --
-      -- Migration: 002_add_test_statuses_column
-      -- Description: Add test_statuses JSONB column to red_teaming table for granular test status tracking
-      --
+    --
+    -- Migration: 002_add_test_statuses_column
+    -- Description: Add test_statuses JSONB column to red_teaming table for granular test status tracking
+    --
 
-      -- ============================================================================
-      -- Column: test_statuses
-      -- Description: Individual test statuses tracking within a red team job
-      -- ============================================================================
+    -- ============================================================================
+    -- Column: test_statuses
+    -- Description: Individual test statuses tracking within a red team job
+    -- ============================================================================
 
-      BEGIN;
+    BEGIN;
 
-      --
-      -- Add test_statuses column
-      --
+    --
+    -- Add test_statuses column
+    --
 
-      ALTER TABLE public.red_teaming
-      ADD COLUMN IF NOT EXISTS test_statuses JSONB DEFAULT NULL;
+    ALTER TABLE public.red_teaming
+    ADD COLUMN IF NOT EXISTS test_statuses JSONB DEFAULT NULL;
 
-      --
-      -- Column Comment
-      --
+    --
+    -- Column Comment
+    --
 
-      COMMENT ON COLUMN public.red_teaming.test_statuses IS
-      'Individual test status tracking: {
-        "test_name": {
-          "status": "queued|running|finished|failed",
-          "started_at": "ISO timestamp or null",
-          "ended_at": "ISO timestamp or null",
-          "samples_tested": number,
-          "total_samples": number,
-          "successful_attacks": number,
-          "attack_success_rate": number,
-          "attack_methods_completed": ["method1", "method2"],
-          "error": "error message or null",
-          "error_type": "error class name or null"
-        }
-      }';
-
-      --
-      -- GIN Index for query performance
-      --
-
-      CREATE INDEX IF NOT EXISTS idx_red_teaming_test_statuses
-      ON public.red_teaming USING GIN (test_statuses);
-
-      --
-      -- Verify the column was added
-      --
-
-      DO $$
-      BEGIN
-        IF EXISTS (
-          SELECT 1
-          FROM information_schema.columns
-          WHERE table_schema = 'public'
-          AND table_name = 'red_teaming'
-          AND column_name = 'test_statuses'
-        ) THEN
-          RAISE NOTICE 'SUCCESS: test_statuses column added successfully';
-        ELSE
-          RAISE EXCEPTION 'FAILED: test_statuses column was not added';
-        END IF;
-      END $$;
-
-      COMMIT;
-    
-      --
-      -- Migration Complete
-      --
-  019-add-latest-config-column.sql: |
-      --
-      -- Migration: 003_add_latest_config_column
-      -- Description: Add latest_config JSONB column to invitations table for tracking current role/group configuration
-      --
-
-      -- ============================================================================
-      -- Column: latest_config
-      -- Description: Stores the current/latest roles and groups configuration for an invitation
-      -- ============================================================================
-
-      BEGIN;
-
-      --
-      -- Add latest_config column
-      --
-
-      ALTER TABLE public.invitations
-      ADD COLUMN IF NOT EXISTS latest_config JSONB DEFAULT NULL;
-
-      --
-      -- Column Comment
-      --
-
-      COMMENT ON COLUMN public.invitations.latest_config IS
-      'Current/latest configuration for the invitation: {
-      "roles": [
-          {
-          "role": "viewer|editor|admin|...",
-          "project": "project_name or * for all projects"
-          }
-      ],
-      "groups": ["group1", "group2", ...]
+    COMMENT ON COLUMN public.red_teaming.test_statuses IS
+    'Individual test status tracking: {
+      "test_name": {
+        "status": "queued|running|finished|failed",
+        "started_at": "ISO timestamp or null",
+        "ended_at": "ISO timestamp or null",
+        "samples_tested": number,
+        "total_samples": number,
+        "successful_attacks": number,
+        "attack_success_rate": number,
+        "attack_methods_completed": ["method1", "method2"],
+        "error": "error message or null",
+        "error_type": "error class name or null"
       }
-      Note: This can be updated post-invitation (e.g., when roles change), 
-      unlike config which stores the original invitation configuration.';
+    }';
 
-      --
-      -- GIN Index for query performance on JSONB queries
-      --
+    --
+    -- GIN Index for query performance
+    --
 
-      CREATE INDEX IF NOT EXISTS idx_invitations_latest_config
-      ON public.invitations USING GIN (latest_config);
+    CREATE INDEX IF NOT EXISTS idx_red_teaming_test_statuses
+    ON public.red_teaming USING GIN (test_statuses);
 
-      --
-      -- Verify the column was added
-      --
+    --
+    -- Verify the column was added
+    --
 
-      DO $$
-      BEGIN
+    DO $$
+    BEGIN
       IF EXISTS (
-          SELECT 1
-          FROM information_schema.columns
-          WHERE table_schema = 'public'
-          AND table_name = 'invitations'
-          AND column_name = 'latest_config'
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = 'red_teaming'
+        AND column_name = 'test_statuses'
       ) THEN
-          RAISE NOTICE 'SUCCESS: latest_config column added successfully';
+        RAISE NOTICE 'SUCCESS: test_statuses column added successfully';
       ELSE
-          RAISE EXCEPTION 'FAILED: latest_config column was not added';
+        RAISE EXCEPTION 'FAILED: test_statuses column was not added';
       END IF;
-      END $$;
+    END $$;
 
-      COMMIT;
+    COMMIT;
 
-      --
-      -- Migration Complete
-      -- 
+    --
+    -- Migration Complete
+    --
+  019-add-latest-config-column.sql: |
+    --
+    -- Migration: 003_add_latest_config_column
+    -- Description: Add latest_config JSONB column to invitations table for tracking current role/group configuration
+    --
 
-  020-reload-schema.sql: | 
+    -- ============================================================================
+    -- Column: latest_config
+    -- Description: Stores the current/latest roles and groups configuration for an invitation
+    -- ============================================================================
+
+    BEGIN;
+
+    --
+    -- Add latest_config column
+    --
+
+    ALTER TABLE public.invitations
+    ADD COLUMN IF NOT EXISTS latest_config JSONB DEFAULT NULL;
+
+    --
+    -- Column Comment
+    --
+
+    COMMENT ON COLUMN public.invitations.latest_config IS
+    'Current/latest configuration for the invitation: {
+    "roles": [
+        {
+        "role": "viewer|editor|admin|...",
+        "project": "project_name or * for all projects"
+        }
+    ],
+    "groups": ["group1", "group2", ...]
+    }
+    Note: This can be updated post-invitation (e.g., when roles change),
+    unlike config which stores the original invitation configuration.';
+
+    --
+    -- GIN Index for query performance on JSONB queries
+    --
+
+    CREATE INDEX IF NOT EXISTS idx_invitations_latest_config
+    ON public.invitations USING GIN (latest_config);
+
+    --
+    -- Verify the column was added
+    --
+
+    DO $$
+    BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = 'invitations'
+        AND column_name = 'latest_config'
+    ) THEN
+        RAISE NOTICE 'SUCCESS: latest_config column added successfully';
+    ELSE
+        RAISE EXCEPTION 'FAILED: latest_config column was not added';
+    END IF;
+    END $$;
+
+    COMMIT;
+
+    --
+    -- Migration Complete
+    --
+
+  020-reload-schema.sql: |
     NOTIFY pgrst, 'reload schema'
   021-add-playground-table.sql: |
     --
@@ -3899,5 +3898,5 @@ kind: ConfigMap
 metadata:
   name: supabase-migration
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook": pre-install,pre-upgrade,post-upgrade
     "helm.sh/hook-weight": "1"

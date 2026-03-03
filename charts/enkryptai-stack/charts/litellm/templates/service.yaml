@@ -9,8 +9,7 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
-      protocol: TCP
+      targetPort: {{ .Values.service.targetPort }}
       name: {{ .Values.service.name }}
   selector:
     {{- include "litellm.selectorLabels" . | nindent 4 }}

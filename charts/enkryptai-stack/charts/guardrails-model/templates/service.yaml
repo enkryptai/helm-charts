@@ -11,8 +11,7 @@ spec:
     {{- range .Values.service.ports }}
     - name: {{ .name }}
       port: {{ .containerPort }}
-      targetPort: {{ .name }}
-      protocol: TCP
+      targetPort: {{ default .containerPort .targetPort }}
     {{- end }}
   selector:
     {{- include "guardrails-model.selectorLabels" . | nindent 4 }}

@@ -1,4 +1,4 @@
-apiVersion: v1
+  apiVersion: v1
 data:
   000-schema.sql: |
     -- Set up realtime

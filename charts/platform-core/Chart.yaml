@@ -55,3 +55,7 @@ dependencies:
     repository: "https://enapter.github.io/charts/"
     condition: keydb.enabled
 
+  - name: kube-prometheus-stack
+    version: "81.0.0"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: monitoring.enabled

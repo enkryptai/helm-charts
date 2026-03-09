@@ -1,0 +1,53 @@
+replicaCount: 1
+podAnnotations:
+  secret.reloader.stakater.com/reload: ""
+labels:
+  app: guardrails-multi-modal
+image:
+  repository: enkryptai-dev/guardrail-multimodel
+  pullPolicy: IfNotPresent
+  tag: "dev-1772781831"
+strategy:
+  type: Recreate
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+podLabels: {}
+service:
+  type: ClusterIP
+  ports:
+    - name: guardrails-multi-modal
+      containerPort: 8000
+resources:
+  requests:
+    cpu: "1"
+    memory: "4Gi"
+    nvidia.com/gpu: 1
+  limits:
+    cpu: "3"
+    memory: "12Gi"
+    nvidia.com/gpu: 1
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 400
+  timeoutSeconds: 10
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 300
+  timeoutSeconds: 30
+envFrom:
+  - secretRef:
+      name: guardrails-multimodal-secret
+
+env: []
+
+nodeSelector:
+  dedicated: llm-model-guardrail
+
+tolerations: []
+
+affinity: {}

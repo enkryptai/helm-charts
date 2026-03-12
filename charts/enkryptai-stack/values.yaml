@@ -780,3 +780,55 @@ guardrails-model:
   tolerations: []
 
   affinity: {}
+
+guardrails-multi-modal:
+  enabled: true
+  replicaCount: 1
+  labels:
+    app: guardrails-multi-modal
+  image:
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrail-multimodal
+    pullPolicy: IfNotPresent
+    tag: "ddc789c"
+  strategy:
+    type: Recreate
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
+  podLabels: {}
+  podAnnotations:
+    secret.reloader.stakater.com/reload: ""
+  service:
+    type: ClusterIP
+    ports:
+      - name: multi-modal
+        containerPort: 8000
+  resources:
+    requests:
+      cpu: "1"
+      memory: "4Gi"
+      nvidia.com/gpu: 1
+    limits:
+      cpu: "3"
+      memory: "12Gi"
+      nvidia.com/gpu: 1
+
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 400
+    timeoutSeconds: 10
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 300
+    timeoutSeconds: 30
+
+  nodeSelector: {}
+  tolerations: []
+
+  affinity: {}

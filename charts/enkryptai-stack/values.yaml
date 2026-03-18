@@ -308,7 +308,7 @@ redteam-proxy:
 
 ################GUARDRAILS###########################
 guardrails:
-  enabled: false
+  enabled: true
   replicaCount: 1
   image:
     repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrails

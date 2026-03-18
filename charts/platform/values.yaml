@@ -38,7 +38,7 @@ sensor:
     - name: SENTRY_LITELLM_GATEWAY_TIMEOUT
       value: "300"
     - name: SENTRY_LITELLM_GATEWAY_URL
-      value: "http://enkryptai-litellm:443"
+      value: "http://enkryptai-litellm.enkryptai-stack:443"
 
 adminpassword:
   secretName: "opensearch-cred"

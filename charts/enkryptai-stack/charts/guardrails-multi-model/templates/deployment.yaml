@@ -33,10 +33,6 @@ spec:
             - name: {{ .name }}
               containerPort: {{ .containerPort }}
             {{- end }}
-          {{- with .Values.envFrom }}
-          envFrom:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
           {{- if .Values.env }}
           env:
             {{- toYaml .Values.env | nindent 12 }}

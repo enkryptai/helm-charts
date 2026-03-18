@@ -729,7 +729,7 @@ litellm:
 
   affinity: {}
 guardrails-model:
-  enabled: true
+  enabled: false
   replicaCount: 1
   labels:
     app: guardrails-model
@@ -787,9 +787,9 @@ guardrails-multi-modal:
   labels:
     app: guardrails-multi-modal
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrail-multimodel
+    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrail-multimodal
     pullPolicy: IfNotPresent
-    tag: "dev-1772781831"
+    tag: "1773124434"
   strategy:
     type: Recreate
   imagePullSecrets: []
@@ -815,7 +815,7 @@ guardrails-multi-modal:
 
   envFrom:
     - secretRef:
-        name:  guardrails-multimodal-secret
+        name: guardrails-multimodal-secret
   livenessProbe:
     enabled: true
     httpGet:
@@ -831,8 +831,7 @@ guardrails-multi-modal:
     initialDelaySeconds: 300
     timeoutSeconds: 30
 
-  nodeSelector:
-    dedicated: llm-model-guardrail
+  nodeSelector: {}
   tolerations: []
 
   affinity: {}

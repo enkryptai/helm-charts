@@ -39,14 +39,9 @@ readinessProbe:
     port: 8000
   initialDelaySeconds: 300
   timeoutSeconds: 30
-envFrom:
-  - secretRef:
-      name: guardrails-multimodal-secret
-
 env: []
 
-nodeSelector:
-  dedicated: llm-model-guardrail
+nodeSelector: {}
 
 tolerations: []
 

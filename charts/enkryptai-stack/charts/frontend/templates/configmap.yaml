@@ -5,4 +5,5 @@ metadata:
   labels:
     {{- include "frontend.labels" . | nindent 4 }}
 data:
-  NEXT_PUBLIC_URL: {{ .Values.configMap.NEXT_PUBLIC_URL | quote }}
+  {{- $globalDomain := .Values.global.domain | default "" }}
+  NEXT_PUBLIC_URL: {{ .Values.configMap.NEXT_PUBLIC_URL | default (printf "https://app.%s" $globalDomain) | quote }}

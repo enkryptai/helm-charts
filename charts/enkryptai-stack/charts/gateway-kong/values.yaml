@@ -2,15 +2,18 @@ replicaCount: 2
 
 image:
   gateway:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
+    repository: ""
+    name: enkryptai-prod/gateway
     tag: "ec1a9d9"
     pullPolicy: IfNotPresent
   sync:
-    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
+    repository: ""
+    name: enkryptai-prod/gateway-sync
     tag: "ec1a9d9"
     pullPolicy: IfNotPresent
   fluentBit:
-    repository: fluent/fluent-bit
+    repository: ""
+    name: onprem/fluent-bit
     tag: "3.2.1"
     pullPolicy: IfNotPresent
 
@@ -96,7 +99,7 @@ autoscaling:
   maxReplicas: 2
   targetCPUUtilizationPercentage: 80
 
-externalSecrets:
+externalSecret:
   enabled: true
   secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/gateway

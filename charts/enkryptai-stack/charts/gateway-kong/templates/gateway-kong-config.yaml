@@ -1,0 +1,8 @@
+{{- if .Values.configMaps.kongConfig.enabled }}
+apiVersion: v1
+{{ .Files.Get "files/kong-config-data.yaml" }}
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMaps.kongConfig.name }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

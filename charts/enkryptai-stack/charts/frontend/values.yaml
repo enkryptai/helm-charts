@@ -2,6 +2,7 @@ replicaCount: 1
 
 image:
   repository: ""
+  name: enkryptai-prod/frontend
   pullPolicy: ""
   tag: "vpc"
 

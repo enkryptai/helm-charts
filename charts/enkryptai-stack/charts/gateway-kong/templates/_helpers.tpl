@@ -72,3 +72,36 @@ imagePullSecrets:
 {{- define "gateway-kong.renderEnv" -}}
 {{- toYaml . | nindent 0 -}}
 {{- end -}}
+
+{{/*
+Resolve gateway image: prefer image.gateway.repository, fallback to global.registry/image.gateway.name
+*/}}
+{{- define "gateway-kong.gatewayImage" -}}
+{{- if .Values.image.gateway.repository -}}
+{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag }}
+{{- else -}}
+{{ .Values.global.registry }}/{{ .Values.image.gateway.name }}:{{ .Values.image.gateway.tag }}
+{{- end -}}
+{{- end }}
+
+{{/*
+Resolve sync image
+*/}}
+{{- define "gateway-kong.syncImage" -}}
+{{- if .Values.image.sync.repository -}}
+{{ .Values.image.sync.repository }}:{{ .Values.image.sync.tag }}
+{{- else -}}
+{{ .Values.global.registry }}/{{ .Values.image.sync.name }}:{{ .Values.image.sync.tag }}
+{{- end -}}
+{{- end }}
+
+{{/*
+Resolve fluent-bit image
+*/}}
+{{- define "gateway-kong.fluentBitImage" -}}
+{{- if .Values.image.fluentBit.repository -}}
+{{ .Values.image.fluentBit.repository }}:{{ .Values.image.fluentBit.tag }}
+{{- else -}}
+{{ .Values.global.registry }}/{{ .Values.image.fluentBit.name }}:{{ .Values.image.fluentBit.tag }}
+{{- end -}}
+{{- end }}

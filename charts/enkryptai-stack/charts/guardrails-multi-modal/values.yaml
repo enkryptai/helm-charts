@@ -5,6 +5,7 @@ labels:
   app: guardrails-multi-modal
 image:
   repository: enkryptai-prod/guardrail-multimodal
+  name: enkryptai-prod/guardrail-multimodal
   pullPolicy: IfNotPresent
   tag: "ddc789c"
 strategy:
@@ -39,7 +40,11 @@ readinessProbe:
     port: 8000
   initialDelaySeconds: 300
   timeoutSeconds: 30
-  # envFrom: {}
+externalSecret:
+  enabled: false
+  secretName: guardrails-multi-modal-secret
+  secretStoreRefName: enkryptai-clustersecret-store
+  repoName: enkryptaivpc/guardrails-multi-modal
 
 env: []
 

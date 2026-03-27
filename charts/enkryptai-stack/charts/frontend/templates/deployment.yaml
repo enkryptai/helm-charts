@@ -30,7 +30,7 @@ spec:
       {{- include "frontend.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "frontend.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: NODE_TLS_REJECT_UNAUTHORIZED

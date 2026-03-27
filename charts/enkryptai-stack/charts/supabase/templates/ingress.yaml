@@ -1,4 +1,9 @@
 {{- if .Values.ingress.enabled -}}
+{{- $globalDomain := .Values.global.domain | default "" -}}
+{{- $autoHost := "" -}}
+{{- if $globalDomain }}
+{{- $autoHost = printf "auth.%s" $globalDomain -}}
+{{- end }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -13,8 +18,9 @@ spec:
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
-  {{- if .Values.ingress.tls }}
+  {{- if or .Values.ingress.tls (and $autoHost .Values.ingress.tls) }}
   tls:
+    {{- if .Values.ingress.tls }}
     {{- range .Values.ingress.tls }}
     - hosts:
         {{- range .hosts }}
@@ -22,8 +28,14 @@ spec:
         {{- end }}
       secretName: {{ .secretName }}
     {{- end }}
+    {{- else if $autoHost }}
+    - hosts:
+        - {{ $autoHost | quote }}
+      secretName: supabase-tls
+    {{- end }}
   {{- end }}
   rules:
+    {{- if .Values.ingress.hosts }}
     {{- range .Values.ingress.hosts }}
     - host: {{ .host | quote }}
       http:
@@ -38,7 +50,16 @@ spec:
                   number: 8000
           {{- end }}
     {{- end }}
+    {{- else if $autoHost }}
+    - host: {{ $autoHost | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}-supabase-kong
+                port:
+                  number: 8000
+    {{- end }}
 {{- end }}
-
-
-

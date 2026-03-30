@@ -4,6 +4,8 @@ metadata:
   annotations:
     "helm.sh/hook-weight": "21"
     "helm.sh/hook": post-install,post-upgrade
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
   name: db-migration-post-upgrade
 spec:
   backoffLimit: 2

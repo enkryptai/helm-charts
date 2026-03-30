@@ -195,6 +195,7 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
   nack:
+    nameOverride: nack
     jetstream:
       enabled: true
       image:

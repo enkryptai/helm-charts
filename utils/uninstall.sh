@@ -32,6 +32,7 @@ cleanup_main_resources() {
   confirm "Proceed with deleting above resources?" || return
 
   kubectl delete sts -n $NAMESPACE -l opster.io/opensearch-cluster=enkryptai-opensearch --ignore-not-found
+  kubectl delete jobs -n $NAMESPACE -l 'app.kubernetes.io/instance in (enkryptai,platform)' --ignore-not-found
   kubectl delete cluster cluster-openfga,supabase-cluster -n $NAMESPACE --ignore-not-found
   kubectl delete deployment -n $NAMESPACE -l opensearch.cluster.dashboards=enkryptai-opensearch  --ignore-not-found
   echo "Resources deleted."

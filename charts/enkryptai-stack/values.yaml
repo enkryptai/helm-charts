@@ -5,7 +5,7 @@ global:
   imagePullPolicy: "IfNotPresent"
   externalSecret: false
   domain: "djj.enkryptai.com"
-  registry: vpcdepoyment.azurecr.io
+  registry: vpcdeployment.azurecr.io
 
 supabaseinitdb:
   repository: onprem/supabase-initdb
@@ -23,7 +23,7 @@ busybox:
 frontend:
   enabled: true
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-prod/frontend
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
     tag: "7961f95"
 
@@ -112,15 +112,15 @@ gateway-kong:
   replicaCount: 2
   image:
     gateway:
-      repository: vpcdepoyment.azurecr.io/enkryptai-prod/gateway
+      repository: vpcdeployment.azurecr.io/enkryptai-prod/gateway
       tag: "dev-1767798930"
       pullPolicy: IfNotPresent
     sync:
-      repository: vpcdepoyment.azurecr.io/enkryptai-prod/gateway-sync
+      repository: vpcdeployment.azurecr.io/enkryptai-prod/gateway-sync
       tag: "a8a9b2c"
       pullPolicy: IfNotPresent
     fluentBit:
-      repository: vpcdepoyment.azurecr.io/onprem/fluent-bit
+      repository: vpcdeployment.azurecr.io/onprem/fluent-bit
       tag: "3.2.1"
       pullPolicy: IfNotPresent
 
@@ -233,7 +233,7 @@ redteam-proxy:
   replicaCount: 2
 
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-prod/redteam-proxy
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/redteam-proxy
     pullPolicy: IfNotPresent
     tag: "prod-v1.0.34"
 
@@ -311,7 +311,7 @@ guardrails:
   enabled: true
   replicaCount: 1
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrails
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrails
     pullPolicy: IfNotPresent
     tag: "prodgr-v0.0.5"
 
@@ -381,7 +381,7 @@ supabase:
   storage:
     enabled: true
     image:
-      repository: vpcdepoyment.azurecr.io/onprem/storage-api
+      repository: vpcdeployment.azurecr.io/onprem/storage-api
       pullPolicy: IfNotPresent
       tag: "v1.19.1"
     miniomc:
@@ -420,7 +420,7 @@ openfgaconfig:
 openfga:
   replicaCount: 1
   image:
-    repository: vpcdepoyment.azurecr.io/onprem/openfga
+    repository: vpcdeployment.azurecr.io/onprem/openfga
     pullPolicy: Always
     tag: "v1.8.9"
 
@@ -481,7 +481,7 @@ openfga:
   securityContext: {}
 
   initContainer:
-    repository: vpcdepoyment.azurecr.io/onprem/k8s-wait-for
+    repository: vpcdeployment.azurecr.io/onprem/k8s-wait-for
     tag: "v2.0"
     pullPolicy: IfNotPresent
 
@@ -562,7 +562,7 @@ openfga:
     migrations:
       resources: {}
       image:
-        repository: vpcdepoyment.azurecr.io/onprem/k8s-wait-for
+        repository: vpcdeployment.azurecr.io/onprem/k8s-wait-for
         pullPolicy: Always
         tag: "v2.0"
 
@@ -683,7 +683,7 @@ litellm:
 
   # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-prod/litellm-gateway
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/litellm-gateway
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: "main-1771906797"
@@ -734,7 +734,7 @@ guardrails-model:
   labels:
     app: guardrails-model
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrail-model
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-model
     pullPolicy: IfNotPresent
     tag: "main-1771906796"
   strategy:
@@ -787,7 +787,7 @@ guardrails-multi-modal:
   labels:
     app: guardrails-multi-modal
   image:
-    repository: vpcdepoyment.azurecr.io/enkryptai-prod/guardrail-multimodal
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-multimodal
     pullPolicy: IfNotPresent
     tag: "ddc789c"
   strategy:

@@ -6,6 +6,8 @@ metadata:
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "10"
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   name: REDTEAM
   subjects:
@@ -33,6 +35,8 @@ metadata:
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "10"
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   name: REDTEAM-LOGS
   subjects:

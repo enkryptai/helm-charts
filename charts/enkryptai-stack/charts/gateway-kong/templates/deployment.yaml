@@ -19,7 +19,7 @@ spec:
       {{- include "gateway-kong.imagePullSecrets" . | nindent 6 }}
       initContainers:
         - name: gateway-migrations
-          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          image: {{ include "gateway-kong.gatewayImage" . }}
           command:
             - kong
             - migrations
@@ -28,7 +28,7 @@ spec:
             - secretRef:
                 name: gateway-migration-env-secret
         - name: gateway-migrations-up
-          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          image: {{ include "gateway-kong.gatewayImage" . }}
           command:
             - /bin/sh
             - -c
@@ -38,7 +38,7 @@ spec:
                 name: gateway-migration-env-secret
       containers:
         - name: gateway
-          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          image: {{ include "gateway-kong.gatewayImage" . }}
           imagePullPolicy: {{ .Values.image.gateway.pullPolicy }}
           envFrom:
             - secretRef:
@@ -73,7 +73,7 @@ spec:
             - mountPath: /tmp
               name: kong-tmp-vol
         - name: gateway-deck-sync
-          image: "{{ .Values.image.sync.repository }}:{{ .Values.image.sync.tag | default .Chart.AppVersion }}"
+          image: {{ include "gateway-kong.syncImage" . }}
           envFrom:
             - secretRef:
                 name: gateway-env-secret
@@ -105,7 +105,7 @@ spec:
             - mountPath: /mnt/deck
               name: gateway-kong-temp-config
         - name: fluent-bit
-          image: "{{ .Values.image.fluentBit.repository }}:{{ .Values.image.fluentBit.tag }}"
+          image: {{ include "gateway-kong.fluentBitImage" . }}
           env:
           {{- include "gateway-kong.renderEnv" .Values.fluentBit.env | nindent 12 }}
           ports:

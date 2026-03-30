@@ -263,7 +263,7 @@ The open source Firebase alternative.
 | minio.environment | object | `{}` |  |
 | minio.fullnameOverride | string | `"minio"` |  |
 | minio.image.pullPolicy | string | `"IfNotPresent"` |  |
-| minio.image.repository | string | `"vpcdepoyment.azurecr.io/onprem/minio"` |  |
+| minio.image.repository | string | `"vpcdeployment.azurecr.io/onprem/minio"` |  |
 | minio.image.tag | string | `"latest"` |  |
 | minio.imagePullSecrets | list | `[]` |  |
 | minio.livenessProbe | object | `{}` |  |
@@ -393,7 +393,7 @@ The open source Firebase alternative.
 | storage.environment.STORAGE_BACKEND | string | `"s3"` |  |
 | storage.fullnameOverride | string | `"supabase-storage"` |  |
 | storage.image.pullPolicy | string | `"IfNotPresent"` |  |
-| storage.image.repository | string | `"vpcdepoyment.azurecr.io/onprem/storage-api"` |  |
+| storage.image.repository | string | `"vpcdeployment.azurecr.io/onprem/storage-api"` |  |
 | storage.image.tag | string | `"v1.19.1"` |  |
 | storage.imagePullSecrets | list | `[]` |  |
 | storage.livenessProbe | object | `{}` |  |

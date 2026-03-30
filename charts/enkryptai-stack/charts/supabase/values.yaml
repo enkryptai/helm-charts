@@ -291,7 +291,7 @@ meta:
 storage:
   enabled: true
   image:
-    repository: vpcdepoyment.azurecr.io/onprem/storage-api
+    repository: vpcdeployment.azurecr.io/onprem/storage-api
     pullPolicy: IfNotPresent
     tag: "v1.19.1"
   miniomc:
@@ -567,7 +567,7 @@ functions:
 minio:
   enabled: true
   image:
-    repository: vpcdepoyment.azurecr.io/onprem/minio
+    repository: vpcdeployment.azurecr.io/onprem/minio
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []

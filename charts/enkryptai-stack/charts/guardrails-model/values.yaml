@@ -5,6 +5,7 @@ labels:
   app: guardrails-model
 image:
   repository: enkryptai-dev/guardrail-model
+  name: enkryptai-prod/guardrail-model
   pullPolicy: IfNotPresent
   tag: "main-1771906796"
 strategy:
@@ -45,6 +46,12 @@ resources:
 envFrom:
   - secretRef:
       name: guardrails-model-secret
+
+externalSecret:
+  enabled: false
+  secretName: guardrails-model-secret
+  secretStoreRefName: enkryptai-clustersecret-store
+  repoName: enkryptaivpc/guardrails-model
 
 env: []
 

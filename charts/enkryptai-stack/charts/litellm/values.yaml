@@ -9,6 +9,7 @@ podAnnotations:
 
 image:
   repository: enkryptai-dev/litellm-gateway
+  name: enkryptai-prod/litellm-gateway
   pullPolicy: IfNotPresent
   tag: "main-1771906797"
 
@@ -45,6 +46,12 @@ envFrom:
   - secretRef:
       name: litellm-gateway-env-secret
 env: []
+
+externalSecret:
+  enabled: false
+  secretName: litellm-gateway-env-secret
+  secretStoreRefName: enkryptai-clustersecret-store
+  repoName: enkryptaivpc/litellm
 
 nodeSelector: {}
 

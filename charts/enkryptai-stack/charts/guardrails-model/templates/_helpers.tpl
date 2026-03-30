@@ -49,3 +49,14 @@ Selector labels
 app.kubernetes.io/name: {{ include "guardrails-model.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Resolve container image: prefer image.repository, fallback to global.registry/image.name
+*/}}
+{{- define "guardrails-model.image" -}}
+{{- if .Values.image.repository -}}
+{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+{{- else -}}
+{{ .Values.global.registry }}/{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+{{- end -}}
+{{- end }}

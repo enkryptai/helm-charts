@@ -68,3 +68,14 @@ imagePullSecrets:
   {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+Resolve container image: prefer image.repository, fallback to global.registry/image.name
+*/}}
+{{- define "guardrails.image" -}}
+{{- if .Values.image.repository -}}
+{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+{{- else -}}
+{{ .Values.global.registry }}/{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+{{- end -}}
+{{- end }}

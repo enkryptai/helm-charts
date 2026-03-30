@@ -2,9 +2,9 @@ externalSecret:
   databaseSecretName: onprem
   databaseSecretRepoName: enkryptaivpc/on-prem
   secretStoreRefName: enkryptai-clustersecret-store
-  
+
 secret:
-  onprem: 
+  onprem:
     name: onprem
   jwt:
     secretRef: "onprem"
@@ -88,7 +88,6 @@ db:
   affinity: {}
   config: {}
 
-
 studio:
   enabled: true
   image:
@@ -109,7 +108,7 @@ studio:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "5"
     "helm.sh/hook": post-install
   podSecurityContext: {}
@@ -146,7 +145,7 @@ auth:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -166,7 +165,7 @@ auth:
   tolerations: []
   affinity: {}
 
-# Secrets Done 
+# Secrets Done
 rest:
   enabled: true
   image:
@@ -182,7 +181,7 @@ rest:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -203,7 +202,6 @@ rest:
   tolerations: []
   affinity: {}
 
-
 realtime:
   enabled: false
   image:
@@ -219,7 +217,7 @@ realtime:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -267,7 +265,7 @@ meta:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -291,7 +289,7 @@ meta:
 storage:
   enabled: true
   image:
-    repository: vpcdepoyment.azurecr.io/onprem/storage-api
+    repository: vpcdeployment.azurecr.io/onprem/storage-api
     pullPolicy: IfNotPresent
     tag: "v1.19.1"
   miniomc:
@@ -306,7 +304,7 @@ storage:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -317,7 +315,7 @@ storage:
   environment:
     PGOPTIONS: -c search_path=storage,public
     FILE_SIZE_LIMIT: "52428800"
-    STORAGE_BACKEND: s3  
+    STORAGE_BACKEND: s3
     FILE_STORAGE_BACKEND_PATH: /var/lib/storage
     REGION: stub
     GLOBAL_S3_BUCKET: stub
@@ -406,7 +404,7 @@ kong:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -459,7 +457,7 @@ analytics:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -539,7 +537,7 @@ functions:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -551,7 +549,7 @@ functions:
     DB_USERNAME: supabase_functions_admin
     DB_PORT: 5432
     DB_DRIVER: postgresql
-    DB_SSL: disable  # disable, allow, prefer, require, verify-ca, verify-full
+    DB_SSL: disable # disable, allow, prefer, require, verify-ca, verify-full
   resources: {}
   autoscaling:
     enabled: true
@@ -567,7 +565,7 @@ functions:
 minio:
   enabled: true
   image:
-    repository: vpcdepoyment.azurecr.io/onprem/minio
+    repository: vpcdeployment.azurecr.io/onprem/minio
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []
@@ -580,7 +578,7 @@ minio:
     create: true
     annotations: {}
     name: ""
-  podAnnotations: 
+  podAnnotations:
     "helm.sh/hook-weight": "15"
     "helm.sh/hook": post-install, post-upgrade
   podSecurityContext: {}
@@ -607,7 +605,7 @@ minio:
   tolerations: []
   affinity: {}
 
-testimage: 
+testimage:
   repository: onprem/curljq
   tag: "latest"
 postgresalpine:

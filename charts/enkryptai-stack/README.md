@@ -28,7 +28,7 @@ A Helm chart for Kubernetes
 | frontend.externalSecret.secretName | string | `"frontend-env-secret"` |  |
 | frontend.externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
 | frontend.image.pullPolicy | string | `"IfNotPresent"` |  |
-| frontend.image.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-dev/frontend"` |  |
+| frontend.image.repository | string | `"vpcdeployment.azurecr.io/enkryptai-dev/frontend"` |  |
 | frontend.image.tag | string | `"dev-1764326836"` |  |
 | frontend.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
 | frontend.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
@@ -81,13 +81,13 @@ A Helm chart for Kubernetes
 | gateway-kong.externalSecrets.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
 | gateway-kong.fullnameOverride | string | `"gateway-kong"` |  |
 | gateway-kong.image.fluentBit.pullPolicy | string | `"IfNotPresent"` |  |
-| gateway-kong.image.fluentBit.repository | string | `"vpcdepoyment.azurecr.io/onprem/fluent-bit"` |  |
+| gateway-kong.image.fluentBit.repository | string | `"vpcdeployment.azurecr.io/onprem/fluent-bit"` |  |
 | gateway-kong.image.fluentBit.tag | string | `"3.2.1"` |  |
 | gateway-kong.image.gateway.pullPolicy | string | `"IfNotPresent"` |  |
-| gateway-kong.image.gateway.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-dev/gateway"` |  |
+| gateway-kong.image.gateway.repository | string | `"vpcdeployment.azurecr.io/enkryptai-dev/gateway"` |  |
 | gateway-kong.image.gateway.tag | string | `"c5cbd5f"` |  |
 | gateway-kong.image.sync.pullPolicy | string | `"IfNotPresent"` |  |
-| gateway-kong.image.sync.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-dev/gateway-sync"` |  |
+| gateway-kong.image.sync.repository | string | `"vpcdeployment.azurecr.io/enkryptai-dev/gateway-sync"` |  |
 | gateway-kong.image.sync.tag | string | `"57df811"` |  |
 | gateway-kong.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
 | gateway-kong.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
@@ -138,7 +138,7 @@ A Helm chart for Kubernetes
 | global.domain | string | `"djj.enkryptai.com"` |  |
 | global.externalSecret | bool | `false` |  |
 | global.imagePullPolicy | string | `"IfNotPresent"` |  |
-| global.registry | string | `"vpcdepoyment.azurecr.io"` |  |
+| global.registry | string | `"vpcdeployment.azurecr.io"` |  |
 | global.storageClass | string | `""` |  |
 | guardrails.affinity | object | `{}` |  |
 | guardrails.autoscaling.enabled | bool | `true` |  |
@@ -152,7 +152,7 @@ A Helm chart for Kubernetes
 | guardrails.externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
 | guardrails.fullnameOverride | string | `"guardrails"` |  |
 | guardrails.image.pullPolicy | string | `"IfNotPresent"` |  |
-| guardrails.image.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-prod/guardrails"` |  |
+| guardrails.image.repository | string | `"vpcdeployment.azurecr.io/enkryptai-prod/guardrails"` |  |
 | guardrails.image.tag | string | `"aa2fdfb"` |  |
 | guardrails.livenessProbe.enabled | bool | `true` |  |
 | guardrails.livenessProbe.httpGet.path | string | `"/health"` |  |
@@ -213,7 +213,7 @@ A Helm chart for Kubernetes
 | openfga.datastore.maxOpenConns | int | `70` |  |
 | openfga.datastore.migrationType | string | `"job"` |  |
 | openfga.datastore.migrations.image.pullPolicy | string | `"Always"` |  |
-| openfga.datastore.migrations.image.repository | string | `"vpcdepoyment.azurecr.io/onprem/k8s-wait-for"` |  |
+| openfga.datastore.migrations.image.repository | string | `"vpcdeployment.azurecr.io/onprem/k8s-wait-for"` |  |
 | openfga.datastore.migrations.image.tag | string | `"v2.0"` |  |
 | openfga.datastore.migrations.resources | object | `{}` |  |
 | openfga.datastore.uri | string | `nil` |  |
@@ -269,7 +269,7 @@ A Helm chart for Kubernetes
 | openfga.http.tls.key | string | `nil` |  |
 | openfga.http.upstreamTimeout | string | `nil` |  |
 | openfga.image.pullPolicy | string | `"Always"` |  |
-| openfga.image.repository | string | `"vpcdepoyment.azurecr.io/onprem/openfga"` |  |
+| openfga.image.repository | string | `"vpcdeployment.azurecr.io/onprem/openfga"` |  |
 | openfga.image.tag | string | `"v1.8.9"` |  |
 | openfga.imagePullSecrets | list | `[]` |  |
 | openfga.ingress.annotations | object | `{}` |  |
@@ -280,7 +280,7 @@ A Helm chart for Kubernetes
 | openfga.ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
 | openfga.ingress.tls | list | `[]` |  |
 | openfga.initContainer.pullPolicy | string | `"IfNotPresent"` |  |
-| openfga.initContainer.repository | string | `"vpcdepoyment.azurecr.io/onprem/k8s-wait-for"` |  |
+| openfga.initContainer.repository | string | `"vpcdeployment.azurecr.io/onprem/k8s-wait-for"` |  |
 | openfga.initContainer.tag | string | `"v2.0"` |  |
 | openfga.lifecycle | object | `{}` |  |
 | openfga.listObjectsDeadline | string | `"3s"` |  |
@@ -400,7 +400,7 @@ A Helm chart for Kubernetes
 | redteam-proxy.externalSecret.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |
 | redteam-proxy.fullnameOverride | string | `"redteam-proxy"` |  |
 | redteam-proxy.image.pullPolicy | string | `"IfNotPresent"` |  |
-| redteam-proxy.image.repository | string | `"vpcdepoyment.azurecr.io/enkryptai-dev/redteam-proxy"` |  |
+| redteam-proxy.image.repository | string | `"vpcdeployment.azurecr.io/enkryptai-dev/redteam-proxy"` |  |
 | redteam-proxy.image.tag | string | `"dev-v1.1.127-1764130957"` |  |
 | redteam-proxy.livenessProbe.enabled | bool | `true` |  |
 | redteam-proxy.livenessProbe.httpGet.path | string | `"/health"` |  |

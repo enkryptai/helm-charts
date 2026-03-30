@@ -781,6 +781,31 @@ guardrails-model:
 
   affinity: {}
 
+################NATS NACK###########################
+nats:
+  enabled: true
+  image:
+    repository: nats
+    tag: 2.10.20-alpine
+  jetstream:
+    enabled: true
+    fileStore:
+      enabled: true
+      storageDirectory: /data
+
+nack:
+  enabled: true
+  jetstream:
+    enabled: true
+    image:
+      registry: "188451452903.dkr.ecr.us-east-1.amazonaws.com"
+      repository: "onprem/jetstream-controller"
+      tag: "0.19.1"
+    tls:
+      enabled: false
+  nats:
+    url: "nats://nats:4222"
+
 guardrails-multi-modal:
   enabled: false
   replicaCount: 1

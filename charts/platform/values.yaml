@@ -105,7 +105,7 @@ platform-core:
     toolkit:
       repository: vpcdepoyment.azurecr.io
       image: onprem/container-toolkit
-      version: v1.13.1-ubi8
+      version: v1.17.9-ubi8
     dcgm:
       repository: vpcdepoyment.azurecr.io
       image: onprem/dcgm-exporter

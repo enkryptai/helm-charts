@@ -47,6 +47,10 @@ envFrom:
       name: guardrails-model-secret
 
 env: []
+secrets:
+  enabled: false
+  HF_TOKEN: hf-token
+  VLLM_API_KEY: vllm-api-key
 
 nodeSelector: {}
 

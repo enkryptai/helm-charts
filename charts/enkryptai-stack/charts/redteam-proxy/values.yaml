@@ -76,6 +76,28 @@ externalSecret:
   secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/redteam-proxy
 
+secrets:
+  enabled: false
+  ACCESS_KEY_ID: access-key-id
+  AZURE_STORAGE_CONNECTION_STRING: azure-storage-connection-storage
+  ENDPOINT: sb-endpoint
+  HF_TOKEN: hf-token
+  NEXTJS_AUTH_TOKEN: auth-token
+  PROXY_PASSWORD: proxy-password
+  PROXY_SERVER: proxy-server-address
+  PROXY_USERNAME: proxy-username
+  REDIS_URL: redis-url
+  REGION: region
+  SECRET_ACCESS_KEY: secret-access-key
+  SENTRY_LITELLM_GATEWAY_API_KEY: litellm-gateway-secret-key
+  SENTRY_LITELLM_GATEWAY_TIMEOUT: 300
+  SENTRY_LITELLM_GATEWAY_URL: gateway-url
+  SIERRA_RELEASE: sierra-release
+  SIERRA_TOKEN: sierra-token
+  SUPABASE_KEY: supabase-key
+  SUPABASE_STORAGE_URL: SB_STORAGE_URL
+  SUPABASE_URL: SB_URL
+
 nodeSelector: {}
 
 tolerations: []

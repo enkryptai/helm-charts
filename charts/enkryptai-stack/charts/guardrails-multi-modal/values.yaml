@@ -43,6 +43,9 @@ readinessProbe:
 
 env: []
 
+secrets:
+  enabled: false
+
 nodeSelector: {}
 
 tolerations: []

@@ -341,10 +341,10 @@ secrets:
     DB_HOST: db-host
     DB_NAME: sb-db-name
     DB_PASSWORD: db-password
-    DB_PORT: NTQzMg==
+    DB_PORT: 5432
     DB_USER: user
-    grant-admin.sql: QUxURVIgVVNFUiBzdXBhYmFzZV9hZG1pbiBTVVBFUlVTRVI7IEdSQU5UIEFMTCBQUklWSUxFR0VTIE9OIERBVEFCQVNFIHN1cGFiYXNlIFRPIHN1cGFiYXNlX2FkbWluOw==
-    kong.sql: Q1JFQVRFIFVTRVIga29uZyBXSVRIIFBBU1NXT1JEICdkdzc3a3Y0VzZxc01peEZyVDdZZU1pR2VZaSc7IEFMVEVSIERBVEFCQVNFIGtvbmcgT1dORVIgVE8ga29uZzsgR1JBTlQgQUxMIFBSSVZJTEVHRVMgT04gREFUQUJBU0Uga29uZyBUTyBrb25nOw==
+    grant-admin.sql: ""
+    kong.sql: ""
     password: password
     username: username
   postgres:

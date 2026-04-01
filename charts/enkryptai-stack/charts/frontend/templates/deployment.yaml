@@ -40,9 +40,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "frontend.fullname" . }}
                   key: NEXT_PUBLIC_URL
+          {{- if .Values.useEnvFrom }}
           envFrom:
             - secretRef:
                 name: {{ .Values.externalSecret.secretName }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}

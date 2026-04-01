@@ -320,6 +320,84 @@ Make sure you:
 * Create DNS records for each subdomain.
 * Attach valid SSL certificates for all three domain
 
+### EnkryptAI Uninstall
+ 
+#### Usage
+ 
+```bash
+cd utils
+chmod u+x uninstall.sh
+./uninstall.sh
+```
+
+> **Note:** If your stack is deployed in a different namespace, update the `NAMESPACE` variable at the top of the script before running.
+> ```bash
+> NAMESPACE="your-namespace"
+> ```
+ 
+The script is interactive and will ask for confirmation before each destructive step.
+ 
+---
+ 
+#### What It Does
+ 
+1. Uninstalls the `platform` and `enkryptai-stack` Helm releases.
+2. Deletes core workloads — StatefulSets, Deployments, and database Clusters.
+3. **Patches and removes finalizers** from Argo Events and OpenSearch resources. Finalizers prevent Kubernetes from deleting resources until certain conditions are met. Since the operators managing these resources are already being removed, the finalizers must be cleared manually to avoid resources getting stuck in `Terminating`.
+4. Deletes cluster-wide CRDs for CNPG, OpenSearch, NATS, and Argo.
+5. **Deletes PVCs** — PVCs hold persistent data (databases, search indices). They are not removed automatically by Helm or resource deletion, so this step cleans them up explicitly.  This is irreversible — all stored data will be permanently lost.
+
+### Preflight Check Requirement
+
+#### Mandatory Step Before Installation
+
+Before installing the **EnkryptAI Stack**, you **must run the preflight check script** to validate your Kubernetes environment.
+
+#### Run Preflight Check
+
+Execute the preflight script from your project directory:
+
+```bash
+./preflight.sh
+```
+
+#### What the Preflight Check Verifies
+
+The script performs multiple validations, including:
+
+* Kubernetes version compatibility
+* Required namespaces
+* Required secrets
+* Cluster readiness
+* Taints on Nodes
+* Required CPU, RAM and Disk
+
+#### If Checks Fail
+
+Do **not proceed with installation** if any check fails.
+
+Instead:
+
+1. Review the failure messages carefully
+2. Fix the reported issues
+3. Re-run the preflight script
+
+Repeat until all checks pass.
+
+#### When to Proceed
+
+Only continue with installation when you see a successful result like:
+
+```
+[PASS] All checks passed ✓
+```
+
+
+#### Next Step
+
+Once the preflight check passes, proceed with installing the EnkryptAI stack as per the installation guide.
+
+
 
 ## Monitoring
 

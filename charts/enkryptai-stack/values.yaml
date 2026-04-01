@@ -397,7 +397,7 @@ redteam-proxy:
     enabled: true
     ACCESS_KEY_ID: access-key-id
     AZURE_STORAGE_CONNECTION_STRING: azure-storage-connection-storage
-    ENDPOINT: http://supabase-storage.enkrytai-stack:5000/s3
+    ENDPOINT: http://storage.enkrytai-stack:5000/s3
     HF_TOKEN: hf-token
     NEXTJS_AUTH_TOKEN: auth-token
     PROXY_PASSWORD: proxy-password

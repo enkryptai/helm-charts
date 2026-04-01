@@ -36,9 +36,11 @@ spec:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
+          {{- if .Values.useEnvFrom }}
           envFrom:
             - secretRef:
                 name: {{ .Values.externalSecret.secretName }}
+          {{- end }}
           {{- if .Values.env }}
           env:
             {{- toYaml .Values.env | nindent 12 }}

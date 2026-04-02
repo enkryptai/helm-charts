@@ -42,7 +42,11 @@ spec:
                   key: NEXT_PUBLIC_URL
           envFrom:
             - secretRef:
+                {{- if .Values.useEnvFrom }}
                 name: {{ .Values.externalSecret.secretName }}
+                {{- else }}
+                name: {{ .Values.secrets.name }}
+                {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}

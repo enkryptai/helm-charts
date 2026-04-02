@@ -16,26 +16,26 @@ stringData:
       config_version: 2
 
     admin:
-      hash: "{{ .Values.opensearch.users.admin.hash }}"
+      hash: "{{ .Values.opensearch.users.admin.hash | default "$2a$10$whxB6/n5cpFEC41yJWUnr.nYbNMol.BHKP/sJRKOE/vF73UF3b/la" }}"
       reserved: true
       backend_roles:
         - "admin"
       description: "admin user"
 
     dashboarduser:
-      hash: "{{ .Values.opensearch.users.dashboarduser.hash }}"
+      hash: "{{ .Values.opensearch.users.dashboarduser.hash | default "$2a$10$whxB6/n5cpFEC41yJWUnr.nYbNMol.BHKP/sJRKOE/vF73UF3b/la" }}"
       reserved: true
       description: "Dashboards user"
 
     kong_logs_plugin:
-      hash: "{{ .Values.opensearch.users.kong_logs_plugin.hash }}"
+      hash: "{{ .Values.opensearch.users.kong_logs_plugin.hash | default "$2a$10$whxB6/n5cpFEC41yJWUnr.nYbNMol.BHKP/sJRKOE/vF73UF3b/la" }}"
       reserved: true
       backend_roles:
         - "readall"
       description: "Kong plugin readall"
 
     kibana_read_only:
-      hash: "{{ .Values.opensearch.users.kibana_read_only.hash }}"
+      hash: "{{ .Values.opensearch.users.kibana_read_only.hash | default "$2a$10$whxB6/n5cpFEC41yJWUnr.nYbNMol.BHKP/sJRKOE/vF73UF3b/la" }}"
       reserved: true
       backend_roles:
         - "readall"

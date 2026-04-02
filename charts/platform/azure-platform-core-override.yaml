@@ -1,4 +1,3 @@
-
 platform-core:
   gpu-operator:
     operator:
@@ -7,4 +6,3 @@ platform-core:
       enabled: false
     driver:
       enabled: false
-      

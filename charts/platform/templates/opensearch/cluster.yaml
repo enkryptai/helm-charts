@@ -13,8 +13,10 @@ spec:
       http:  
         generate: true  
     config:
+      {{- if .Values.opensearch.securityconfig }}
       securityConfigSecret:
         name: "opensearch-securityconfig"
+      {{- end }}
       adminCredentialsSecret:
         name: "opensearch-cred"
   general:

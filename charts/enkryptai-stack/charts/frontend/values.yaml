@@ -87,9 +87,48 @@ configMap:
   NEXT_PUBLIC_URL: "https://app..enkryptai.com"
 
 externalSecret:
-  enabled: false
+  enabled: true
   secretName: frontend-env-secret
   secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/frontend
   databaseSecretName: onprem
   databaseSecretRepoName: enkryptaivpc/on-prem
+
+secrets:
+  name: frontend-env-secret
+  enabled: false
+  APIAAS_KONG_BASIC_AUTH: basic-auth
+  APIAAS_KONG_SERVICE_BASIC_AUTH: basic-auth-token
+  APIAAS_KONG_URL: http://gateway-kong
+  DEFAULT_ENTERPRISE: true
+  ENCRYPTION_PASSPHRASE: passphrase
+  FGA_API_URL: http://openfga:8080
+  FGA_MODEL_ID: model-id
+  FGA_STORE_ID: store-id
+  INVITATION_JWT_SECRET: jwt-secret
+  LEADERBOARD_BASIC_AUTH: leaderboard
+  LEADERBOARD_SUPABASE_SERVICE_ROLE_KEY: leaderboard-supabase-role-key
+  MCP_SCANNER_SUPABASE_SERVICE_ROLE_KEY: mcp-role-key
+  NEXT_PUBLIC_APIAAS_KONG_URL: https://api.enkryptai.co
+  NEXT_PUBLIC_API_URL: http://0.0.0.0:3000
+  NEXT_PUBLIC_ENVIRONMENT: production
+  NEXT_PUBLIC_LEADERBOARD_SUPABASE_ANON_KEY: leaderboard
+  NEXT_PUBLIC_LEADERBOARD_SUPABASE_SERVICE_ROLE_KEY: leaderboard
+  NEXT_PUBLIC_LEADERBOARD_SUPABASE_URL: leaderboard
+  NEXT_PUBLIC_MCP_SCANNER_SUPABASE_ANON_KEY: mcp-anon-key
+  NEXT_PUBLIC_MCP_SCANNER_SUPABASE_URL: https://nhecqixvcegdosnmprqn.supabase.com
+  NEXT_PUBLIC_OKTA_DOMAIN: enkryptai.com
+  NEXT_PUBLIC_OKTA_ENABLED: true
+  NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+  NEXT_PUBLIC_POSTHOG_KEY: posthog-key
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: supabase-anon-key
+  NEXT_PUBLIC_SUPABASE_URL: https://auth.enkryptai.con
+  NEXT_PUBLIC_URL: https://app.enkryptai.co
+  RESEND_API_KEY: api-key-resend
+  SAMPLE_MODEL_API_KEY: model-key
+  SAMPLE_MODEL_PASSWORD: model-password
+  SAMPLE_REPORTS_USER_ID: sample-user
+  STRIPE_PUBLIC_KEY: pk_test
+  STRIPE_SECRET_KEY: sk_test
+  STRIPE_WEBHOOK_SECRET: webhook-secret
+  SUPABASE_SERVICE_ROLE_KEY: service-role-key

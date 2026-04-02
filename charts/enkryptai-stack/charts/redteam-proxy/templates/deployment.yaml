@@ -38,7 +38,11 @@ spec:
               protocol: TCP
           envFrom:
             - secretRef:
+                {{- if .Values.useEnvFrom }}
                 name: {{ .Values.externalSecret.secretName }}
+                {{- else }}
+                name: {{ .Values.secrets.name }}
+                {{- end }}
           {{- if .Values.env }}
           env:
             {{- toYaml .Values.env | nindent 12 }}

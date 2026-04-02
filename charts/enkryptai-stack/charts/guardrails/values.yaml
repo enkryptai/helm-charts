@@ -55,6 +55,14 @@ externalSecret:
   secretName: guardrails-env-secret
   secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/guardrails
+secrets:
+  enabled: false
+  name: guardrails-env-secret
+  GR_MODELS_MODE: remote
+  REDIS_URL: redis://keydb:6379
+  SENTRY_LITELLM_GATEWAY_API_KEY: litellm-gateway-secret-key
+  SENTRY_LITELLM_GATEWAY_TIMEOUT: 300
+  SENTRY_LITELLM_GATEWAY_URL: http://enkryptai-stack-litellm:443
 
 env:
   - name: GR_MODELS_MODE

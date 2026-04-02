@@ -327,6 +327,39 @@ platform-core:
 externalSecret:
   enabled: false
 
+secrets:
+  enabled: false
+  opensearch:
+    password: password
+    username: user
+  openfga:
+    password: password
+    test-query.sql: query
+    uri: uri
+    username: user
+  supabase:
+    DB_HOST: db-host
+    DB_NAME: sb-db-name
+    DB_PASSWORD: db-password
+    DB_PORT: 5432
+    DB_USER: user
+    grant-admin.sql: ""
+    kong.sql: ""
+    password: password
+    username: username
+  postgres:
+    password: password
+    username: user
+  onprem:
+    API_EXTERNAL_URL: api_url
+    AWS_ACCESS_KEY_ID: keyid
+    AWS_SECRET_ACCESS_KEY: accesskey
+    DASHBOARD_PASSWORD: pwd
+    DASHBOARD_USERNAME: username
+    DB_DRIVER: postgres
+    DB_HOST: host
+    DB_NAME: db
+    DB_PASSWORD: dbpwd
 # ------------------------------------------------
 # OTEL CONFIG
 # -----------------------------------------------

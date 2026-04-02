@@ -24,31 +24,25 @@ spec:
             - kong
             - migrations
             - bootstrap
-          {{- if .Values.useEnvFrom }}
           envFrom:
             - secretRef:
                 name: gateway-migration-env-secret
-          {{- end }}
         - name: gateway-migrations-up
           image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
           command:
             - /bin/sh
             - -c
             - kong migrations up && kong migrations finish
-          {{- if .Values.useEnvFrom }}
           envFrom:
             - secretRef:
                 name: gateway-migration-env-secret
-          {{- end }}
       containers:
         - name: gateway
           image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.gateway.pullPolicy }}
-          {{- if .Values.useEnvFrom }}
           envFrom:
             - secretRef:
                 name: gateway-env-secret
-          {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             exec:
@@ -80,11 +74,9 @@ spec:
               name: kong-tmp-vol
         - name: gateway-deck-sync
           image: "{{ .Values.image.sync.repository }}:{{ .Values.image.sync.tag | default .Chart.AppVersion }}"
-          {{- if .Values.useEnvFrom }}
           envFrom:
             - secretRef:
                 name: gateway-env-secret
-          {{- end }}
           command:
             - /bin/sh
           args:

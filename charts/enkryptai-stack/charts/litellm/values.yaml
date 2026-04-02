@@ -46,6 +46,7 @@ envFrom:
       name: litellm-gateway-env-secret
 env: []
 secrets:
+  name: litellm-gateway-env-secret
   enabled: false
   ANTHROPIC_API_KEY: anthropic-api-key
   BEAM_API_KEY: beam-api-key

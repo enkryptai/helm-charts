@@ -394,10 +394,10 @@ redteam-proxy:
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/redteam-proxy
   secrets:
-    enabled: true
+    enabled: false
     ACCESS_KEY_ID: access-key-id
     AZURE_STORAGE_CONNECTION_STRING: azure-storage-connection-storage
-    ENDPOINT: http://storage.enkrytai-stack:5000/s3
+    ENDPOINT: http://storage.enkrytai:5000/s3
     HF_TOKEN: hf-token
     NEXTJS_AUTH_TOKEN: auth-token
     PROXY_PASSWORD: proxy-password
@@ -412,8 +412,8 @@ redteam-proxy:
     SIERRA_RELEASE: sierra-release
     SIERRA_TOKEN: sierra-token
     SUPABASE_KEY: supabase-key
-    SUPABASE_STORAGE_URL: http://supabase-storage.enkrytai-stack:5000/s3
-    SUPABASE_URL: https://auth.enkryptai.com/
+    SUPABASE_STORAGE_URL: http://storage:5000/s3
+    SUPABASE_URL: https://enkryptai.com/
 
 nodeSelector: {}
 
@@ -490,9 +490,9 @@ guardrails:
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/guardrails
   secrets:
-    enabled: true
+    enabled: false
     GR_MODELS_MODE: remote
-    REDIS_URL: redis://keydb:6379
+    REDIS_URL: redisurl
     SENTRY_LITELLM_GATEWAY_API_KEY: litellm-gateway-secret-key
     SENTRY_LITELLM_GATEWAY_TIMEOUT: 300
     SENTRY_LITELLM_GATEWAY_URL: http://enkryptai-stack-litellm:443
@@ -973,7 +973,7 @@ guardrails-model:
       memory: "12Gi"
       nvidia.com/gpu: 1
   secrets:
-    enabled: true
+    enabled: false
     HF_TOKEN: hf-token
     VLLM_API_KEY: vllm-api-key
 

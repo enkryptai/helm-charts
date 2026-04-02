@@ -95,6 +95,7 @@ externalSecret:
   databaseSecretRepoName: enkryptaivpc/on-prem
 
 secrets:
+  name: frontend-env-secret
   enabled: false
   APIAAS_KONG_BASIC_AUTH: basic-auth
   APIAAS_KONG_SERVICE_BASIC_AUTH: basic-auth-token

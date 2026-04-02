@@ -57,6 +57,7 @@ externalSecret:
   repoName: enkryptai/guardrails
 secrets:
   enabled: false
+  name: guardrails-env-secret
   GR_MODELS_MODE: remote
   REDIS_URL: redis://keydb:6379
   SENTRY_LITELLM_GATEWAY_API_KEY: litellm-gateway-secret-key

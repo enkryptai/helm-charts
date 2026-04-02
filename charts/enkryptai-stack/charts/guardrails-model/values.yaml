@@ -49,6 +49,7 @@ envFrom:
 env: []
 secrets:
   enabled: false
+  name: guardrails-model-secret
   HF_TOKEN: hf-token
   VLLM_API_KEY: vllm-api-key
 

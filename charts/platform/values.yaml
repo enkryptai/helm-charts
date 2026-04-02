@@ -328,7 +328,7 @@ externalSecret:
   enabled: false
 
 secrets:
-  enabled: true
+  enabled: false
   opensearch:
     password: password
     username: user
@@ -350,7 +350,16 @@ secrets:
   postgres:
     password: password
     username: user
-
+  onprem:
+    API_EXTERNAL_URL: api_url
+    AWS_ACCESS_KEY_ID: keyid
+    AWS_SECRET_ACCESS_KEY: accesskey
+    DASHBOARD_PASSWORD: pwd
+    DASHBOARD_USERNAME: username
+    DB_DRIVER: postgres
+    DB_HOST: host
+    DB_NAME: db
+    DB_PASSWORD: dbpwd
 # ------------------------------------------------
 # OTEL CONFIG
 # -----------------------------------------------

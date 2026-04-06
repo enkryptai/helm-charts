@@ -41,15 +41,15 @@ spec:
           args:
             - |
               echo $(DB_HOST)
-              echo $(DB_PORT) 
-              echo $(DB_USER) 
+              echo $(DB_PORT)
+              echo $(DB_USER)
               until pg_isready -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER); do
               echo "Waiting for database to start..."
               sleep 2
               done
             - echo "Database is ready"
         {{- if .Values.minio.enabled }}
-        
+
         - env:
             - name: MINIO_ROOT_USER
               valueFrom:

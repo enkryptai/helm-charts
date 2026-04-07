@@ -4,6 +4,8 @@ metadata:
   annotations:
     "helm.sh/hook-weight": "21"
     "helm.sh/hook": post-install
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
   name: db-migration-supabase
 spec:
   backoffLimit: 2

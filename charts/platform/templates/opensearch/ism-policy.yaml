@@ -5,6 +5,8 @@ metadata:
   annotations:
     helm.sh/hook-weight: "18"
     helm.sh/hook: "post-install,post-upgrade"
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}

@@ -47,7 +47,9 @@ envFrom:
       name: guardrails-model-secret
 
 env: []
-
+secrets:
+  enabled: false
+  name: guardrails-model-secret
 nodeSelector: {}
 
 tolerations: []

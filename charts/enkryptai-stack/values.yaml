@@ -105,6 +105,9 @@ frontend:
     secretName: frontend-env-secret
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/frontend
+  secrets:
+    enabled: false
+
 
 ################GATEWAY_KONG###########################
 gateway-kong:
@@ -165,6 +168,8 @@ gateway-kong:
       - hosts:
           - api.anishs.xyz
         secretName: custom-cert-front
+  secrets:
+    enabled: false
 
   resources:
     gateway:
@@ -300,11 +305,19 @@ redteam-proxy:
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/redteam-proxy
 
-  nodeSelector: {}
+  secrets:
+    enabled: false
+nodeSelector: {}
 
-  tolerations: []
+tolerations: []
 
-  affinity: {}
+affinity: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
 
 ################GUARDRAILS###########################
 guardrails:
@@ -368,6 +381,8 @@ guardrails:
     secretName: guardrails-env-secret
     secretStoreRefName: enkryptai-clustersecret-store
     repoName: enkryptaivpc/guardrails
+  secrets:
+    enabled: false
 
   nodeSelector: {}
 
@@ -720,9 +735,16 @@ litellm:
     httpGet:
       path: /
       port: https
+
+  useEnvFrom: true
+
   envFrom:
     - secretRef:
         name: litellm-gateway-env-secret
+  secrets:
+    enabled: false
+    name: litellm-gateway-env-secret
+
   nodeSelector: {}
 
   tolerations: []
@@ -771,6 +793,10 @@ guardrails-model:
       cpu: "3"
       memory: "12Gi"
       nvidia.com/gpu: 1
+  secrets:
+    enabled: false
+
+  useEnvFrom: true
 
   envFrom:
     - secretRef:

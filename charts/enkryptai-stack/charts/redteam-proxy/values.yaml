@@ -76,6 +76,9 @@ externalSecret:
   secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/redteam-proxy
 
+secrets:
+  name: redteam-proxy-env-secret
+  enabled: false
 nodeSelector: {}
 
 tolerations: []

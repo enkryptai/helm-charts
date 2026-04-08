@@ -93,3 +93,7 @@ externalSecret:
   repoName: enkryptai/frontend
   databaseSecretName: onprem
   databaseSecretRepoName: enkryptaivpc/on-prem
+
+secrets:
+  name: frontend-env-secret
+  enabled: false

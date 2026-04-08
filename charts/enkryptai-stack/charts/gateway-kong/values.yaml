@@ -101,6 +101,18 @@ externalSecrets:
   secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/gateway
 
+secrets:
+  enabled: false
+  gateway:
+    KONG_DATABASE: postgres
+    KONG_LOG_LEVEL: info
+    KONG_MEM_CACHE_SIZE: 128m
+  gatewayMigration:
+    KONG_DATABASE: postgres
+    KONG_LOG_LEVEL: error
+  elastic:
+    ELASTIC_HOST: elastic-host
+    ELASTIC_PASSWORD: password
 configMaps:
   kongConfig:
     enabled: true
@@ -114,7 +126,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-        
 fluentBit:
   env:
     - name: ELASTIC_HOST

@@ -55,6 +55,9 @@ externalSecret:
   secretName: guardrails-env-secret
   secretStoreRefName: enkryptai-clustersecret-store
   repoName: enkryptai/guardrails
+secrets:
+  enabled: false
+  name: guardrails-env-secret
 
 env:
   - name: GR_MODELS_MODE

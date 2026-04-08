@@ -59,7 +59,7 @@ spec:
             secretKeyRef:
               name: s3-cred
               key: AWS_SECRET_ACCESS_KEY
-        - name: AWS_DEFAULT_REGION  
+        - name: AWS_DEFAULT_REGION
           valueFrom:
             secretKeyRef:
               name: s3-cred

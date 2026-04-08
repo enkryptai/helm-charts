@@ -45,6 +45,9 @@ envFrom:
   - secretRef:
       name: litellm-gateway-env-secret
 env: []
+secrets:
+  name: litellm-gateway-env-secret
+  enabled: false
 
 nodeSelector: {}
 

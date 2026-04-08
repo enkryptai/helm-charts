@@ -38,7 +38,6 @@ secret:
     secretRefKey:
       keyId: S3keyId
       accessKey: S3accessKey
-
 # We are using cnpg
 db:
   enabled: false

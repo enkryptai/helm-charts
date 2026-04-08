@@ -343,7 +343,7 @@ for NS in enkryptai-stack redteam-jobs; do
     PH=$(kubectl get namespace "$NS" -o jsonpath='{.status.phase}' 2>/dev/null || echo "unknown")
     info "Namespace '${NS}' exists (phase: ${PH})"
   else
-    info "Namespace '${NS}' not yet created — Helm install will create it"
+    fail "Namespace '${NS}' not yet created Please create enkryptai-stack && redteam-jobs namespace"
   fi
 done
 

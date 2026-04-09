@@ -125,6 +125,35 @@ delete_crds() {
   echo "CRDs deleted."
 }
 
+delete_secrets() {
+  local namespaces=("enkryptai-stack" "redteam-jobs")
+
+  for ns in "${namespaces[@]}"; do
+    echo "Checking namespace: $ns"
+
+    secrets=$(kubectl get secrets -n "$ns" 2>/dev/null)
+
+    if [[ -z "$secrets" || "$secrets" == *"No resources found"* ]]; then
+      echo "No Secrets found in $ns. Skipping."
+      echo ""
+      continue
+    fi
+
+    echo "Secrets in namespace: $ns"
+    echo "$secrets"
+    echo ""
+
+    confirm "Delete labeled secrets in $ns?" || continue
+
+    kubectl delete secret -n "$ns" \
+      -l "app.kubernetes.io/instance in (enkryptai,platform)" \
+      --ignore-not-found
+
+    echo "Labeled secrets deleted in $ns."
+    echo ""
+  done
+}
+
 handle_pvc_cleanup() {
   local pvcs
   pvcs=$(kubectl get pvc -n $NAMESPACE 2>/dev/null)
@@ -155,6 +184,7 @@ main() {
   cleanup_main_resources
   remove_argo_finalizers
   remove_opensearch_finalizers
+  delete_secrets
   delete_crds
   handle_pvc_cleanup
 

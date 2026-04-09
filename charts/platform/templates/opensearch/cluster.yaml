@@ -44,12 +44,17 @@ spec:
     - component: masters
       replicas: 3
       diskSize: "40Gi"
+      probes:
+        startup:
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 40
       persistence:
         pvc:
           storageClass: gp3-encrypted
           accessModes:
           - ReadWriteOnce
-      NodeSelector:
       resources:
          requests:
             memory: "2Gi"

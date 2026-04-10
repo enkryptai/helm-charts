@@ -1,3 +1,42 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gateway-configmap-sa
+  namespace: enkryptai-stack
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-30"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gateway-configmap-role
+  namespace: enkryptai-stack
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-20"
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gateway-configmap-binding
+  namespace: enkryptai-stack
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+subjects:
+- kind: ServiceAccount
+  name: gateway-configmap-sa
+  namespace: enkryptai-stack
+roleRef:
+  kind: Role
+  name: gateway-configmap-role
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -7,7 +46,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-weight": "-9"
 spec:
   backoffLimit: 2
   template:
@@ -15,6 +54,7 @@ spec:
       labels:
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      serviceAccountName: gateway-configmap-sa
       restartPolicy: Never
       containers:
         - name: create-gateway-configmap

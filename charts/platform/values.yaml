@@ -360,6 +360,26 @@ secrets:
     DB_HOST: host
     DB_NAME: db
     DB_PASSWORD: dbpwd
+
+traefik-stack:
+  enabled: false
+traefik:
+  image:
+    registry: vpcdeployment.azurecr.io
+    repository: onprem/traefik
+    tag: v3.6.7
+    pullPolicy: IfNotPresent
+  deployment:
+    enabled: true
+    kind: Deployment
+    replicas: 1
+  ingressClass:
+    enabled: true
+    isDefaultClass: true
+  service:
+    enabled: true
+    single: true
+    type: LoadBalancer
 # ------------------------------------------------
 # OTEL CONFIG
 # -----------------------------------------------

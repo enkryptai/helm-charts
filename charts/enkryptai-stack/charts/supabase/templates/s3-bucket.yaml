@@ -4,6 +4,8 @@ metadata:
   name: create-s3-buckets
   annotations:
     "helm.sh/hook": post-install, post-upgrade
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   template:
     spec:

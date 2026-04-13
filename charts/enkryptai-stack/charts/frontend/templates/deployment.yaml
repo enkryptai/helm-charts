@@ -40,6 +40,8 @@ spec:
                 configMapKeyRef:
                   name: {{ include "frontend.fullname" . }}
                   key: NEXT_PUBLIC_URL
+            - name: NEXT_PUBLIC_VPC_FORCE_ORG_MODE
+              value: {{ .Values.env.NEXT_PUBLIC_VPC_FORCE_ORG_MODE | quote }}             
           envFrom:
             - secretRef:
                 name: {{ .Values.externalSecret.secretName }}

@@ -40,6 +40,9 @@ frontend:
     targetPort: 3000
     name: http
 
+  env:
+    NEXT_PUBLIC_VPC_FORCE_ORG_MODE: "true"
+
   ingress:
     enabled: true
     className: nginx

@@ -86,6 +86,15 @@ platform-core:
         repository: vpcdeployment.azurecr.io/onprem/kube-rbac-proxy
         tag: "v0.15.0"
   gpu-operator:
+    daemonsets:
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: gpu
+          effect: NoSchedule
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
     operator:
       repository: vpcdeployment.azurecr.io
       image: onprem/gpu-operator
@@ -98,6 +107,12 @@ platform-core:
       image:
         repository: vpcdeployment.azurecr.io/onprem/node-feature-discovery
         tag: v0.16.6
+      worker:
+        tolerations:
+          - key: dedicated
+            operator: Equal
+            value: gpu
+            effect: NoSchedule
     validator:
       repository: vpcdeployment.azurecr.io
       image: onprem/gpu-operator-validator

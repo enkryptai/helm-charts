@@ -1,10 +1,10 @@
 apiVersion: v2
-appVersion: 1.1.28
+appVersion: 1.1.29
 dependencies:
   - alias: platform-core
     name: platform-core
     repository: https://enkryptai.github.io/helm-charts
-    version: 1.1.0
+    version: 1.2.0
 
   - alias: otel
     name: opentelemetry-collector
@@ -20,4 +20,4 @@ dependencies:
 
 description: Complete platform infrastructure stack
 name: platform-stack
-version: 1.1.28
+version: 1.1.29

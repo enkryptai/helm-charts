@@ -11,13 +11,13 @@ supabase:
   tag: 16.0.1
 openfga:
   repository: onprem/postgresql
-  tag: 17.4-8
+  tag: 17.9-system-trixie
 databasekong:
   repository: onprem/postgres
-  tag: 16
+  tag: 18.3-alpine3.22
 migrationjob:
   repository: onprem/postgres
-  tag: 15
+  tag: 18.3-alpine3.22
 sensor:
   natsURL: "nats://nats.enkryptai-stack:4222"
   jobversion: "prod-v1.0.34"
@@ -30,7 +30,7 @@ sensor:
     - name: IS_PROXY_MODE
       value: "true"
     - name: RT_NATS_PAYLOAD
-      value: '{{"{{inputs.parameters.event-data}}"}}'
+      value: "{{inputs.parameters.event-data}}"
     - name: GR_MODELS_MODE
       value: "remote"
     - name: SENTRY_LITELLM_GATEWAY_API_KEY
@@ -84,40 +84,56 @@ platform-core:
     kubeRbacProxy:
       image:
         repository: vpcdeployment.azurecr.io/onprem/kube-rbac-proxy
-        tag: "v0.15.0"
+        tag: "v0.21.2"
   gpu-operator:
+    daemonsets:
+      tolerations:
+        - key: dedicated
+          operator: Equal
+          value: gpu
+          effect: NoSchedule
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
     operator:
+      runtimeClass: nvidia-container-runtime
       repository: vpcdeployment.azurecr.io
       image: onprem/gpu-operator
-      version: v24.9.0
+      version: v26.3.0
       initContainer:
         repository: vpcdeployment.azurecr.io
         image: onprem/gpu-operator-init
-        version: v24.9.0
+        version: v26.3.0
     node-feature-discovery:
       image:
         repository: vpcdeployment.azurecr.io/onprem/node-feature-discovery
-        tag: v0.16.6
+        tag: v0.18.3
+      worker:
+        tolerations:
+          - key: dedicated
+            operator: Equal
+            value: gpu
+            effect: NoSchedule
     validator:
       repository: vpcdeployment.azurecr.io
       image: onprem/gpu-operator-validator
-      version: v24.9.0
+      version: v26.3.0
     toolkit:
       repository: vpcdeployment.azurecr.io
       image: onprem/container-toolkit
-      version: v1.17.9-ubi8
+      version: v1.19.0
     dcgm:
       repository: vpcdeployment.azurecr.io
-      image: onprem/dcgm-exporter
-      version: 3.3.8-3.6.0-ubuntu22.04
+      image: onprem/dcgm
+      version: 4.5.2-1-ubuntu22.04
     gfd:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-device-plugin
-      version: v0.17.0-ubi9
+      version: v0.19.0
     driver:
       repository: vpcdeployment.azurecr.io
       image: onprem/nvidia-driver
-      version: 525.85.12-ubi9
+      version: 580.126.20
       manager:
         repository: vpcdeployment.azurecr.io
         image: onprem/k8s-driver-manager
@@ -128,7 +144,7 @@ platform-core:
       driverManager:
         repository: vpcdeployment.azurecr.io
         image: onprem/k8s-driver-manager
-        version: "v0.7.0"
+        version: v0.10.0
     kataManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-kata-manager
@@ -136,40 +152,40 @@ platform-core:
     vfioManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/cuda
-      version: "12.6.2-base-ubi9"
+      version: "v0.10.0"
 
     vgpuDeviceManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/vgpu-device-manager
-      version: "v0.2.8"
+      version: v0.4.2
     ccManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-cc-manager
-      version: "v0.1.1"
+      version: v0.3.0
     devicePlugin:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-device-plugin
-      version: "v0.17.0-ubi9"
+      version: v0.19.0
     dcgmExporter:
       repository: vpcdeployment.azurecr.io
       image: onprem/dcgm-exporter
-      version: "3.3.8-3.6.0-ubuntu22.04"
+      version: 4.5.1-4.8.0-distroless
     migManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-mig-manager
-      version: "v0.10.0-ubuntu20.04"
+      version: v0.14.0
     nodeStatusExporter:
       repository: vpcdeployment.azurecr.io
       image: onprem/gpu-operator-validator
-      version: "v24.9.0"
+      version: "v26.3.0"
     gdrcopy:
       repository: vpcdeployment.azurecr.io
       image: onprem/gdrdrv
-      version: "v2.4.1-2"
+      version: "v2.5.1"
     sandboxDevicePlugin:
       repository: vpcdeployment.azurecr.io
       image: onprem/kubevirt-gpu-device-plugin
-      version: "v1.2.10"
+      version: "v1.5.0"
   keydb:
     imageRepository: vpcdeployment.azurecr.io/onprem/keydb
     imageTag: x86_64_v6.3.2
@@ -178,19 +194,19 @@ platform-core:
       container:
         image:
           repository: onprem/nats-box
-          tag: 0.18.0
+          tag: 0.19.3
     promExporter:
       image:
         repository: onprem/prometheus-nats-exporter
-        tag: 0.17.3
+        tag: 0.19.2
     reloader:
       image:
         repository: onprem/nats-server-config-reloader
-        tag: 0.19.1
+        tag: 0.21.1
     container:
       image:
         repository: onprem/nats
-        tag: 2.11.8-alpine
+        tag: 2.12.6-alpine
     global:
       image:
         registry: vpcdeployment.azurecr.io
@@ -200,7 +216,7 @@ platform-core:
       enabled: true
       image:
         repository: onprem/jetstream-controller
-        tag: 0.19.1
+        tag: 0.22.2
         registry: vpcdeployment.azurecr.io
     nats:
       url: nats://nats:4222
@@ -211,10 +227,10 @@ platform-core:
         versions:
           - version: latest
             natsStreamingImage: nats-streaming:latest
-            metricsExporterImage: natsio/prometheus-nats-exporter:latest
-          - version: 0.22.1
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.19.2
+          - version: 0.19.2
             natsStreamingImage: nats-streaming:0.22.1
-            metricsExporterImage: natsio/prometheus-nats-exporter:0.8.0
+            metricsExporterImage: natsio/prometheus-nats-exporter:0.19.2
       jetstream:
         settings:
           maxMemoryStore: -1
@@ -273,10 +289,15 @@ platform-core:
             metricsExporterImage: vpcdeployment.azurecr.io/onprem/prometheus-nats-exporter:0.14.0
             configReloaderImage: vpcdeployment.azurecr.io/onprem/nats-server-config-reloader:0.14.0
             startCommand: /nats-server
+          - version: 2.12.6
+            natsImage: vpcdeployment.azurecr.io/onprem/nats:2.12.6
+            metricsExporterImage: vpcdeployment.azurecr.io/onprem/prometheus-nats-exporter:0.19.2
+            configReloaderImage: vpcdeployment.azurecr.io/onprem/nats-server-config-reloader:0.21.1
+            startCommand: /nats-server
     global:
       image:
         repository: vpcdeployment.azurecr.io/onprem/argo-events
-        tag: "v1.9.7"
+        tag: "v1.9.10"
         imagePullPolicy: IfNotPresent
   argo-workflows:
     images:
@@ -290,7 +311,7 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
         repository: onprem/argocli
-        tag: "v3.7.1"
+        tag: "v4.0.4"
       deploymentAnnotations: {}
       podAnnotations: {}
       podLabels: {}
@@ -308,7 +329,7 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
         repository: onprem/argoexec
-        tag: "v3.6.13"
+        tag: "v3.6.14"
         pullPolicy: ""
       resources: {}
       args: []
@@ -318,15 +339,15 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
         repository: onprem/workflow-controller
-        tag: "v3.7.1"
+        tag: "v4.0.4"
       namespaceParallelism: "10"
       retentionPolicy:
         completed: 10
         failed: 3
         errored: 3
+
 externalSecret:
   enabled: false
-
 secrets:
   enabled: false
   opensearch:

@@ -49,7 +49,7 @@ spec:
           storageClass: gp3-encrypted
           accessModes:
           - ReadWriteOnce
-      NodeSelector:
+
       resources:
          requests:
             memory: "2Gi"

@@ -97,9 +97,8 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
 
 externalSecrets:
-  enabled: true
-  secretStoreRefName: enkryptai-clustersecret-store
-  repoName: enkryptai/gateway
+  enabled: false
+  secrets: []
 
 secrets:
   enabled: false

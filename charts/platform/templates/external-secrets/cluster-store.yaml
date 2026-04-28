@@ -1,0 +1,179 @@
+{{- if and .Values.externalSecret.enabled .Values.externalSecret.clusterSecretStore.enabled }}
+{{- $css := .Values.externalSecret.clusterSecretStore }}
+{{- $provider := required "externalSecret.clusterSecretStore.provider is required" $css.provider }}
+
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: {{ required "externalSecret.clusterSecretStore.name is required" $css.name | quote }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  provider:
+    {{- if eq $provider "azure" }}
+    azurekv:
+      vaultUrl: {{ required "externalSecret.clusterSecretStore.azure.vaultUrl is required" $css.azure.vaultUrl | quote }}
+      tenantId: {{ required "externalSecret.clusterSecretStore.azure.tenantId is required" $css.azure.tenantId | quote }}
+      authType: {{ required "externalSecret.clusterSecretStore.azure.authType is required" $css.azure.authType | quote }}
+
+      {{- if eq $css.azure.authType "ServicePrincipal" }}
+      authSecretRef:
+        clientId:
+          name: {{ required "azure.auth.clientSecretSecretRef.name is required" $css.azure.auth.clientSecretSecretRef.name }}
+          key: client-id
+          {{- if $css.azure.auth.clientSecretSecretRef.namespace }}
+          namespace: {{ $css.azure.auth.clientSecretSecretRef.namespace }}
+          {{- end }}
+
+        clientSecret:
+          name: {{ required "azure.auth.clientSecretSecretRef.name is required" $css.azure.auth.clientSecretSecretRef.name }}
+          key: {{ required "azure.auth.clientSecretSecretRef.key is required" $css.azure.auth.clientSecretSecretRef.key }}
+          {{- if $css.azure.auth.clientSecretSecretRef.namespace }}
+          namespace: {{ $css.azure.auth.clientSecretSecretRef.namespace }}
+          {{- end }}
+      {{- end }}
+
+      {{- if eq $css.azure.authType "WorkloadIdentity" }}
+      serviceAccountRef:
+        name: {{ required "azure.auth.workloadIdentity.serviceAccountRef.name is required" $css.azure.auth.workloadIdentity.serviceAccountRef.name }}
+        {{- if $css.azure.auth.workloadIdentity.serviceAccountRef.namespace }}
+        namespace: {{ $css.azure.auth.workloadIdentity.serviceAccountRef.namespace }}
+        {{- end }}
+      {{- end }}
+
+    {{- else if eq $provider "aws" }}
+    aws:
+      service: {{ required "externalSecret.clusterSecretStore.aws.service is required" $css.aws.service | quote }}
+      region: {{ required "externalSecret.clusterSecretStore.aws.region is required" $css.aws.region | quote }}
+      auth:
+        {{- if $css.aws.auth.jwt }}
+        jwt:
+          serviceAccountRef:
+            name: {{ required "aws.auth.jwt.serviceAccountRef.name is required" $css.aws.auth.jwt.serviceAccountRef.name }}
+            {{- if $css.aws.auth.jwt.serviceAccountRef.namespace }}
+            namespace: {{ $css.aws.auth.jwt.serviceAccountRef.namespace }}
+            {{- end }}
+
+        {{- else if $css.aws.auth.secretRef }}
+        secretRef:
+          accessKeyIDSecretRef:
+            name: {{ required "aws.auth.secretRef.accessKeyIDSecretRef.name is required" $css.aws.auth.secretRef.accessKeyIDSecretRef.name }}
+            key: {{ required "aws.auth.secretRef.accessKeyIDSecretRef.key is required" $css.aws.auth.secretRef.accessKeyIDSecretRef.key }}
+            {{- if $css.aws.auth.secretRef.accessKeyIDSecretRef.namespace }}
+            namespace: {{ $css.aws.auth.secretRef.accessKeyIDSecretRef.namespace }}
+            {{- end }}
+
+          secretAccessKeySecretRef:
+            name: {{ required "aws.auth.secretRef.secretAccessKeySecretRef.name is required" $css.aws.auth.secretRef.secretAccessKeySecretRef.name }}
+            key: {{ required "aws.auth.secretRef.secretAccessKeySecretRef.key is required" $css.aws.auth.secretRef.secretAccessKeySecretRef.key }}
+            {{- if $css.aws.auth.secretRef.secretAccessKeySecretRef.namespace }}
+            namespace: {{ $css.aws.auth.secretRef.secretAccessKeySecretRef.namespace }}
+            {{- end }}
+        {{- else }}
+        {{ fail "aws.auth.jwt or aws.auth.secretRef must be configured" }}
+        {{- end }}
+
+    {{- else if eq $provider "vault" }}
+    vault:
+      server: {{ required "externalSecret.clusterSecretStore.vault.server is required" $css.vault.server | quote }}
+      path: {{ required "externalSecret.clusterSecretStore.vault.path is required" $css.vault.path | quote }}
+      version: {{ required "externalSecret.clusterSecretStore.vault.version is required" $css.vault.version | quote }}
+
+      {{- if $css.vault.caBundle }}
+      caBundle: {{ $css.vault.caBundle }}
+      {{- end }}
+
+      auth:
+        {{- if eq $css.vault.auth.type "kubernetes" }}
+        kubernetes:
+          mountPath: {{ required "vault.auth.kubernetes.mountPath is required" $css.vault.auth.kubernetes.mountPath | quote }}
+          role: {{ required "vault.auth.kubernetes.role is required" $css.vault.auth.kubernetes.role | quote }}
+
+          serviceAccountRef:
+            name: {{ required "vault.auth.kubernetes.serviceAccountRef.name is required" $css.vault.auth.kubernetes.serviceAccountRef.name }}
+            {{- if $css.vault.auth.kubernetes.serviceAccountRef.namespace }}
+            namespace: {{ $css.vault.auth.kubernetes.serviceAccountRef.namespace }}
+            {{- end }}
+
+        {{- else if eq $css.vault.auth.type "approle" }}
+        appRole:
+          path: {{ required "vault.auth.approle.path is required" $css.vault.auth.approle.path | quote }}
+          roleId: {{ required "vault.auth.approle.roleId is required" $css.vault.auth.approle.roleId | quote }}
+          secretRef:
+            name: {{ required "vault.auth.approle.secretRef.name is required" $css.vault.auth.approle.secretRef.name }}
+            key: {{ required "vault.auth.approle.secretRef.key is required" $css.vault.auth.approle.secretRef.key }}
+            {{- if $css.vault.auth.approle.secretRef.namespace }}
+            namespace: {{ $css.vault.auth.approle.secretRef.namespace }}
+            {{- end }}
+
+        {{- else if eq $css.vault.auth.type "token" }}
+        tokenSecretRef:
+          name: {{ required "vault.auth.token.secretRef.name is required" $css.vault.auth.token.secretRef.name }}
+          key: {{ required "vault.auth.token.secretRef.key is required" $css.vault.auth.token.secretRef.key }}
+          {{- if $css.vault.auth.token.secretRef.namespace }}
+          namespace: {{ $css.vault.auth.token.secretRef.namespace }}
+          {{- end }}
+
+        {{- else if eq $css.vault.auth.type "jwt" }}
+        jwt:
+          path: {{ required "vault.auth.jwt.path is required" $css.vault.auth.jwt.path | quote }}
+          role: {{ required "vault.auth.jwt.role is required" $css.vault.auth.jwt.role | quote }}
+          kubernetesServiceAccountToken:
+            serviceAccountRef:
+              name: {{ required "vault.auth.jwt.kubernetesServiceAccountToken.serviceAccountRef.name is required" $css.vault.auth.jwt.kubernetesServiceAccountToken.serviceAccountRef.name }}
+            expirationSeconds: {{ $css.vault.auth.jwt.kubernetesServiceAccountToken.expirationSeconds | default 3600 }}
+            {{- with $css.vault.auth.jwt.kubernetesServiceAccountToken.audiences }}
+            audiences:
+{{ toYaml . | indent 14 }}
+            {{- end }}
+
+        {{- else }}
+        {{ fail "unsupported vault.auth.type" }}
+        {{- end }}
+
+    {{- else if eq $provider "gcp" }}
+    gcpsm:
+      projectID: {{ required "externalSecret.clusterSecretStore.gcp.projectID is required" $css.gcp.projectID | quote }}
+      auth:
+        {{- if $css.gcp.auth.workloadIdentity }}
+        workloadIdentity:
+          serviceAccountRef:
+            name: {{ required "gcp.auth.workloadIdentity.serviceAccountRef.name is required" $css.gcp.auth.workloadIdentity.serviceAccountRef.name }}
+            {{- if $css.gcp.auth.workloadIdentity.serviceAccountRef.namespace }}
+            namespace: {{ $css.gcp.auth.workloadIdentity.serviceAccountRef.namespace }}
+            {{- end }}
+
+        {{- else if $css.gcp.auth.secretRef }}
+        secretRef:
+          secretAccessKeySecretRef:
+            name: {{ required "gcp.auth.secretRef.secretAccessKeySecretRef.name is required" $css.gcp.auth.secretRef.secretAccessKeySecretRef.name }}
+            key: {{ required "gcp.auth.secretRef.secretAccessKeySecretRef.key is required" $css.gcp.auth.secretRef.secretAccessKeySecretRef.key }}
+            {{- if $css.gcp.auth.secretRef.secretAccessKeySecretRef.namespace }}
+            namespace: {{ $css.gcp.auth.secretRef.secretAccessKeySecretRef.namespace }}
+            {{- end }}
+        {{- else }}
+        {{ fail "gcp.auth.workloadIdentity or gcp.auth.secretRef must be configured" }}
+        {{- end }}
+
+    {{- else if eq $provider "ibm" }}
+    ibm:
+      serviceUrl: {{ required "externalSecret.clusterSecretStore.ibm.serviceUrl is required" $css.ibm.serviceUrl | quote }}
+      auth:
+        secretRef:
+          secretApiKeySecretRef:
+            name: {{ required "ibm.auth.secretRef.secretApiKeySecretRef.name is required" $css.ibm.auth.secretRef.secretApiKeySecretRef.name }}
+            key: {{ required "ibm.auth.secretRef.secretApiKeySecretRef.key is required" $css.ibm.auth.secretRef.secretApiKeySecretRef.key }}
+            {{- if $css.ibm.auth.secretRef.secretApiKeySecretRef.namespace }}
+            namespace: {{ $css.ibm.auth.secretRef.secretApiKeySecretRef.namespace }}
+            {{- end }}
+
+    {{- else }}
+    {{ fail (printf "unsupported provider: %s" $provider) }}
+
+    {{- end }}
+
+{{- end }}

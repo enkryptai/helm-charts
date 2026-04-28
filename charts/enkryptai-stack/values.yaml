@@ -2,10 +2,39 @@ global:
   # imagePullSecrets:
   # - core-app-pullsecret
   storageClass: ""
-  imagePullPolicy: "IfNotPresent"
-  externalSecret: false
+  imagePullPolicy: "IfNotPresent"    
   domain: "djj.enkryptai.com"
   registry: vpcdeployment.azurecr.io
+  externalSecrets:
+    enabled: false
+    namespaceOverride: enkryptai-stack
+    installCRDs: false
+    clusterSecretStore:
+      enabled: false                      
+      name: "cluster-secret-store"
+      provider: azure / aws
+    # use any one of the below based on your secret store provider
+
+    # config for azure key vault
+      azure:
+        vaultUrl: "<Your-Key-Vault-URL>"
+        tenantId: "<Your-Tenant-ID>"
+        authType: WorkloadIdentity
+        auth:
+          workloadIdentity:
+            serviceAccountRef:
+              name: platform-external-secrets
+              namespace: enkryptai-stack
+      
+      # config for aws secrets manager 
+      aws:
+        service: SecretsManager
+        region: "<region>"
+        auth:
+          jwt:
+            serviceAccountRef:
+              name: platform-external-secrets
+              namespace: enkryptai-stack
 
 supabaseinitdb:
   repository: onprem/supabase-initdb
@@ -47,14 +76,14 @@ frontend:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: app.anishs.xyz
+      - host: app.example.com
         paths:
           - path: /
             pathType: Prefix
 
     tls:
       - hosts:
-          - app.anishs.xyz
+          - app.example.com
         secretName: custom-cert-front
 
   resources:
@@ -98,13 +127,20 @@ frontend:
   affinity: {}
 
   configMap:
-    NEXT_PUBLIC_URL: "app.anishs.xyz"
+    NEXT_PUBLIC_URL: "app.example.com"
 
-  externalSecret:
+  externalSecrets:
     enabled: false
-    secretName: frontend-env-secret
-    secretStoreRefName: enkryptai-clustersecret-store
-    repoName: enkryptaivpc/frontend
+    secrets:
+      - name: frontend-env-secret
+        target:
+          name: frontend-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-frontend-env-secret
+
   secrets:
     enabled: false
 
@@ -160,13 +196,13 @@ gateway-kong:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: api.anishs.xyz
+      - host: api.example.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - api.anishs.xyz
+          - api.example.com
         secretName: custom-cert-front
   secrets:
     enabled: false
@@ -214,10 +250,31 @@ gateway-kong:
 
   externalSecrets:
     enabled: false
-    secretStoreRefName: enkryptai-clustersecret-store
-  externalSecret:
-    repoName: enkryptaivpc/kong-gateway
-
+    secrets:
+      - name: gateway-env-secret
+        target:
+          name: gateway-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-gateway-env-secret
+      - name: elastic-env-secret
+        target:
+          name: elastic-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-elastic-env-secret
+      - name: gateway-migration-env-secret
+        target:
+          name: gateway-migration-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-gateway-migration-env-secret
   configMaps:
     kongConfig:
       enabled: true
@@ -299,11 +356,25 @@ redteam-proxy:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 80
 
-  externalSecret:
+  externalSecrets:
     enabled: false
-    secretName: redteam-proxy-env-secret
-    secretStoreRefName: enkryptai-clustersecret-store
-    repoName: enkryptaivpc/redteam-proxy
+    secrets:
+      - name: redteam-proxy-env-secret
+        target:
+          name: redteam-proxy-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-redteam-proxy-env-secret
+      - name: redteam-proxy-env-secret
+        target:
+          name: redteam-proxy-env-secret
+          namespace: redteam-jobs
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-redteam-proxy-env-secret
 
   secrets:
     enabled: false
@@ -313,11 +384,6 @@ tolerations: []
 
 affinity: {}
 
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
 
 ################GUARDRAILS###########################
 guardrails:
@@ -376,11 +442,17 @@ guardrails:
     maxReplicas: 2
     targetCPUUtilizationPercentage: 80
 
-  externalSecret:
+  externalSecrets:
     enabled: false
-    secretName: guardrails-env-secret
-    secretStoreRefName: enkryptai-clustersecret-store
-    repoName: enkryptaivpc/guardrails
+    secrets:
+      - name: guardrails-env-secret
+        target:
+          name: guardrails-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-guardrails-env-secret
   secrets:
     enabled: false
 
@@ -410,16 +482,16 @@ supabase:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: auth.anishs.xyz
+      - host: auth.example.com
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - auth.anishs.xyz
+          - auth.example.com
         secretName: custom-cert-front
 openfgaconfig:
-  externalSecret:
+  externalSecrets:
     name: openfga-env-secret
     refreshInterval: "15m"
     secretStoreName: enkryptai-clustersecret-store
@@ -691,6 +763,7 @@ openfga:
   testPodSpec: {}
   testContainerSpec: {}
   extraObjects: []
+
 litellm:
   enabled: true
   # Default values for litellm.
@@ -737,7 +810,17 @@ litellm:
       port: https
 
   useEnvFrom: true
-
+  externalSecrets:
+    enabled: false
+    secrets:
+      - name: litellm-gateway-env-secret
+        target:
+          name: litellm-gateway-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-litellm-gateway-env-secret
   envFrom:
     - secretRef:
         name: litellm-gateway-env-secret
@@ -801,6 +884,17 @@ guardrails-model:
   envFrom:
     - secretRef:
         name: guardrails-model-secret
+  externalSecrets:
+    enabled: false
+    secrets:
+      - name: guardrails-model-secret
+        target:
+          name: guardrails-model-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-guardrails-model-secret
   nodeSelector: {}
 
   tolerations: []

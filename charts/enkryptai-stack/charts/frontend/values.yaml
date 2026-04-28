@@ -86,13 +86,9 @@ affinity: {}
 configMap:
   NEXT_PUBLIC_URL: "https://app..enkryptai.com"
 
-externalSecret:
+externalSecrets:
   enabled: false
-  secretName: frontend-env-secret
-  secretStoreRefName: enkryptai-clustersecret-store
-  repoName: enkryptai/frontend
-  databaseSecretName: onprem
-  databaseSecretRepoName: enkryptaivpc/on-prem
+  secrets: []
 
 secrets:
   name: frontend-env-secret

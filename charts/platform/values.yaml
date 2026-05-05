@@ -51,16 +51,16 @@ opensearch:
   initHelper:
     image: "vpcdeployment.azurecr.io/onprem/busybox:latest"
   security:
-  securityconfig: false
+  securityconfig: true
   users:
     admin:
-      hash: ""
+      hash: ""  # add hash of the opensearch-cred password 
     dashboarduser:
-      hash: ""
+      hash: "" # add hash of the opensearch-cred password 
     kong_logs_plugin:
-      hash: ""
+      hash: "" # add hash of the opensearch-cred password 
     kibana_read_only:
-      hash: ""
+      hash: "" # add hash of the opensearch-cred password 
   ism:
     # enabled: true
     policyName: "otel-logs-lifecycle"
@@ -348,6 +348,107 @@ platform-core:
 
 externalSecret:
   enabled: false
+  namespaceOverride: enkryptai-stack
+  installCRDs: false
+  clusterSecretStore:
+    enabled: false                      
+    name: "cluster-secret-store"
+    provider: "aws" # azure
+    # use any one of the below based on your secret store provider
+    
+    # config for azure key vault
+    azure:
+      vaultUrl: "<Your-Key-Vault-URL>"
+      tenantId: "<Your-Tenant-ID>"
+      authType: WorkloadIdentity
+      auth:
+        workloadIdentity:
+          serviceAccountRef:
+            name: platform-external-secrets
+            namespace: enkryptai-stack
+    
+    # config for aws secrets manager 
+    aws:
+      service: SecretsManager
+      region: "<region>"
+      auth:
+        jwt:
+          serviceAccountRef:
+            name: platform-external-secrets
+            namespace: enkryptai-stack
+  serviceAccount:
+    create: false # keep sa always false
+    name: platform-external-secrets
+    annotations:
+      "helm.sh/hook": pre-install,pre-upgrade
+      "helm.sh/hook-weight": "-11"
+     
+      # If using azure
+      azure.workload.identity/client-id: ""
+      # If using AWS
+      eks.amazonaws.com/role-arn: "<external-secret-role-arn>"
+  secrets:
+    - name: onprem
+      target:
+        name: onprem
+        namespace: enkryptai-stack
+      refreshInterval: 15m
+      dataFrom:
+        - extract:
+            key: enkryptaivpc-onprem
+    - name: openfga-env-secret
+      target:
+        name: openfga-env-secret
+        namespace: enkryptai-stack
+      refreshInterval: 15m
+      dataFrom:
+        - extract:
+            key: enkryptaivpc-openfga-env-secret
+
+    - name: opensearch-cred
+      target:
+        name: opensearch-cred
+        namespace: enkryptai-stack
+      refreshInterval: 15m
+      dataFrom:
+        - extract:
+            key: enkryptaivpc-opensearch-cred
+
+
+    - name: postgres-superuser-secret
+      target:
+        name: postgres-superuser-secret
+        namespace: enkryptai-stack
+      refreshInterval: 15m
+      dataFrom:
+        - extract:
+            key: enkryptaivpc-postgres-superuser-secret
+
+    - name: s3-cred
+      target:
+        name: s3-cred
+        namespace: enkryptai-stack
+      refreshInterval: 15m
+      dataFrom:
+        - extract:
+            key: enkryptaivpc-s3-cred
+
+    - name: superuser-secret
+      target:
+        name: superuser-secret
+        namespace: enkryptai-stack
+      refreshInterval: 15m
+      dataFrom:
+        - extract:
+            key: enkryptaivpc-superuser-secret
+
+external-secrets:
+  installCRDs: false
+
+  # keep sa always false
+  serviceAccount:
+    create: false
+
 secrets:
   enabled: false
   opensearch:

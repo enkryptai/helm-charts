@@ -350,9 +350,15 @@ externalSecret:
   enabled: false
   namespaceOverride: enkryptai-stack
   installCRDs: false
+  annotations: 
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
   clusterSecretStore:
     enabled: false                      
     name: "cluster-secret-store"
+    annotations: 
+      "helm.sh/hook": post-install,post-upgrade
+      "helm.sh/hook-weight": "-10"
     provider: "aws" # azure
     # use any one of the below based on your secret store provider
     

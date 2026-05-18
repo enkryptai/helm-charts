@@ -17,10 +17,10 @@ metadata:
     helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version | replace "+" "_" }}
     app.kubernetes.io/instance: {{ $.Release.Name }}
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
+  {{- with $.Values.global.externalSecrets.annotations }}
   annotations:
-    "helm.sh/hook": "pre-install,pre-upgrade"
-    "helm.sh/hook-weight": "-5"   
-    "helm.sh/hook-delete-policy": "before-hook-creation"
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   refreshInterval: {{ $secret.refreshInterval | default "15m" | quote }}
 

@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wait-for-external-secrets
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-20"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: wait
+          image: busybox:1.36
+
+          command:
+            - sh
+            - -c
+            - |
+              WEBHOOK_HOST="{{ .Release.Name }}-external-secrets-webhook.{{ .Release.Namespace }}.svc"
+
+              echo "Waiting for webhook: ${WEBHOOK_HOST}"
+
+              until nc -z ${WEBHOOK_HOST} 443; do
+                echo "Webhook not ready..."
+                sleep 5
+              done
+
+              echo "Webhook ready."

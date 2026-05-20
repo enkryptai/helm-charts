@@ -7,11 +7,15 @@ metadata:
     helm.sh/hook: "post-install,post-upgrade"
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
+
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
+
   description: "ISM policy equivalent to ES ILM"
+
   defaultState: hot
+
   ismTemplate:
     indexPatterns:
       - otel-*
@@ -22,14 +26,17 @@ spec:
       - red_teaming
       - .ds-*
     priority: 999
+
   states:
     - name: hot
       actions:
         - rollover:
-            min_index_age: "1d"
-            min_size: "50gb"
-        - replica_count:
-            number_of_replicas: 1
+            minIndexAge: "1d"
+            minSize: "50gb"
+
+        - replicaCount:
+            numberOfReplicas: 1
+
       transitions:
         - stateName: warm
           conditions:
@@ -37,11 +44,14 @@ spec:
 
     - name: warm
       actions:
-        - read_only: {}
-        - force_merge:
-            max_num_segments: 1
-        - replica_count:
-            number_of_replicas: 0
+        - readOnly: {}
+
+        - forceMerge:
+            maxNumSegments: 1
+
+        - replicaCount:
+            numberOfReplicas: 0
+
       transitions:
         - stateName: delete
           conditions:
@@ -50,4 +60,5 @@ spec:
     - name: delete
       actions:
         - delete: {}
+
       transitions: []

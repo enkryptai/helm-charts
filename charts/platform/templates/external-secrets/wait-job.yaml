@@ -1,12 +1,12 @@
+{{- if .Values.externalSecret.enabled }}
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: wait-for-external-secrets
+  {{- with .Values.externalSecret.waitJob.annotations }}
   annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "-20"
-    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
-
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   template:
     spec:
@@ -30,3 +30,4 @@ spec:
               done
 
               echo "Webhook ready."
+{{- end }}

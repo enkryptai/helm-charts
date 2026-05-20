@@ -75,7 +75,7 @@ platform-core:
     enabled: true
     image:
       repository: vpcdeployment.azurecr.io/onprem/cloudnative-pg
-      tag: "1.27.0"
+      tag: "1.29.1"
   opensearch-operator:
     manager:
       image:

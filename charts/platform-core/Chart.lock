@@ -16,7 +16,7 @@ dependencies:
   version: 1.0.0
 - name: cloudnative-pg
   repository: https://cloudnative-pg.github.io/charts
-  version: 0.26.0
+  version: 0.28.2
 - name: opensearch-operator
   repository: https://opensearch-project.github.io/opensearch-k8s-operator
   version: 2.8.0
@@ -26,5 +26,5 @@ dependencies:
 - name: keydb
   repository: https://enapter.github.io/charts/
   version: 0.48.0
-digest: sha256:9ed03d6f167e3c42514bddd4d6fa4c6b816c3a9393e0bba3bb0a1a497f7bf662
-generated: "2026-04-23T11:37:19.968397002+05:30"
+digest: sha256:5beac88dba2ac7d36e8af5ef361e7dbb09f17a68cb09db89e135238f3324b300
+generated: "2026-05-20T13:58:08.033980253+05:30"

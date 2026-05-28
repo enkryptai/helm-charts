@@ -1,6 +1,8 @@
 global:
   platform: azure
   registry: vpcdeployment.azurecr.io
+  imagePullSecrets: []
+  # - name: example-secret
 aws:
   region: "us-west-2"
 backup:
@@ -76,11 +78,15 @@ platform-core:
     image:
       repository: vpcdeployment.azurecr.io/onprem/cloudnative-pg
       tag: "1.29.1"
+    imagePullSecrets: []
+    # - name: example-registry
   opensearch-operator:
     manager:
       image:
         repository: vpcdeployment.azurecr.io/onprem/opensearch-operator
         tag: "2.8.0"
+      imagePullSecrets: []
+      # - name: example-registry
     kubeRbacProxy:
       image:
         repository: vpcdeployment.azurecr.io/onprem/kube-rbac-proxy
@@ -104,10 +110,14 @@ platform-core:
         repository: vpcdeployment.azurecr.io
         image: onprem/gpu-operator-init
         version: v26.3.0
+      imagePullSecrets: []
+      # - example-registry
     node-feature-discovery:
       image:
         repository: vpcdeployment.azurecr.io/onprem/node-feature-discovery
         tag: v0.18.3
+      imagePullSecrets: []
+      # - name: example-registry
       worker:
         tolerations:
           - key: dedicated
@@ -118,10 +128,14 @@ platform-core:
       repository: vpcdeployment.azurecr.io
       image: onprem/gpu-operator-validator
       version: v26.3.0
+      imagePullSecrets: []
+      # - example-registry
     toolkit:
       repository: vpcdeployment.azurecr.io
       image: onprem/container-toolkit
       version: v1.19.0
+      imagePullSecrets: []
+        # - example-registry
     dcgm:
       repository: vpcdeployment.azurecr.io
       image: onprem/dcgm
@@ -130,6 +144,8 @@ platform-core:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-device-plugin
       version: v0.19.0
+      imagePullSecrets: []
+        # - example-registry
     driver:
       repository: vpcdeployment.azurecr.io
       image: onprem/nvidia-driver
@@ -138,9 +154,13 @@ platform-core:
         repository: vpcdeployment.azurecr.io
         image: onprem/k8s-driver-manager
         version: "v0.7.0"
+      imagePullSecrets: []
+        # - example-registry
     vgpuManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/vgpu-manager
+      imagePullSecrets: []
+      # - example-registry 
       driverManager:
         repository: vpcdeployment.azurecr.io
         image: onprem/k8s-driver-manager
@@ -148,47 +168,67 @@ platform-core:
     kataManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-kata-manager
+      imagePullSecrets: []
+        # - example-registry
       version: "v0.2.2"
     vfioManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/cuda
       version: "v0.10.0"
-
+      imagePullSecrets: []
+      # - example-registry
     vgpuDeviceManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/vgpu-device-manager
       version: v0.4.2
+      imagePullSecrets: []
+      # - example-registry
     ccManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-cc-manager
       version: v0.3.0
+      imagePullSecrets: []
+      # - example-registry
     devicePlugin:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-device-plugin
       version: v0.19.0
+      imagePullSecrets: []
+      # - example-registry
     dcgmExporter:
       repository: vpcdeployment.azurecr.io
       image: onprem/dcgm-exporter
       version: 4.5.1-4.8.0-distroless
+
     migManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/k8s-mig-manager
       version: v0.14.0
+      imagePullSecrets: []
+      # - example-registry
     nodeStatusExporter:
       repository: vpcdeployment.azurecr.io
       image: onprem/gpu-operator-validator
       version: "v26.3.0"
+      imagePullSecrets: []
+      # - example-registry
     gdrcopy:
       repository: vpcdeployment.azurecr.io
       image: onprem/gdrdrv
       version: "v2.5.1"
+      imagePullSecrets: []
+      # - example-registry
     sandboxDevicePlugin:
       repository: vpcdeployment.azurecr.io
       image: onprem/kubevirt-gpu-device-plugin
       version: "v1.5.0"
+      imagePullSecrets: []
+      # - example-registry
   keydb:
     imageRepository: vpcdeployment.azurecr.io/onprem/keydb
     imageTag: x86_64_v6.3.2
+    imagePullSecrets: []
+    #- name: example-registry
   nats:
     natsBox:
       container:
@@ -211,6 +251,8 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
   nack:
+    imagePullSecrets: []
+    # - name: example-registry
     nameOverride: nack
     jetstream:
       enabled: true
@@ -299,11 +341,14 @@ platform-core:
         repository: vpcdeployment.azurecr.io/onprem/argo-events
         tag: "v1.9.10"
         imagePullPolicy: IfNotPresent
+      imagePullSecrets: []
+      # - name: example-registry
   argo-workflows:
     images:
       tag: ""
       pullPolicy: Always
       pullSecrets: []
+      # - name: example-seret
     singleNamespace: false
     server:
       enabled: true
@@ -352,18 +397,22 @@ externalSecret:
   installCRDs: false
   waitJob:
     annotations:
-      helm.sh/hook: post-install,post-upgrade
-      helm.sh/hook-weight: "-12"
+      # helm.sh/hook: post-install,post-upgrade # use this annotation when installing platform as a singular chart
+      helm.sh/hook-weight: "-12"  
       helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
-  annotations: 
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "-5"
+  
+  # use below annotations when installing platform as a singular chart
+  # annotations: 
+  #   "helm.sh/hook": post-install,post-upgrade
+  #   "helm.sh/hook-weight": "-5"
+
   clusterSecretStore:
     enabled: false                      
     name: "cluster-secret-store"
-    annotations: 
-      "helm.sh/hook": post-install,post-upgrade
-      "helm.sh/hook-weight": "-10"
+    # use below annotations when installing platform as a singular chart
+    # annotations: 
+    #   "helm.sh/hook": post-install,post-upgrade
+    #   "helm.sh/hook-weight": "-10"
     provider: "aws" # azure
     # use any one of the below based on your secret store provider
     
@@ -393,7 +442,7 @@ externalSecret:
     annotations:
       "helm.sh/hook": pre-install,pre-upgrade
       "helm.sh/hook-weight": "-11"
-     
+
       # If using azure
       # azure.workload.identity/client-id: ""
       # If using AWS
@@ -454,7 +503,7 @@ externalSecret:
             key: enkryptaivpc-superuser-secret
 
 external-secrets:
-  installCRDs: false
+  installCRDs: false  # enable when you are using externalsecret
 
   # keep sa always false
   serviceAccount:
@@ -506,6 +555,8 @@ traefik:
     enabled: true
     kind: Deployment
     replicas: 1
+    imagePullSecrets: []
+    # - name: example-registry
   ingressClass:
     enabled: true
     isDefaultClass: true

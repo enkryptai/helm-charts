@@ -1,0 +1,9 @@
+platform:
+  platform-core:
+    gpu-operator:
+      operator:
+        runtimeClass: nvidia-container-runtime
+      toolkit:
+        enabled: false
+      driver:
+        enabled: false

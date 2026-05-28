@@ -1,0 +1,1491 @@
+enkryptai:
+  global:
+    # imagePullSecrets:
+    # - core-app-pullsecret
+    storageClass: ""
+    imagePullPolicy: "IfNotPresent"
+    domain: "djj.enkryptai.com"
+    registry: proxy.replicated.com/proxy/full-stack/vpcimage
+    externalSecrets:
+      enabled: false
+      namespaceOverride: enkryptai-stack
+      # annotations:
+      #   "helm.sh/hook": post-install,post-upgrade
+      #   "helm.sh/hook-weight": "-10"
+      clusterSecretStore:
+        enabled: false                      
+        name: "cluster-secret-store"
+        provider: azure
+
+        azure:
+          vaultUrl: "https://test-external-secrets.vault.azure.net/"
+          tenantId: "2fad0b06-ed54-4316-b3b3-79e93b19079b"
+          authType: WorkloadIdentity
+          auth:
+            workloadIdentity:
+              serviceAccountRef:
+                name: platform-external-secrets
+                namespace: enkryptai-stack
+
+  supabaseinitdb:
+    repository: onprem/supabase-initdb
+    tag: "latest"
+  nginxalpine:
+    repository: onprem/nginx
+    tag: "alpine"
+  openfgaSyncJob:
+    repository: enkryptai-prod/openfga-sync
+    tag: v1.3.0
+    annotations:
+      "helm.sh/hook": post-install,post-upgrade
+      "helm.sh/hook-weight": "27"
+      "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  busybox:
+    repository: onprem/busybox
+    tag: "latest"
+
+  frontend:
+    enabled: true
+    image:
+      repository: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-dev/frontend
+      pullPolicy: IfNotPresent
+      tag: "dev-1774339362"
+
+    serviceAccount:
+      create: false
+    podAnnotations:
+      reloader.stakater.com/auto: "true"
+
+    podLabels:
+      app: frontend
+
+    service:
+      type: ClusterIP
+      port: 3000
+      targetPort: 3000
+      name: http
+
+    ingress:
+      enabled: true
+      className: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"
+        traefik.ingress.kubernetes.io/buffering-maxResponseBodyBytes: "209715200"
+        traefik.ingress.kubernetes.io/buffering-memRequestBodyBytes: "2097152"
+        traefik.ingress.kubernetes.io/buffering-memResponseBodyBytes: "2097152"
+        traefik.ingress.kubernetes.io/router.middlewares: enkryptai-stack-frontendmiddleware@kubernetescrd
+
+      hosts:
+        - host: app.harshyadav.me
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: frontend-tls
+          hosts:
+            - app.harshyadav.me
+
+    resources:
+      limits:
+        cpu: 1700m
+        memory: 4Gi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+
+    livenessProbe:
+      enabled: false
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 120
+      timeoutSeconds: 10
+
+    readinessProbe:
+      enabled: true
+      httpGet:
+        path: /api/health
+        port: 3000
+        scheme: HTTP
+      failureThreshold: 3
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
+
+    configMap:
+      NEXT_PUBLIC_URL: "https://app.harshyadav.me"
+
+    externalSecrets:
+      enabled: true
+      secrets:
+        - name: frontend-env-secret
+          target:
+            name: frontend-env-secret
+            namespace: enkryptai-stack
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-frontend-env-secret
+
+  ################GATEWAY_KONG###########################
+  gateway-kong:
+    enabled: true
+    replicaCount: 2
+    image:
+      gateway:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-dev/gateway
+        tag: "dev-1774424218"
+        pullPolicy: IfNotPresent
+      sync:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-dev/gateway-sync
+        tag: "dev"
+        pullPolicy: IfNotPresent
+      fluentBit:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/fluent-bit
+        tag: "3.2.1"
+        pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: "gateway-kong"
+    annotations: []
+    service:
+      type: ClusterIP
+      ports:
+        http:
+          port: 80
+          targetPort: 8000
+        https:
+          port: 443
+          targetPort: 8443
+        admin:
+          port: 8001
+          targetPort: 8001
+        adminGui:
+          port: 8002
+          targetPort: 8002
+        fluentBitMetrics:
+          port: 2020
+          targetPort: 2020
+        fluentBitAdmin:
+          port: 5043
+          targetPort: 5043
+
+    ingress:
+      enabled: true
+      className: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"
+        traefik.ingress.kubernetes.io/buffering-maxResponseBodyBytes: "209715200"
+        traefik.ingress.kubernetes.io/buffering-memRequestBodyBytes: "2097152"
+        traefik.ingress.kubernetes.io/buffering-memResponseBodyBytes: "2097152"
+        traefik.ingress.kubernetes.io/router.middlewares: enkryptai-stack-frontendmiddleware@kubernetescrd
+      hosts:
+        - host: api.harshyadav.me
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: gateway-tls
+          hosts:
+            - api.harshyadav.me
+
+    resources:
+      gateway:
+        limits:
+          cpu: "2"
+          memory: "4Gi"
+        requests:
+          cpu: "0.5"
+          memory: "1.5Gi"
+      sync:
+        limits:
+          cpu: "0.5"
+          memory: "256Mi"
+        requests:
+          cpu: "0.1"
+          memory: "64Mi"
+      fluentBit:
+        limits:
+          cpu: "0.5"
+          memory: "256Gi"
+        requests:
+          cpu: "0.1"
+          memory: "64Mi"
+
+    livenessProbe:
+      enabled: true
+      exec:
+        command:
+          - kong
+          - health
+      failureThreshold: 10
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 10
+
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 80
+
+    externalSecrets:
+      enabled: true
+      secrets:
+        - name: gateway-env-secret
+          target:
+            name: gateway-env-secret
+            namespace: enkryptai-stack
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-gateway-env-secret
+        - name: elastic-env-secret
+          target:
+            name: elastic-env-secret
+            namespace: enkryptai-stack
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-elastic-env-secret
+        - name: gateway-migration-env-secret
+          target:
+            name: gateway-migration-env-secret
+            namespace: enkryptai-stack
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-gateway-migration-env-secret
+
+    configMaps:
+      kongConfig:
+        enabled: true
+        name: gateway-kong-temp-config
+      fluentBit:
+        enabled: true
+        name: fluent-bit-config
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
+
+  ################REDTEAMING###########################
+  redteam-proxy:
+    enabled: true
+    replicaCount: 2
+
+    image:
+      repository: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-dev/redteam-proxy
+      pullPolicy: IfNotPresent
+      tag: "63bb5e4"
+
+    nameOverride: ""
+    fullnameOverride: "redteam-proxy"
+
+    podAnnotations:
+      reloader.stakater.com/auto: "true"
+
+    podLabels:
+      app: redteam-proxy
+
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 50%
+        maxUnavailable: 50%
+
+    service:
+      type: ClusterIP
+      port: 9091
+      targetPort: 9091
+      name: http
+
+    env:
+      - name: NATS_URL
+        value: "nats://nats:4222"
+      - name: IS_PROXY_MODE
+        value: "true"
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 300Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+    livenessProbe:
+      enabled: true
+      httpGet:
+        path: /health
+        port: 9091
+      initialDelaySeconds: 90
+      timeoutSeconds: 10
+
+    readinessProbe:
+      enabled: true
+      httpGet:
+        path: /health
+        port: 9091
+      initialDelaySeconds: 30
+      timeoutSeconds: 10
+
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 80
+
+    externalSecrets:
+      enabled: true
+      secrets:
+        - name: redteam-proxy-env-secret
+          target:
+            name: redteam-proxy-env-secret
+            namespace: enkryptai-stack
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-redteam-proxy-env-secret
+        - name: redteam-proxy-env-secret
+          target:
+            name: redteam-proxy-env-secret
+            namespace:  redteam-jobs
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-redteam-proxy-env-secret
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
+
+  ################GUARDRAILS###########################
+  guardrails:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-dev/guardrails
+      pullPolicy: IfNotPresent
+      tag: "devgr-v0.0.48-1774275843"
+
+    nameOverride: ""
+    fullnameOverride: "guardrails"
+
+    podAnnotations:
+      reloader.stakater.com/auto: "true"
+
+    podLabels:
+      app: guardrails
+
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+
+    service:
+      type: ClusterIP
+      port: 80
+      targetPort: 80
+      name: http
+
+    resources:
+      requests:
+        cpu: 0.5
+        memory: 500Mi
+      limits:
+        cpu: 1
+        memory: 1Gi
+    livenessProbe:
+      enabled: true
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 90
+      timeoutSeconds: 10
+
+    readinessProbe:
+      enabled: true
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 120
+      timeoutSeconds: 30
+
+    extraEnv:
+      - name: LOCAL_GUARDRAILS
+        value: "true"
+
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 2
+      targetCPUUtilizationPercentage: 80
+
+    externalSecrets:
+      enabled: true
+      secrets:
+        - name: guardrails-env-secret
+          target:
+            name: guardrails-env-secret
+            namespace: enkryptai-stack
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-guardrails-env-secret
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
+
+  supabase:
+    s3Bucket:
+      annotations:
+        "helm.sh/hook": post-install, post-upgrade
+        helm.sh/hook-weight: "25"
+    kong: 
+      imagePullSecrets:
+        - name: replicated-registry
+    meta:
+      imagePullSecrets:
+        - name: replicated-registry
+    rest:
+      imagePullSecrets:
+        - name: replicated-registry
+    studio:
+      imagePullSecrets:
+        - name: replicated-registry 
+    auth:
+      deploymentAnnotations:
+        helm.sh/hook: "post-install, post-upgrade"
+        helm.sh/hook-weight: "22"
+      imagePullSecrets:
+        - name: replicated-registry
+    storage:
+      enabled: true
+      image:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/storage-api
+        pullPolicy: IfNotPresent
+        tag: "v1.19.1"
+      imagePullSecrets:
+        - name: replicated-registry
+      deploymentAnnotations:
+        helm.sh/hook: "post-install, post-upgrade"
+        helm.sh/hook-weight: "22"
+      miniomc:
+        image: onprem/mc:latest
+    minio:
+      enabled: true
+      image:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/minio
+        pullPolicy: IfNotPresent
+        tag: "latest"
+      imagePullSecrets:
+        - name: replicated-registry
+    ingress:
+      enabled: true
+      className: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+        traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"
+        traefik.ingress.kubernetes.io/buffering-maxResponseBodyBytes: "209715200"
+        traefik.ingress.kubernetes.io/buffering-memRequestBodyBytes: "2097152"
+        traefik.ingress.kubernetes.io/buffering-memResponseBodyBytes: "2097152"
+        traefik.ingress.kubernetes.io/router.middlewares: enkryptai-stack-frontendmiddleware@kubernetescrd
+      hosts:
+        - host: auth.harshyadav.me
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: supabase-tls
+          hosts:
+            - auth.harshyadav.me
+
+  openfga:
+    replicaCount: 1
+    image:
+      repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/openfga
+      pullPolicy: Always
+      tag: "v1.8.9"
+    annotations:
+      helm.sh/hook: "post-install, post-upgrade"
+      helm.sh/hook-weight: "26"
+    imagePullSecrets: 
+    - name: replicated-registry
+    nameOverride: "openfga"
+    fullnameOverride: "openfga"
+
+    commonLabels: {}
+
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+
+    podAnnotations: {}
+    podExtraLabels: {}
+
+    extraEnvVars:
+      - name: OPENFGA_HTTP_TLS_ENABLED
+        value: "false"
+      - name: OPENFGA_REQUEST_TIMEOUT
+        value: "3s"
+      - name: OPENFGA_DATASTORE_METRICS_ENABLED
+        value: "true"
+      - name: OPENFGA_CHECK_CACHE_LIMIT
+        value: "10000"
+      - name: OPENFGA_CHECK_ITERATOR_CACHE_ENABLED
+        value: "true"
+      - name: OPENFGA_CHECK_ITERATOR_CACHE_MAX_RESULTS
+        value: "10000"
+      - name: OPENFGA_CHECK_ITERATOR_CACHE_TTL
+        value: "1m"
+      - name: OPENFGA_CACHE_CONTROLLER_ENABLED
+        value: "true"
+      - name: OPENFGA_CACHE_CONTROLLER_TTL
+        value: "30s"
+      - name: OPENFGA_CHECK_DISPATCH_THROTTLING_ENABLED
+        value: "false"
+      - name: OPENFGA_LIST_OBJECTS_DISPATCH_THROTTLING_ENABLED
+        value: "false"
+      - name: OPENFGA_LIST_USERS_DISPATCH_THROTTLING_ENABLED
+        value: "false"
+      - name: OPENFGA_TRACING_ENABLED
+        value: "false"
+      - name: OPENFGA_TRACE_SERVICE_NAME
+        value: "openfga"
+      - name: OPENFGA_ACCESS_CONTROL_ENABLED
+        value: "false"
+
+    extraVolumes: []
+    extraVolumeMounts: []
+    extraInitContainers: []
+
+    podSecurityContext: {}
+
+    securityContext: {}
+
+    initContainer:
+      repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/k8s-wait-for
+      tag: "v2.0"
+      pullPolicy: IfNotPresent
+
+    livenessProbe:
+      enabled: false
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 12
+      successThreshold: 1
+
+    readinessProbe:
+      enabled: true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
+      successThreshold: 1
+
+    startupProbe:
+      enabled: false
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 30
+      successThreshold: 1
+
+    customLivenessProbe: {}
+    customReadinessProbe: {}
+    customStartupProbe: {}
+
+    service:
+      annotations: {}
+      type: ClusterIP
+      port: 8080
+
+    telemetry:
+      trace:
+        enabled: false
+        otlp:
+          endpoint:
+          tls:
+            enabled: false
+        sampleRatio: 0.3
+
+      metrics:
+        enabled: true
+
+        serviceMonitor:
+          enabled: false
+          additionalLabels: {}
+          annotations: {}
+          jobLabel: "app.kubernetes.io/name"
+          namespace: ""
+          namespaceSelector: {}
+          scrapeInterval: 30s
+          scrapeTimeout: 10s
+          targetLabels: []
+          relabelings: []
+          metricRelabelings: []
+
+        addr: 0.0.0.0:2112
+        enableRPCHistograms:
+        podAnnotations:
+          prometheus.io/scrape: "true"
+    datastore:
+      engine: postgres
+      uri:
+      uriSecret: openfga-env-secret
+      maxCacheSize: 100000
+      maxOpenConns: 70
+      maxIdleConns: 30
+      connMaxIdleTime: 1m
+      connMaxLifetime: 1h
+      applyMigrations: true
+      waitForMigrations: true
+      migrationType: job
+      migrations:
+        resources: {}
+        image:
+          repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/k8s-wait-for
+          pullPolicy: Always
+          tag: "v2.0"
+
+    postgresql:
+      enabled: false
+
+    mysql:
+      enabled: false
+
+    grpc:
+      addr: 0.0.0.0:8081
+      tls:
+        enabled: false
+        cert:
+        key:
+        ca:
+
+    http:
+      enabled: true
+      addr: 0.0.0.0:8080
+      tls:
+        enabled: false
+        cert:
+        key:
+      upstreamTimeout:
+      corsAllowedOrigins: ["*"]
+      corsAllowedHeaders: ["*"]
+
+    authn:
+      method: none
+      preshared:
+        keys: []
+      oidc:
+        audience:
+        issuer:
+
+    playground:
+      enabled: false
+      port: 3000
+
+    profiler:
+      enabled: false
+      addr: 0.0.0.0:3001
+
+    log:
+      level: info
+      format: json
+      timestampFormat: Unix
+
+    checkQueryCache:
+      enabled: true
+      limit: 10000
+      ttl: 1m
+
+    experimentals: []
+
+    maxTuplesPerWrite:
+    maxTypesPerAuthorizationModel:
+    maxAuthorizationModelSizeInBytes:
+    maxConcurrentReadsForCheck:
+    maxConcurrentReadsForListObjects:
+    maxConcurrentReadsForListUsers:
+    changelogHorizonOffset:
+    resolveNodeLimit:
+    resolveNodeBreadthLimit:
+    listObjectsDeadline: 3s
+    listObjectsMaxResults: 1000
+    listUsersDeadline: 3s
+    listUsersMaxResults: 1000
+    requestDurationDatastoreQueryCountBuckets: [50, 200]
+    allowWriting1_0Models:
+    allowEvaluating1_0Models:
+
+    ingress:
+      enabled: false
+      className: ""
+      annotations: {}
+      hosts:
+        - host: chart-example.local
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+      tls: []
+
+    resources: {}
+
+    lifecycle: {}
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: {}
+    tolerations: []
+    topologySpreadConstraints: []
+    affinity: {}
+    sidecars: []
+
+    migrate:
+      extraVolumes: []
+      extraVolumeMounts: []
+      extraInitContainers: []
+      sidecars: []
+      annotations:
+        helm.sh/hook: "post-install, post-upgrade, post-rollback, post-delete"
+        helm.sh/hook-weight: "27"
+        helm.sh/hook-delete-policy: "before-hook-creation"
+      labels: {}
+      timeout:
+
+    testPodSpec: {}
+    testContainerSpec: {}
+    extraObjects: []
+  litellm:
+    enabled: true
+    # Default values for litellm.
+    replicaCount: 1
+
+    # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+    image:
+      repository: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-dev/litellm-gateway
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "1772775747"
+
+    # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    imagePullSecrets: []
+    # This is to override the chart name.
+    nameOverride: ""
+    fullnameOverride: ""
+
+    # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+    service:
+      type: ClusterIP
+      port: 443
+      targetPort: 443
+      name: https
+    autoscaling:
+      enabled: false
+    # resources information
+    resources:
+      requests:
+        cpu: 0.5
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
+    externalSecrets:
+      enabled: true
+      secrets:
+        - name: litellm-gateway-env-secret
+          target:
+            name: litellm-gateway-env-secret
+            namespace: enkryptai-stack
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-litellm-gateway-env-secret
+    # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+    livenessProbe:
+      httpGet:
+        path: /
+        port: https
+    readinessProbe:
+      httpGet:
+        path: /
+        port: https
+    envFrom:
+      - secretRef:
+          name: litellm-gateway-env-secret
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
+  guardrails-model:
+    enabled: true
+    replicaCount: 1
+    labels:
+      app: guardrails-model
+    image:
+      repository: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-dev/guardrail-model
+      pullPolicy: IfNotPresent
+      tag: "1776402715"
+    strategy:
+      type: Recreate
+    imagePullSecrets: []
+    nameOverride: ""
+    fullnameOverride: ""
+    podLabels: {}
+    podAnnotations:
+    secret.reloader.stakater.com/reload: ""
+    service:
+      type: ClusterIP
+      ports:
+        - name: nsfw
+          containerPort: 8001
+        - name: toxicity
+          containerPort: 8002
+        - name: promptinject
+          containerPort: 8003
+        - name: pii
+          containerPort: 8004
+        - name: llm
+          containerPort: 8005
+        - name: language
+          containerPort: 8006
+        - name: router
+          containerPort: 8080
+    resources:
+      requests:
+        cpu: "1"
+        memory: "3Gi"
+        nvidia.com/gpu: 1
+      limits:
+        cpu: "3"
+        memory: "12Gi"
+        nvidia.com/gpu: 1
+    externalSecrets:
+      enabled: true
+      secrets:
+        - name: guardrails-model-secret
+          target:
+            name: guardrails-model-secret
+            namespace: enkryptai-stack
+          refreshInterval: 5h
+          dataFrom:
+            - extract:
+                key: enkryptai-guardrails-model-secret
+    envFrom:
+      - secretRef:
+          name: guardrails-model-secret
+    nodeSelector:
+      dedicated: gpu
+
+    tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "gpu"
+        effect: "NoSchedule"
+
+    affinity: {}
+
+  guardrails-multi-modal:
+    enabled: true
+    replicaCount: 1
+    labels:
+      app: guardrails-multi-modal
+    image:
+      repository: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-prod/guardrail-multimodal
+      pullPolicy: IfNotPresent
+      tag: "1773124434"
+    strategy:
+      type: Recreate
+    imagePullSecrets: []
+    nameOverride: ""
+    fullnameOverride: ""
+    podLabels: {}
+    podAnnotations:
+      secret.reloader.stakater.com/reload: ""
+    service:
+      type: ClusterIP
+      ports:
+        - name: multi-modal
+          containerPort: 8000
+    resources:
+      requests:
+        cpu: "1"
+        memory: "4Gi"
+        nvidia.com/gpu: 1
+      limits:
+        cpu: "3"
+        memory: "12Gi"
+        nvidia.com/gpu: 1
+    envFrom: []
+    livenessProbe:
+      enabled: true
+      httpGet:
+        path: /health
+        port: 8000
+      initialDelaySeconds: 400
+      timeoutSeconds: 10
+    readinessProbe:
+      enabled: true
+      httpGet:
+        path: /health
+        port: 8000
+      initialDelaySeconds: 300
+      timeoutSeconds: 30
+
+    nodeSelector: {}
+    tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "gpu"
+        effect: "NoSchedule"
+
+    affinity: {}
+
+platform:
+  global:
+    platform: azure
+    registry: proxy.replicated.com/proxy/full-stack/vpcimage
+    imagePullSecrets:
+    - name: replicated-registry
+  aws:
+    region: "us-west-2"
+  backup:
+    openfgsS3Bucket: "s3://vpc"
+    supabaseS3Bucket: "s3://vpc"
+  supabase:
+    repository: supabase
+    tag: 16.0.1
+
+  openfga:
+    repository: onprem/postgresql
+    tag: 17.9-system-trixie
+
+  databasekong:
+    repository: onprem/postgres
+    tag: 18.3-alpine3.22
+  migrationjob:
+    repository: onprem/postgres
+    tag: 18.3-alpine3.22
+  sensor:
+    natsURL: "nats://nats.enkryptai-stack:4222"
+    jobversion: "prod-v1.0.50"
+    jobImage: proxy.replicated.com/proxy/full-stack/vpcimage/enkryptai-prod/redteam-job
+  env:
+    - name: WORKER_TYPE
+      value: "combined"
+    - name: NATS_URL
+      value: "nats://nats.enkryptai-stack:4222"
+    - name: IS_PROXY_MODE
+      value: "true"
+    - name: RT_NATS_PAYLOAD
+      value: "{{inputs.parameters.event-data}}"
+    - name: GR_MODELS_MODE
+      value: "remote"
+    - name: SENTRY_LITELLM_GATEWAY_API_KEY
+      value: "sentry-litellm-gateway-secret-key"
+    - name: SENTRY_LITELLM_GATEWAY_TIMEOUT
+      value: "300"
+    - name: SENTRY_LITELLM_GATEWAY_URL
+      value: "http://enkryptai-litellm.enkryptai-stack:443"
+  adminpassword:
+    secretName: "opensearch-cred"
+  clustername: "enkryptai-opensearch"
+  opensearch:
+    general:
+      image: "proxy.replicated.com/proxy/full-stack/vpcimage/onprem/opensearch:3.2.0"
+    dashboards:
+      image: "proxy.replicated.com/proxy/full-stack/vpcimage/onprem/opensearch-dashboards:3.2.0"
+    initHelper:
+      image: "proxy.replicated.com/proxy/full-stack/vpcimage/onprem/busybox:latest"
+    security:
+    securityconfig: false
+    users:
+      admin:
+        hash: "$2y$12$7mC/0Y5jeMf.w95KW/7i2OV7k9uTRx5KrsNQjKR1szeuw68pVwgr6"
+      dashboarduser:
+        hash: "$2y$12$7mC/0Y5jeMf.w95KW/7i2OV7k9uTRx5KrsNQjKR1szeuw68pVwgr6"
+      kong_logs_plugin:
+        hash: "$2y$12$7mC/0Y5jeMf.w95KW/7i2OV7k9uTRx5KrsNQjKR1szeuw68pVwgr6"
+      kibana_read_only:
+        hash: "$2y$12$7mC/0Y5jeMf.w95KW/7i2OV7k9uTRx5KrsNQjKR1szeuw68pVwgr6"
+
+  platform-core:
+    namespaces:
+      - name: argo-events
+        labels:
+          name: argo-events
+    cloudnative-pg:
+      enabled: true
+      image:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/cloudnative-pg
+        tag: "1.29.1"
+      imagePullSecrets: 
+      - name: replicated-registry
+    opensearch-operator:
+      manager:
+        image:
+          repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/opensearch-operator
+          tag: "2.8.0"
+        imagePullSecrets :
+        - name: replicated-registry
+      kubeRbacProxy:
+        image:
+          repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/kube-rbac-proxy
+          tag: "v0.21.2"
+    gpu-operator:
+      daemonsets:
+        tolerations:
+          - key: dedicated
+            operator: Equal
+            value: gpu
+            effect: NoSchedule
+          - key: nvidia.com/gpu
+            operator: Exists
+            effect: NoSchedule
+      operator: 
+        runtimeClass: nvidia-container-runtime
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/gpu-operator
+        version: v26.3.0
+        initContainer:
+          repository: proxy.replicated.com/proxy/full-stack/vpcimage
+          image: onprem/gpu-operator-init
+          version: v26.3.0
+        imagePullSecrets:
+        - replicated-registry
+      node-feature-discovery:
+        image:
+          repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/node-feature-discovery
+          tag: v0.18.3
+        imagePullSecrets: 
+        - name: replicated-registry
+        worker:
+          tolerations:
+            - key: dedicated
+              operator: Equal
+              value: gpu
+              effect: NoSchedule
+      validator:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/gpu-operator-validator
+        version: v26.3.0
+        imagePullSecrets:
+        - replicated-registry
+      toolkit:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/container-toolkit
+        version: v1.19.0
+        imagePullSecrets:
+        - replicated-registry
+      dcgm:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/dcgm
+        version: 4.5.2-1-ubuntu22.04
+      gfd:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/k8s-device-plugin
+        version: v0.19.0
+        imagePullSecrets:
+        - replicated-registry
+      driver:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/nvidia-driver
+        version: 580.126.20
+        manager:
+          repository: proxy.replicated.com/proxy/full-stack/vpcimage
+          image: onprem/k8s-driver-manager
+          version: "v0.7.0"
+        imagePullSecrets:
+        - replicated-registry
+      vgpuManager:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/vgpu-manager
+        driverManager:
+          repository: proxy.replicated.com/proxy/full-stack/vpcimage
+          image: onprem/k8s-driver-manager
+          version: v0.10.0
+        imagePullSecrets:
+        - replicated-registry
+      kataManager:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/k8s-kata-manager
+        version: "v0.2.2"
+        imagePullSecrets:
+        - replicated-registry
+      vfioManager:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/cuda
+        version: "v0.10.0"
+        imagePullSecrets:
+        - replicated-registry
+      vgpuDeviceManager:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/vgpu-device-manager
+        version: v0.4.2
+        imagePullSecrets:
+        - replicated-registry
+      ccManager:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/k8s-cc-manager
+        version: v0.3.0
+        imagePullSecrets:
+        - replicated-registry
+      devicePlugin:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/k8s-device-plugin
+        version: v0.19.0
+        imagePullSecrets:
+        - replicated-registry
+      dcgmExporter:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/dcgm-exporter
+        version: 4.5.1-4.8.0-distroless
+      migManager:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/k8s-mig-manager
+        version: v0.14.0
+        imagePullSecrets:
+        - replicated-registry
+      nodeStatusExporter:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/gpu-operator-validator
+        version: "v26.3.0"
+        imagePullSecrets:
+        - replicated-registry
+      gdrcopy:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/gdrdrv
+        version: "v2.5.1"
+        imagePullSecrets:
+        - replicated-registry
+      sandboxDevicePlugin:
+        repository: proxy.replicated.com/proxy/full-stack/vpcimage
+        image: onprem/kubevirt-gpu-device-plugin
+        version: "v1.5.0"
+        imagePullSecrets:
+        - replicated-registry
+    keydb:
+      imageRepository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/keydb
+      imageTag: x86_64_v6.3.2
+      imagePullSecrets:
+      - name: replicated-registry
+    nats:
+      natsBox:
+        container:
+          image:
+            repository: onprem/nats-box
+            tag: 0.19.3
+      promExporter:
+        image:
+          repository: onprem/prometheus-nats-exporter
+          tag: 0.19.2
+      reloader:
+        image:
+          repository: onprem/nats-server-config-reloader
+          tag: 0.21.1
+      container:
+        image:
+          repository: onprem/nats
+          tag: 2.12.6-alpine
+      global:
+        image:
+          registry: proxy.replicated.com/proxy/full-stack/vpcimage
+    nack:
+      imagePullSecrets: 
+      - name: replicated-registry
+      nameOverride: nack
+      jetstream:
+        enabled: true
+        image:
+          repository: onprem/jetstream-controller
+          tag: 0.22.2
+          registry: proxy.replicated.com/proxy/full-stack/vpcimage
+        nats:
+          url: nats://nats:4222
+    argo-events:
+      namespaceOverride: "enkryptai-stack"
+      configs:
+        nats:
+          versions:
+            - version: latest
+              natsStreamingImage: nats-streaming:latest
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.19.2
+            - version: 0.19.2
+              natsStreamingImage: nats-streaming:0.22.1
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.19.2
+        jetstream:
+          settings:
+            maxMemoryStore: -1
+            maxFileStore: -1
+          streamConfig:
+            maxMsgs: 1000000
+            maxAge: 72h
+            maxBytes: 1GB
+            replicas: 3
+            duplicates: 300s
+            retention: 0
+            discard: 0
+          versions:
+            - version: latest
+              natsImage: nats:2.10.10
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.14.0
+              configReloaderImage: natsio/nats-server-config-reloader:0.14.0
+              startCommand: /nats-server
+            - version: 2.8.1
+              natsImage: nats:2.8.1
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+              configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+              startCommand: /nats-server
+            - version: 2.8.1-alpine
+              natsImage: nats:2.8.1-alpine
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+              configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+              startCommand: nats-server
+            - version: 2.8.2
+              natsImage: nats:2.8.2
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+              configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+              startCommand: /nats-server
+            - version: 2.8.2-alpine
+              natsImage: nats:2.8.2-alpine
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+              configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+              startCommand: nats-server
+            - version: 2.9.1
+              natsImage: nats:2.9.1
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+              configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+              startCommand: /nats-server
+            - version: 2.9.12
+              natsImage: nats:2.9.12
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+              configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+              startCommand: /nats-server
+            - version: 2.9.16
+              natsImage: nats:2.9.16
+              metricsExporterImage: natsio/prometheus-nats-exporter:0.9.1
+              configReloaderImage: natsio/nats-server-config-reloader:0.7.0
+              startCommand: /nats-server
+            - version: 2.10.10
+              natsImage: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/nats:2.10.10
+              metricsExporterImage: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/prometheus-nats-exporter:0.14.0
+              configReloaderImage: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/nats-server-config-reloader:0.14.0
+              startCommand: /nats-server
+            - version: 2.12.6
+              natsImage: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/nats:2.12.6
+              metricsExporterImage: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/prometheus-nats-exporter:0.19.2
+              configReloaderImage: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/nats-server-config-reloader:0.21.1
+              startCommand: /nats-server
+      global:
+        image:
+          repository: proxy.replicated.com/proxy/full-stack/vpcimage/onprem/argo-events
+          tag: "v1.9.10"
+          imagePullPolicy: IfNotPresent
+        imagePullSecrets:
+          - name: replicated-registry
+    argo-workflows:
+      images:
+        tag: ""
+        pullPolicy: Always
+        pullSecrets: 
+        - name: replicated-registry
+      singleNamespace: false
+      server:
+        enabled: true
+        baseHref: /
+        image:
+          registry: proxy.replicated.com/proxy/full-stack/vpcimage
+          repository: onprem/argocli
+          tag: "v4.0.4"
+        deploymentAnnotations: {}
+        podAnnotations: {}
+        podLabels: {}
+        podSecurityContext: {}
+        rbac:
+          create: true
+        securityContext:
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+      executor:
+        image:
+          registry: proxy.replicated.com/proxy/full-stack/vpcimage
+          repository: onprem/argoexec
+          tag: "v3.6.14"
+          pullPolicy: ""
+        resources: {}
+        args: []
+        env: []
+        securityContext: {}
+      controller:
+        image:
+          registry: proxy.replicated.com/proxy/full-stack/vpcimage
+          repository: onprem/workflow-controller
+          tag: "v4.0.4"
+        namespaceParallelism: "10"
+        retentionPolicy:
+          completed: 10
+          failed: 3
+          errored: 3
+  externalSecret:
+    enabled: false
+    namespaceOverride: enkryptai-stack
+    waitJob:
+      annotations:
+        # helm.sh/hook: post-install,post-upgrade
+        helm.sh/hook-weight: "-12"
+        helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    # annotations: 
+    #   # "helm.sh/hook": post-install,post-upgrade
+    #   # "helm.sh/hook-weight": "-5"
+    clusterSecretStore:
+      enabled: false                      
+      name: "cluster-secret-store"
+      provider: azure
+      annotations: 
+        "helm.sh/hook": post-install,post-upgrade
+        "helm.sh/hook-weight": "-10"
+      azure:
+        vaultUrl: "https://test-external-secrets.vault.azure.net/"
+        tenantId: "2fad0b06-ed54-4316-b3b3-79e93b19079b"
+        authType: WorkloadIdentity
+        auth:
+          workloadIdentity:
+            serviceAccountRef:
+              name: platform-external-secrets
+              namespace: enkryptai-stack
+
+    serviceAccount:
+      create: false
+      name: platform-external-secrets
+      annotations:
+        azure.workload.identity/client-id: "a32e0a2e-6c3c-4fea-8715-db47833022ec"
+        "helm.sh/hook": pre-install,pre-upgrade
+        "helm.sh/hook-weight": "-11"
+    secrets:
+      - name: onprem
+        target:
+          name: onprem
+          namespace: enkryptai-stack
+        refreshInterval: 5h
+        dataFrom:
+          - extract:
+              key: enkryptai-onprem
+      - name: openfga-env-secret
+        target:
+          name: openfga-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 5h
+        dataFrom:
+          - extract:
+              key: enkryptai-openfga-env-secret
+
+      - name: opensearch-cred
+        target:
+          name: opensearch-cred
+          namespace: enkryptai-stack
+        refreshInterval: 5h
+        dataFrom:
+          - extract:
+              key: enkryptai-opensearch-cred
+
+      # - name: opensearch-securityconfig
+      #   target:
+      #     name: opensearch-securityconfig
+      #     namespace: enkryptai-stack
+      #   refreshInterval: 5h
+      #   dataFrom:
+      #     - extract:
+      #         key: enkryptai-opensearch-securityconfig
+
+      - name: postgres-superuser-secret
+        target:
+          name: postgres-superuser-secret
+          namespace: enkryptai-stack
+        refreshInterval: 5h
+        dataFrom:
+          - extract:
+              key: enkryptai-postgres-superuser-secret
+
+      - name: s3-cred
+        target:
+          name: s3-cred
+          namespace: enkryptai-stack
+        refreshInterval: 5h
+        dataFrom:
+          - extract:
+              key: enkryptai-s3-cred
+
+      - name: superuser-secret
+        target:
+          name: superuser-secret
+          namespace: enkryptai-stack
+        refreshInterval: 5h
+        dataFrom:
+          - extract:
+              key: enkryptai-superuser-secret 
+  external-secrets:
+    installCRDs: false
+    serviceAccount:
+      create: false
+
+  traefik-stack:
+    enabled: true
+  traefik:
+    image:
+      registry: proxy.replicated.com/proxy/full-stack/vpcimage
+      repository: onprem/traefik
+      tag: v3.6.7
+      pullPolicy: IfNotPresent
+    deployment:
+      enabled: true
+      kind: Deployment
+      replicas: 1
+      imagePullSecrets:
+      - name: replicated-registry
+    ingressClass:
+      enabled: true
+      isDefaultClass: true
+      name: traefik
+    service:
+      enabled: true
+      single: true
+      type: LoadBalancer
+
+      

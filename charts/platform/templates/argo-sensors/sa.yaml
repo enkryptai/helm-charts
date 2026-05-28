@@ -3,3 +3,7 @@ kind: ServiceAccount
 metadata:
   name: argo-events-sa
   namespace: argo-events
+{{- with .Values.global.imagePullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | nindent 2 }}
+{{- end }}

@@ -9,9 +9,10 @@ global:
     enabled: false
     namespaceOverride: enkryptai-stack
     installCRDs: false
-    annotations:
-      "helm.sh/hook": post-install,post-upgrade
-      "helm.sh/hook-weight": "-5"
+    # Enable when installing this chart as singular chart
+    # annotations:
+    #   "helm.sh/hook": post-install,post-upgrade
+    #   "helm.sh/hook-weight": "-5"
     clusterSecretStore:
       enabled: false                      
       name: "cluster-secret-store"
@@ -48,6 +49,10 @@ nginxalpine:
 openfgaSyncJob:
   repository: enkryptai-prod/openfga-sync
   tag: v1.3.0
+  annotations: 
+    "helm.sh/hook-weight": "-6"    
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 busybox:
   repository: onprem/busybox
   tag: "latest"
@@ -168,7 +173,7 @@ gateway-kong:
 
   nameOverride: ""
   fullnameOverride: "gateway-kong"
-
+  annotations: []
   service:
     type: ClusterIP
     ports:
@@ -466,6 +471,25 @@ guardrails:
   affinity: {}
 
 supabase:
+
+  kong: 
+    imagePullSecrets: []
+      # - name: example-registry
+  meta:
+    imagePullSecrets: []
+      # - name: example-registry
+  rest:
+    imagePullSecrets: []
+      # - name: example-registry
+  studio:
+    imagePullSecrets: []
+      # - name: example-registry
+  auth:
+    deploymentAnnotations: []
+      # helm.sh/hook: "post-install, post-upgrade"
+      # helm.sh/hook-weight: "22"
+    imagePullSecrets: []
+      # - name: example-registry
   customtemplate:
     enabled: false
   storage:
@@ -474,9 +498,21 @@ supabase:
       repository: vpcdeployment.azurecr.io/onprem/storage-api
       pullPolicy: IfNotPresent
       tag: "v1.19.1"
+    imagePullSecrets: []
+      # - name: example-registry
+    deploymentAnnotations: []
+      # helm.sh/hook: "post-install, post-upgrade"
+      # helm.sh/hook-weight: "22"
     miniomc:
       image: onprem/mc:latest
-
+  minio:
+    enabled: true
+    image:
+      repository: vpcdeployment.azurecr.io/onprem/minio
+      pullPolicy: IfNotPresent
+      tag: "latest"
+    imagePullSecrets: []
+    # - name: example-registry
   ingress:
     enabled: true
     className: nginx
@@ -500,8 +536,8 @@ openfga:
     repository: vpcdeployment.azurecr.io/onprem/openfga
     pullPolicy: Always
     tag: "v1.8.9"
-
   imagePullSecrets: []
+  # - name: replicated-registry
   nameOverride: "openfga"
   fullnameOverride: "openfga"
 
@@ -513,7 +549,8 @@ openfga:
     name: ""
 
   annotations: {}
-
+  # helm.sh/hook: "post-install, post-upgrade"
+  # helm.sh/hook-weight: "26"
   podAnnotations: {}
   podExtraLabels: {}
 

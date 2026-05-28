@@ -3,10 +3,10 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: openfga-sync
+  {{- with .Values.openfgaSyncJob.annotations }}
   annotations:
-    "helm.sh/hook-weight": "-6"
-    "helm.sh/hook": post-install
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   backoffLimit: 5
   template:

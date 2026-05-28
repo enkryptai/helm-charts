@@ -44,6 +44,21 @@ entries:
     version: 1.0.6
   enkryptai-stack:
   - apiVersion: v2
+    appVersion: 1.1.23
+    created: "2026-05-28T08:59:53.28604277+05:30"
+    dependencies:
+    - alias: openfga
+      name: openfga
+      repository: https://openfga.github.io/helm-charts
+      version: 0.2.26
+    description: A Helm chart for Kubernetes
+    digest: 26e430758d6dd702af58c3db69a85827e6c66aabd0878c2b34e8ba4d1a2401c0
+    name: enkryptai-stack
+    type: application
+    urls:
+    - https://enkryptai.github.io/helm-charts/helm-release/enkryptai-stack-1.1.23.tgz
+    version: 1.1.23
+  - apiVersion: v2
     appVersion: 1.1.22
     created: "2026-05-28T09:05:25.0136701+05:30"
     dependencies:

@@ -2,8 +2,10 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: create-s3-buckets
+  {{- with .Values.s3Bucket.annotations }}
   annotations:
-    "helm.sh/hook": post-install, post-upgrade
+  {{ toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:

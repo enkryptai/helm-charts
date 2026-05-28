@@ -53,7 +53,7 @@ opensearch:
   initHelper:
     image: "vpcdeployment.azurecr.io/onprem/busybox:latest"
   security:
-  securityconfig: true
+  securityconfig: false
   users:
     admin:
       hash: ""  # add hash of the opensearch-cred password 
@@ -402,7 +402,7 @@ externalSecret:
       helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
   
   # use below annotations when installing platform as a singular chart
-  # annotations: 
+  annotations: {}
   #   "helm.sh/hook": post-install,post-upgrade
   #   "helm.sh/hook-weight": "-5"
 
@@ -410,7 +410,7 @@ externalSecret:
     enabled: false                      
     name: "cluster-secret-store"
     # use below annotations when installing platform as a singular chart
-    # annotations: 
+    annotations: {}
     #   "helm.sh/hook": post-install,post-upgrade
     #   "helm.sh/hook-weight": "-10"
     provider: "aws" # azure

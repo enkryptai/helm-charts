@@ -10,7 +10,7 @@ global:
     namespaceOverride: enkryptai-stack
     installCRDs: false
     # Enable when installing this chart as singular chart
-    # annotations:
+    annotations: {}
     #   "helm.sh/hook": post-install,post-upgrade
     #   "helm.sh/hook-weight": "-5"
     clusterSecretStore:
@@ -471,7 +471,9 @@ guardrails:
   affinity: {}
 
 supabase:
-
+  s3Bucket:
+    annotations:
+      "helm.sh/hook": post-install, post-upgrade
   kong: 
     imagePullSecrets: []
       # - name: example-registry
@@ -485,7 +487,7 @@ supabase:
     imagePullSecrets: []
       # - name: example-registry
   auth:
-    deploymentAnnotations: []
+    deploymentAnnotations: {}
       # helm.sh/hook: "post-install, post-upgrade"
       # helm.sh/hook-weight: "22"
     imagePullSecrets: []
@@ -500,7 +502,7 @@ supabase:
       tag: "v1.19.1"
     imagePullSecrets: []
       # - name: example-registry
-    deploymentAnnotations: []
+    deploymentAnnotations: {}
       # helm.sh/hook: "post-install, post-upgrade"
       # helm.sh/hook-weight: "22"
     miniomc:

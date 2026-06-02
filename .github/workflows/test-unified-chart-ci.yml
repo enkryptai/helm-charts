@@ -6,7 +6,7 @@ on:
       - test-unified-chat-ci
     paths:
       - 'manifests/**'
-
+  workflow_dispatch:
 permissions:
   contents: write
 

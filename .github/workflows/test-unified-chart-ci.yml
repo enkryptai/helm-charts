@@ -20,9 +20,14 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
+      - name: Helm repo add
+        run: |
+          helm repo add enkryptai https://enkryptai.github.io/helm-charts
+          helm repo update
+        
       - name: Build Dependencies
         run: |
-          helm dependency update manifests
+          helm dependency build manifests
 
       - name: Lint Chart
         run: |
@@ -49,12 +54,12 @@ jobs:
         run: |
           ls -lah release/
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.chart.outputs.version }}
-          name: Release v${{ steps.chart.outputs.version }}
-          generate_release_notes: true
-          files: release/*.tgz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: v${{ steps.chart.outputs.version }}
+      #     name: Release v${{ steps.chart.outputs.version }}
+      #     generate_release_notes: true
+      #     files: release/*.tgz
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

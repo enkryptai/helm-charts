@@ -19,8 +19,10 @@ jobs:
 
       - name: Setup Helm
         uses: azure/setup-helm@v4
-        with:
-          version: v3.20.2
+        # with:
+        #   version: v3.20.2
+      - name: Show Helm Version
+        run: helm version
 
       - name: Helm repo add
         run: |

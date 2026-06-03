@@ -58,6 +58,11 @@ jobs:
         run: |
           ls -lah release/
 
+      - name: Upload Helm Chart
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart
+          path: release/*.tgz
       # - name: Create GitHub Release
       #   uses: softprops/action-gh-release@v2
       #   with:

@@ -3,7 +3,7 @@ name: Release Unified Enkryptai Chart
 on:
   push:
     branches:
-      - test-unified-chat-ci
+      - test-unified-chart-ci
     paths:
       - 'manifests/**'
   workflow_dispatch:

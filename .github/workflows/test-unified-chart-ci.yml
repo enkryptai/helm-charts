@@ -22,7 +22,7 @@ jobs:
 
       - name: Build Dependencies
         run: |
-          helm dependency build manifests
+          helm dependency update manifests
 
       - name: Lint Chart
         run: |

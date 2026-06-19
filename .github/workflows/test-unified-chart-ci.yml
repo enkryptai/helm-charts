@@ -1,0 +1,74 @@
+name: Release Unified Enkryptai Chart
+
+on:
+  push:
+    branches:
+      - test-unified-chart-ci
+    paths:
+      - 'manifests/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        # with:
+        #   version: v3.20.2
+      - name: Show Helm Version
+        run: helm version
+
+      - name: Helm repo add
+        run: |
+          helm repo add enkryptai https://enkryptai.github.io/helm-charts
+          helm repo update
+        
+      - name: Build Dependencies
+        run: |
+          helm dependency build manifests
+
+      - name: Lint Chart
+        run: |
+          helm lint manifests
+
+      - name: Validate Templates
+        run: |
+          helm template manifests > /dev/null
+
+      - name: Extract Chart Metadata
+        id: chart
+        run: |
+          CHART_NAME=$(grep '^name:' manifests/Chart.yaml | awk '{print $2}')
+          CHART_VERSION=$(grep '^version:' manifests/Chart.yaml | awk '{print $2}')
+          echo "name=${CHART_NAME}" >> $GITHUB_OUTPUT
+          echo "version=${CHART_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Package Chart
+        run: |
+          mkdir -p release
+          helm package manifests -d release
+
+      - name: Verify Package Exists
+        run: |
+          ls -lah release/
+
+      - name: Upload Helm Chart
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart
+          path: release/*.tgz
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     tag_name: v${{ steps.chart.outputs.version }}
+      #     name: Release v${{ steps.chart.outputs.version }}
+      #     generate_release_notes: true
+      #     files: release/*.tgz
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

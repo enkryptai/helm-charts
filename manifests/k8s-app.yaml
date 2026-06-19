@@ -1,0 +1,14 @@
+apiVersion: kots.io/v1beta2
+kind: HelmChart
+metadata:
+  name: enkryptai
+spec:
+  helmVersion: v3
+  chart:
+    name: full-stack
+    chartVersion: "0.1.0"
+  releaseName: enkryptai
+  namespace: enkryptai-stack
+  helmUpgradeFlags:
+    - "--timeout=20m"
+    - "--debug"

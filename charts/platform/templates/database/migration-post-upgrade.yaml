@@ -11,6 +11,10 @@ spec:
   backoffLimit: 2
   template:
     spec:
+    {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+      {{ toYaml . | nindent 6 }}
+      {{- end }}
       restartPolicy: Never
       initContainers:
         - name: wait-for-db

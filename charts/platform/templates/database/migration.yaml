@@ -11,6 +11,7 @@ spec:
   backoffLimit: 2
   template:
     spec:
+
       restartPolicy: Never
       initContainers:
         - name: wait-for-db
@@ -46,3 +47,7 @@ spec:
         - name: supabase-migration
           configMap:
             name: supabase-migration
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml . | nindent 8 }}
+      {{- end }}

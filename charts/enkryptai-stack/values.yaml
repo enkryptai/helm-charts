@@ -1,44 +1,24 @@
 global:
-  # imagePullSecrets:
-  # - core-app-pullsecret
+  
   storageClass: ""
-  imagePullPolicy: "IfNotPresent"    
-  domain: "djj.enkryptai.com"
+
+  imagePullPolicy: "IfNotPresent" 
+  imagePullSecrets: []
+
+  domain: "enkryptai.com"
+  
   registry: vpcdeployment.azurecr.io
+
   externalSecrets:
     enabled: false
     namespaceOverride: enkryptai-stack
-    installCRDs: false
-    # Enable when installing this chart as singular chart
-    annotations: {}
-    #   "helm.sh/hook": post-install,post-upgrade
-    #   "helm.sh/hook-weight": "-5"
+    annotations: 
+      "helm.sh/hook": pre-install,pre-upgrade
+      "helm.sh/hook-weight": "-23"
+
     clusterSecretStore:
       enabled: false                      
       name: "cluster-secret-store"
-      provider: azure
-    # use any one of the below based on your secret store provider
-
-    # config for azure key vault
-      # azure:
-      #   vaultUrl: "<Your-Key-Vault-URL>"
-      #   tenantId: "<Your-Tenant-ID>"
-      #   authType: WorkloadIdentity
-      #   auth:
-      #     workloadIdentity:
-      #       serviceAccountRef:
-      #         name: platform-external-secrets
-      #         namespace: enkryptai-stack
-      
-      # config for aws secrets manager 
-      # aws:
-      #   service: SecretsManager
-      #   region: "<region>"
-      #   auth:
-      #     jwt:
-      #       serviceAccountRef:
-      #         name: platform-external-secrets
-      #         namespace: enkryptai-stack
 
 supabaseinitdb:
   repository: onprem/supabase-initdb
@@ -63,7 +43,6 @@ frontend:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
     tag: "7961f95"
-
   serviceAccount:
     create: false
   podAnnotations:
@@ -78,7 +57,7 @@ frontend:
     name: http
 
   ingress:
-    enabled: true
+    enabled: false
     className: nginx
     annotations:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
@@ -92,7 +71,7 @@ frontend:
     tls:
       - hosts:
           - app.example.com
-        secretName: custom-cert-front
+        secretName: frontend-cert
 
   resources:
     limits:
@@ -135,7 +114,9 @@ frontend:
   affinity: {}
 
   configMap:
-    NEXT_PUBLIC_URL: "app.example.com"
+    NEXT_PUBLIC_URL: "https://app.example.com"
+    NEXT_PUBLIC_APIAAS_KONG_URL: "https://api.example.com"
+    NEXT_PUBLIC_SUPABASE_URL:  "https://auth.example.com"
 
   externalSecrets:
     enabled: false
@@ -170,10 +151,9 @@ gateway-kong:
       repository: vpcdeployment.azurecr.io/onprem/fluent-bit
       tag: "3.2.1"
       pullPolicy: IfNotPresent
-
   nameOverride: ""
   fullnameOverride: "gateway-kong"
-  annotations: []
+  annotations: {}
   service:
     type: ClusterIP
     ports:
@@ -197,7 +177,7 @@ gateway-kong:
         targetPort: 5043
 
   ingress:
-    enabled: true
+    enabled: false
     className: nginx
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -211,7 +191,7 @@ gateway-kong:
     tls:
       - hosts:
           - api.example.com
-        secretName: custom-cert-front
+        secretName: gateway-cert
   secrets:
     enabled: false
 
@@ -305,7 +285,7 @@ redteam-proxy:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "prod-v1.0.34"
+    tag: "prod-v1.0.68"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"
@@ -383,7 +363,11 @@ redteam-proxy:
         dataFrom:
           - extract:
               key: enkryptaivpc-redteam-proxy-env-secret
-
+  configMapNamespaces:
+    - enkryptai-stack
+    - redteam-jobs
+  configMap:
+    SUPABASE_URL: "https://auth.example.com"
   secrets:
     enabled: false
 nodeSelector: {}
@@ -395,7 +379,7 @@ affinity: {}
 
 ################GUARDRAILS###########################
 guardrails:
-  enabled: true
+  enabled: false
   replicaCount: 1
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrails
@@ -416,8 +400,8 @@ guardrails:
 
   service:
     type: ClusterIP
-    port: 80
-    targetPort: 80
+    port: 8000
+    targetPort: 8000
     name: http
 
   resources:
@@ -432,7 +416,7 @@ guardrails:
     enabled: true
     httpGet:
       path: /health
-      port: 80
+      port: 8000
     initialDelaySeconds: 90
     timeoutSeconds: 10
 
@@ -440,7 +424,7 @@ guardrails:
     enabled: true
     httpGet:
       path: /health
-      port: 80
+      port: 8000
     initialDelaySeconds: 120
     timeoutSeconds: 30
 
@@ -492,6 +476,7 @@ supabase:
       # helm.sh/hook-weight: "22"
     imagePullSecrets: []
       # - name: example-registry
+      
   customtemplate:
     enabled: false
   storage:
@@ -516,7 +501,7 @@ supabase:
     imagePullSecrets: []
     # - name: example-registry
   ingress:
-    enabled: true
+    enabled: false
     className: nginx
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -530,7 +515,18 @@ supabase:
     tls:
       - hosts:
           - auth.example.com
-        secretName: custom-cert-front
+        secretName: supabse-cert
+
+  configMap:
+    API_EXTERNAL_URL: https://app.example.com
+    GOTRUE_EXTERNAL_REDIRECT_URLS: http://localhost:3000/api/auth/callback,https://auth.example.com/api/auth/callback
+    GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: https://auth.example.com/auth/v1/callback
+    GOTRUE_MAILER_EXTERNAL_HOSTS: auth.example.com,app.example.com,smtp.resend.com
+    GOTRUE_SITE_URL: https://app.example.com
+    SUPABASE_PUBLIC_URL: https://auth.example.com
+    GOTRUE_ADDITIONAL_REDIRECT_URLS: http://localhost:3000/red-teaming, http://localhost:3000/**,
+      https://app.example.com/**
+
 
 openfga:
   replicaCount: 1
@@ -794,7 +790,7 @@ openfga:
   extraObjects: []
 
 litellm:
-  enabled: true
+  enabled: false
   # Default values for litellm.
   replicaCount: 1
 

@@ -43,6 +43,8 @@ spec:
                 {{- else }}
                 name: {{ .Values.secrets.name }}
                 {{- end }}
+            - configMapRef:
+                name: guardrails-env-cm
           {{- with .Values.env }}
           env:
           {{- toYaml . | nindent 12 }}

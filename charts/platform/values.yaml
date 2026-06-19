@@ -2,7 +2,6 @@ global:
   platform: azure
   registry: vpcdeployment.azurecr.io
   imagePullSecrets: []
-  # - name: example-secret
 aws:
   region: "us-west-2"
 backup:
@@ -40,7 +39,7 @@ sensor:
     - name: SENTRY_LITELLM_GATEWAY_TIMEOUT
       value: "300"
     - name: SENTRY_LITELLM_GATEWAY_URL
-      value: "http://enkryptai-litellm.enkryptai-stack:443"
+      value: "http://enkryptai-litellm.enkryptai-stack:4000"
 
 adminpassword:
   secretName: "opensearch-cred"
@@ -250,6 +249,7 @@ platform-core:
     global:
       image:
         registry: vpcdeployment.azurecr.io
+        pullSecretNames: []
   nack:
     imagePullSecrets: []
     # - name: example-registry
@@ -391,21 +391,71 @@ platform-core:
         failed: 3
         errored: 3
 
-externalSecret:
+secrets:
+  enabled: false
+  opensearch:
+    password: password
+    username: user
+  openfga:
+    password: password
+    test-query.sql: query
+    uri: uri
+    username: user
+  supabase:
+    DB_HOST: db-host
+    DB_NAME: sb-db-name
+    DB_PASSWORD: db-password
+    DB_PORT: 5432
+    DB_USER: user
+    grant-admin.sql: ""
+    kong.sql: ""
+    password: password
+    username: username
+  postgres:
+    password: password
+    username: user
+  onprem:
+    API_EXTERNAL_URL: api_url
+    AWS_ACCESS_KEY_ID: keyid
+    AWS_SECRET_ACCESS_KEY: accesskey
+    DASHBOARD_PASSWORD: pwd
+    DASHBOARD_USERNAME: username
+    DB_DRIVER: postgres
+    DB_HOST: host
+    DB_NAME: db
+    DB_PASSWORD: dbpwd
+
+traefik-stack:
+  enabled: false
+traefik:
+  image:
+    registry: vpcdeployment.azurecr.io
+    repository: onprem/traefik
+    tag: v3.6.7
+    pullPolicy: IfNotPresent
+  deployment:
+    enabled: true
+    kind: Deployment
+    replicas: 1
+    imagePullSecrets: []
+    # - name: example-registry
+  ingressClass:
+    enabled: true
+    isDefaultClass: true
+  service:
+    enabled: true
+    single: true
+    type: LoadBalancer
+
+
+
+externalSecrets:
   enabled: false
   namespaceOverride: enkryptai-stack
-  installCRDs: false
-  waitJob:
-    annotations:
-      # helm.sh/hook: post-install,post-upgrade # use this annotation when installing platform as a singular chart
-      helm.sh/hook-weight: "-12"  
-      helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
-  
   # use below annotations when installing platform as a singular chart
   annotations: {}
   #   "helm.sh/hook": post-install,post-upgrade
   #   "helm.sh/hook-weight": "-5"
-
   clusterSecretStore:
     enabled: false                      
     name: "cluster-secret-store"
@@ -413,7 +463,7 @@ externalSecret:
     annotations: {}
     #   "helm.sh/hook": post-install,post-upgrade
     #   "helm.sh/hook-weight": "-10"
-    provider: "aws" # azure
+    provider: "" # azure, aws
     # use any one of the below based on your secret store provider
     
     # config for azure key vault
@@ -437,11 +487,10 @@ externalSecret:
     #         name: platform-external-secrets
     #         namespace: enkryptai-stack
   serviceAccount:
-    create: false # keep sa always false we are creating a separate sa with required annotations for external secrets
     name: platform-external-secrets
     annotations:
-      "helm.sh/hook": pre-install,pre-upgrade
-      "helm.sh/hook-weight": "-11"
+      # "helm.sh/hook": pre-install,pre-upgrade
+      # "helm.sh/hook-weight": "-11"
 
       # If using azure
       # azure.workload.identity/client-id: ""
@@ -502,68 +551,7 @@ externalSecret:
         - extract:
             key: enkryptaivpc-superuser-secret
 
-external-secrets:
-  installCRDs: false  # enable when you are using externalsecret
 
-  # keep sa always false
-  serviceAccount:
-    create: false
-
-secrets:
-  enabled: false
-  opensearch:
-    password: password
-    username: user
-  openfga:
-    password: password
-    test-query.sql: query
-    uri: uri
-    username: user
-  supabase:
-    DB_HOST: db-host
-    DB_NAME: sb-db-name
-    DB_PASSWORD: db-password
-    DB_PORT: 5432
-    DB_USER: user
-    grant-admin.sql: ""
-    kong.sql: ""
-    password: password
-    username: username
-  postgres:
-    password: password
-    username: user
-  onprem:
-    API_EXTERNAL_URL: api_url
-    AWS_ACCESS_KEY_ID: keyid
-    AWS_SECRET_ACCESS_KEY: accesskey
-    DASHBOARD_PASSWORD: pwd
-    DASHBOARD_USERNAME: username
-    DB_DRIVER: postgres
-    DB_HOST: host
-    DB_NAME: db
-    DB_PASSWORD: dbpwd
-
-traefik-stack:
-  enabled: false
-traefik:
-  image:
-    registry: vpcdeployment.azurecr.io
-    repository: onprem/traefik
-    tag: v3.6.7
-    pullPolicy: IfNotPresent
-  deployment:
-    enabled: true
-    kind: Deployment
-    replicas: 1
-    imagePullSecrets: []
-    # - name: example-registry
-  ingressClass:
-    enabled: true
-    isDefaultClass: true
-  service:
-    enabled: true
-    single: true
-    type: LoadBalancer
 # ------------------------------------------------
 # OTEL CONFIG
 # -----------------------------------------------

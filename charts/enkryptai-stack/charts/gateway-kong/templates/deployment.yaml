@@ -31,6 +31,8 @@ spec:
           envFrom:
             - secretRef:
                 name: gateway-migration-env-secret
+            - configMapRef:
+                name: gateway-migration-env-cm
         - name: gateway-migrations-up
           image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
           command:
@@ -40,6 +42,8 @@ spec:
           envFrom:
             - secretRef:
                 name: gateway-migration-env-secret
+            - configMapRef:
+                name: gateway-migration-env-cm
       containers:
         - name: gateway
           image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
@@ -47,6 +51,8 @@ spec:
           envFrom:
             - secretRef:
                 name: gateway-env-secret
+            - configMapRef:
+                name: gateway-env-cm
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             exec:
@@ -81,6 +87,8 @@ spec:
           envFrom:
             - secretRef:
                 name: gateway-env-secret
+            - configMapRef:
+                name: gateway-env-cm
           command:
             - /bin/sh
           args:

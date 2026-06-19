@@ -41,6 +41,8 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
+            - configMapRef:
+                name: onprem
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -100,6 +102,8 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
+            - configMapRef:
+                name: onprem
           env:
             {{- range $key, $value := .Values.storage.environment }}
             - name: {{ $key }}

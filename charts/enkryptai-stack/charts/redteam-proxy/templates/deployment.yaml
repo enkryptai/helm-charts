@@ -43,6 +43,8 @@ spec:
                 {{- else }}
                 name: {{ .Values.secrets.name }}
                 {{- end }}
+            - configMapRef:
+                name: redteam-proxy-env-cm
           {{- if .Values.env }}
           env:
             {{- toYaml .Values.env | nindent 12 }}

@@ -11,3 +11,8 @@ metadata:
 spec:
   jetstream:
     version: 2.12.6
+
+    {{- with .Values.global.imagePullSecrets }}
+    imagePullSecrets:
+    {{ toYaml . | nindent 4 }}
+    {{- end }}

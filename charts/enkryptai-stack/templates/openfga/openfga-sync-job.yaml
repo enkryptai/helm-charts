@@ -11,6 +11,12 @@ spec:
   backoffLimit: 5
   template:
     spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
       restartPolicy: Never
       initContainers:
         - name: wait-for-openfga

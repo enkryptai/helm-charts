@@ -38,6 +38,8 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
+            - configMapRef:
+                name: onprem
           args:
             - server
             - --console-address

@@ -11,6 +11,12 @@ metadata:
 spec:
   template:
     spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
       containers:
       - name: create-buckets
         image: {{.Values.global.registry}}/{{.Values.aws.repository}}:{{.Values.aws.tag}}

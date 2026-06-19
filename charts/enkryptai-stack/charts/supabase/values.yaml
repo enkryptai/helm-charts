@@ -612,3 +612,55 @@ postgresalpine:
 aws:
   repository: onprem/aws-cli
   tag: "2.27.55"
+
+configMap:
+  DB_HOST: supabase-cluster-rw
+  DB_PORT: '5432'
+  DB_SSL: disable
+  DEFAULT_ORGANIZATION_NAME: Enkryptai
+  GOTRUE_API_HOST: 0.0.0.0
+  GOTRUE_API_PORT: '9999'
+  GOTRUE_DISABLE_SIGNUP: 'false'
+  GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
+  GOTRUE_EXTERNAL_GOOGLE_ENABLED: 'true'
+  GOTRUE_EXTERNAL_GOOGLE_SKIP_NONCE_CHECK: 'false'
+  GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED: 'true'
+  GOTRUE_JWT_ADMIN_ROLES: service_role
+  GOTRUE_JWT_AUD: authenticated
+  GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+  GOTRUE_JWT_EXP: '3600'
+  GOTRUE_MAILER_AUTOCONFIRM: 'true'
+  GOTRUE_MAILER_OTP_LENGTH: '7'
+  GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: "\U0001F510 Your Enkrypt AI OTP \U0001F522"
+  GOTRUE_MAILER_TEMPLATES_CONFIRMATION: http://nginx-html-service:80/template.html
+  GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://nginx-html-service:80/template.html
+  GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+  GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+  GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+  GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+  GOTRUE_REFRESH_TOKEN_EXPIRY: '604800'
+  GOTRUE_SESSION_IDLE_TIMEOUT: '0'
+  GOTRUE_SMS_AUTOCONFIRM: 'false'
+  GOTRUE_SMTP_ADMIN_EMAIL: no-reply@enkryptai.com
+  GOTRUE_SMTP_HOST: smtp.resend.com
+  GOTRUE_SMTP_PORT: '587'
+  GOTRUE_SMTP_SENDER_NAME: no-reply@enkryptai.com
+  GOTRUE_URI_ALLOW_LIST: '*'
+  MINIO_LOG_LEVEL: debug
+  NEXT_PUBLIC_ENABLE_LOGS: 'true'
+  SERVER_HEADERS_TIMEOUT: '60'
+  SERVER_KEEP_ALIVE_TIMEOUT: '75'
+  STUDIO_DEFAULT_ORGANIZATION: Enkryptai
+  STUDIO_DEFAULT_PROJECT: enkryptai
+  STUDIO_PG_META_URL: http://enkrytpai-supabase-meta:8080
+  STUDIO_PORT: '3000'
+  SUPABASE_URL: http://enkrytpai-supabase-kong:8000
+  
+  API_EXTERNAL_URL: https://app.example.com
+  GOTRUE_EXTERNAL_REDIRECT_URLS: http://localhost:3000/api/auth/callback,https://auth.example.com/api/auth/callback
+  GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: https://auth.example.com/auth/v1/callback
+  GOTRUE_MAILER_EXTERNAL_HOSTS: auth.{{ .Values.global.domain }},app.example.com,smtp.resend.com
+  GOTRUE_SITE_URL: https://app.example.com
+  SUPABASE_PUBLIC_URL: https://auth.example.com
+  GOTRUE_ADDITIONAL_REDIRECT_URLS: http://localhost:3000/red-teaming, http://localhost:3000/**,
+    https://app.example.com/**

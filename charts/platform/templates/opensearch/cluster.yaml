@@ -15,14 +15,16 @@ spec:
       http:  
         generate: true  
     config:
-      {{- if .Values.opensearch.securityconfig }}
       securityConfigSecret:
         name: "opensearch-securityconfig"
-      {{- end }}
       adminCredentialsSecret:
         name: "opensearch-cred"
   general:
     image: {{.Values.opensearch.general.image }}
+    {{- with .Values.global.imagePullSecrets }}
+    imagePullSecrets:
+    {{ toYaml . | nindent 4 }}
+    {{- end }}
     serviceName: enkryptai-opensearch-cluster
     version: 3.2.0
     setVMMaxMapCount: true
@@ -30,8 +32,16 @@ spec:
       reindex.ssl.verification_mode: none
   initHelper:
     image: {{ .Values.opensearch.initHelper.image }}
+    {{- with .Values.global.imagePullSecrets }}
+    imagePullSecrets:
+    {{ toYaml . | nindent 4 }}
+    {{- end }}
   dashboards:
     image: {{ .Values.opensearch.dashboards.image }}
+    {{- with .Values.global.imagePullSecrets }}
+    imagePullSecrets:
+    {{ toYaml . | nindent 4 }}
+    {{- end }}
     opensearchCredentialsSecret:
       name: opensearch-cred
     enable: true

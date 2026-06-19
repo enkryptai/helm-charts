@@ -169,7 +169,7 @@ handle_pvc_cleanup() {
   echo "WARNING: Deleting PVCs will permanently delete data."
   confirm "Do you want to delete these PVCs?" || return
 
-  kubectl delete pvc -n $NAMESPACE -l 'app.kubernetes.io/instance in (enkryptai-stack,platform)' --ignore-not-found
+  kubectl delete pvc -n $NAMESPACE -l 'app.kubernetes.io/instance in (enkryptai,platform)' --ignore-not-found
   kubectl delete pvc -n $NAMESPACE -l opster.io/opensearch-cluster --ignore-not-found
 
   echo "PVCs deleted."
@@ -179,7 +179,7 @@ main() {
   echo "Starting EnkryptAI cleanup..."
   
   helm uninstall platform -n $NAMESPACE --ignore-not-found
-  helm uninstall enkryptai-stack -n $NAMESPACE --ignore-not-found
+  helm uninstall enkryptai -n $NAMESPACE --ignore-not-found
 
   cleanup_main_resources
   remove_argo_finalizers

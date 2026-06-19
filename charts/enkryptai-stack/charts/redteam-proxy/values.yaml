@@ -38,7 +38,7 @@ env:
   - name: SENTRY_LITELLM_GATEWAY_TIMEOUT
     value: "300"
   - name: SENTRY_LITELLM_GATEWAY_URL
-    value: "http://enkryptai-litellm:443"
+    value: "http://enkryptai-litellm:4000"
 
 resources:
   requests:
@@ -84,3 +84,16 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+configMapNamespaces:
+  - enkryptai-stack
+  - redteam-jobs
+configMap:
+  # NEXT_PUBLIC_SUPABASE_URL: "https://auth.example.com/"
+  ENDPOINT: http://supabase-storage.enkryptai-stack:5000/s3
+  REDIS_URL: redis://keydb.enkryptai-stack:6379
+  REGION: us-east-1
+  SENTRY_LITELLM_GATEWAY_TIMEOUT: "300"
+  SENTRY_LITELLM_GATEWAY_URL: http://enkryptai-litellm.enkryptai-stack:4000
+  SIERRA_RELEASE: 59df177a7029c49f66ea01c0dddfbb5552b64f6d393ffe98a1ffa8bfaa0599d2
+  SUPABASE_STORAGE_URL: http://supabase-storage.enkryptai-stack:5000/s3
+  SUPABASE_URL: "https://auth.example.com"

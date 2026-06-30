@@ -2,19 +2,16 @@ apiVersion: v2
 name: enkryptai
 description: A Helm chart for Kubernetes
 type: application
-version: 0.1.0
-appVersion: "0.1.0"
+version: 0.1.1
+appVersion: "0.1.1"
 dependencies:
 
   - alias: platform
     name: platform-stack
     repository: https://enkryptai.github.io/helm-charts
-    version: 1.1.32
+    version: 1.1.33
 
   - alias: enkryptai
     name: enkryptai-stack
     repository: https://enkryptai.github.io/helm-charts
-    version: 1.1.23
-    
-
-
+    version: 1.1.24

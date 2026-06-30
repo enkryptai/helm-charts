@@ -1,38 +1,24 @@
 enkryptai:
   global:
-    # imagePullSecrets: []
+    imagePullSecrets: []
     # - core-app-pullsecret
     storageClass: ""
     imagePullPolicy: "IfNotPresent"
     domain: "djj.enkryptai.com"
     registry: vpcdeployment.azurecr.io
+
     externalSecrets:
       enabled: false
       namespaceOverride: enkryptai-stack
+      annotations: 
+        "helm.sh/hook": pre-install,pre-upgrade
+        "helm.sh/hook-weight": "-25"
+
       clusterSecretStore:
         enabled: false                      
         name: "cluster-secret-store"
-        provider: azure
+        provider: ""
 
-        # azure:
-        #   vaultUrl: "<vaultUrl>"
-        #   tenantId: "tenantId"
-        #   authType: WorkloadIdentity
-        #   auth:
-        #     workloadIdentity:
-        #       serviceAccountRef:
-        #         name: platform-external-secrets
-        #         namespace: enkryptai-stack
-
-        # config for aws secrets manager 
-        # aws:
-        #   service: SecretsManager
-        #   region: "<region>"
-        #   auth:
-        #     jwt:
-        #       serviceAccountRef:
-        #         name: platform-external-secrets
-        #         namespace: enkryptai-stack
   supabaseinitdb:
     repository: onprem/supabase-initdb
     tag: "latest"
@@ -134,9 +120,11 @@ enkryptai:
 
     configMap:
       NEXT_PUBLIC_URL: "https://app.example.com"
+      NEXT_PUBLIC_APIAAS_KONG_URL: "https://api.example.com"
+      NEXT_PUBLIC_SUPABASE_URL:  "https://auth.example.com"
 
     externalSecrets:
-      enabled: true
+      enabled: false
       secrets:
         - name: frontend-env-secret
           target:
@@ -254,7 +242,7 @@ enkryptai:
       targetCPUUtilizationPercentage: 80
 
     externalSecrets:
-      enabled: true
+      enabled: false
       secrets:
         - name: gateway-env-secret
           target:
@@ -297,7 +285,7 @@ enkryptai:
 
   ################REDTEAMING###########################
   redteam-proxy:
-    enabled: true
+    enabled: false
     replicaCount: 2
 
     image:
@@ -363,7 +351,7 @@ enkryptai:
       targetCPUUtilizationPercentage: 80
 
     externalSecrets:
-      enabled: true
+      enabled: false
       secrets:
         - name: redteam-proxy-env-secret
           target:
@@ -381,7 +369,11 @@ enkryptai:
           dataFrom:
             - extract:
                 key: enkryptai-redteam-proxy-env-secret
-
+    configMapNamespaces:
+      - enkryptai-stack
+      - redteam-jobs
+    configMap:
+      SUPABASE_URL: "https://auth.example.com"
     nodeSelector: {}
 
     tolerations: []
@@ -429,7 +421,7 @@ enkryptai:
       enabled: true
       httpGet:
         path: /health
-        port: 80
+        port: 8000
       initialDelaySeconds: 90
       timeoutSeconds: 10
 
@@ -437,7 +429,7 @@ enkryptai:
       enabled: true
       httpGet:
         path: /health
-        port: 80
+        port: 8000
       initialDelaySeconds: 120
       timeoutSeconds: 30
 
@@ -452,7 +444,7 @@ enkryptai:
       targetCPUUtilizationPercentage: 80
 
     externalSecrets:
-      enabled: true
+      enabled: false
       secrets:
         - name: guardrails-env-secret
           target:
@@ -532,6 +524,16 @@ enkryptai:
         - secretName: supabase-tls
           hosts:
             - auth.example.com
+
+    configMap:
+      API_EXTERNAL_URL: https://app.example.com
+      GOTRUE_EXTERNAL_REDIRECT_URLS: http://localhost:3000/api/auth/callback,https://auth.example.com/api/auth/callback
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: https://auth.example.com/auth/v1/callback
+      GOTRUE_MAILER_EXTERNAL_HOSTS: auth.example.com,app.example.com,smtp.resend.com
+      GOTRUE_SITE_URL: https://app.example.com
+      SUPABASE_PUBLIC_URL: https://auth.example.com
+      GOTRUE_ADDITIONAL_REDIRECT_URLS: http://localhost:3000/red-teaming, http://localhost:3000/**,
+        https://app.example.com/**
 
   openfga:
     replicaCount: 1
@@ -797,7 +799,7 @@ enkryptai:
     testContainerSpec: {}
     extraObjects: []
   litellm:
-    enabled: true
+    enabled: false
     # Default values for litellm.
     replicaCount: 1
 
@@ -817,8 +819,8 @@ enkryptai:
     # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
     service:
       type: ClusterIP
-      port: 443
-      targetPort: 443
+      port: 4000
+      targetPort: 4000
       name: https
     autoscaling:
       enabled: false
@@ -831,7 +833,7 @@ enkryptai:
         cpu: 1
         memory: 2Gi
     externalSecrets:
-      enabled: true
+      enabled: false
       secrets:
         - name: litellm-gateway-env-secret
           target:
@@ -841,6 +843,7 @@ enkryptai:
           dataFrom:
             - extract:
                 key: enkryptai-litellm-gateway-env-secret
+
     # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     livenessProbe:
       httpGet:
@@ -869,7 +872,7 @@ enkryptai:
       tag: "1776402715"
     strategy:
       type: Recreate
-    imagePullSecrets: []
+
     nameOverride: ""
     fullnameOverride: ""
     podLabels: {}
@@ -902,7 +905,7 @@ enkryptai:
         memory: "12Gi"
         nvidia.com/gpu: 1
     externalSecrets:
-      enabled: true
+      enabled: false
       secrets:
         - name: guardrails-model-secret
           target:
@@ -937,7 +940,7 @@ enkryptai:
       tag: "1773124434"
     strategy:
       type: Recreate
-    imagePullSecrets: []
+
     nameOverride: ""
     fullnameOverride: ""
     podLabels: {}
@@ -1009,7 +1012,7 @@ platform:
     tag: 18.3-alpine3.22
   sensor:
     natsURL: "nats://nats.enkryptai-stack:4222"
-    jobversion: "prod-v1.0.50"
+    jobversion: "prod-v1.0.68"
     jobImage: vpcdeployment.azurecr.io/enkryptai-prod/redteam-job
   env:
     - name: WORKER_TYPE
@@ -1027,7 +1030,7 @@ platform:
     - name: SENTRY_LITELLM_GATEWAY_TIMEOUT
       value: "300"
     - name: SENTRY_LITELLM_GATEWAY_URL
-      value: "http://enkryptai-litellm.enkryptai-stack:443"
+      value: "http://enkryptai-litellm.enkryptai-stack:4000"
   adminpassword:
     secretName: "opensearch-cred"
   clustername: "enkryptai-opensearch"
@@ -1039,7 +1042,7 @@ platform:
     initHelper:
       image: "vpcdeployment.azurecr.io/onprem/busybox:latest"
     security:
-    securityconfig: false  # enable if using external secrets
+    securityconfig: false
     users:
       admin:
         hash: "" # provide if using external secrets
@@ -1048,7 +1051,7 @@ platform:
       kong_logs_plugin: 
         hash: ""  # provide if using external secrets
       kibana_read_only:
-        hash: ""  # provide if using external secrets
+        hash: ""
 
   platform-core:
     namespaces:
@@ -1328,7 +1331,7 @@ platform:
       images:
         tag: ""
         pullPolicy: Always
-        pullSecrets: 
+        pullSecrets: []
         # - name: replicated-registry
       singleNamespace: false
       server:
@@ -1371,23 +1374,27 @@ platform:
           completed: 10
           failed: 3
           errored: 3
-  externalSecret:
+
+  externalSecrets:
     enabled: false
     namespaceOverride: enkryptai-stack
-    waitJob:
-      annotations:
-        helm.sh/hook-weight: "-12"
-        helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+
+    annotations:
+      "helm.sh/hook": pre-install,pre-upgrade
+      "helm.sh/hook-weight": "-25"
+
     clusterSecretStore:
       enabled: false                      
       name: "cluster-secret-store"
-      provider: azure
-      annotations: 
-        "helm.sh/hook": post-install,post-upgrade
-        "helm.sh/hook-weight": "-10"
+      annotations:
+        "helm.sh/hook": pre-install,pre-upgrade
+        "helm.sh/hook-weight": "-29"
+
+      provider: "" # azure/aws
+
       # azure:
-      #   vaultUrl: "<vaultUrl>"
-      #   tenantId: "tenantId"
+      #   vaultUrl: ""
+      #   tenantId: ""
       #   authType: WorkloadIdentity
       #   auth:
       #     workloadIdentity:
@@ -1395,7 +1402,6 @@ platform:
       #         name: platform-external-secrets
       #         namespace: enkryptai-stack
 
-      # config for aws secrets manager 
       # aws:
       #   service: SecretsManager
       #   region: "<region>"
@@ -1404,20 +1410,25 @@ platform:
       #       serviceAccountRef:
       #         name: platform-external-secrets
       #         namespace: enkryptai-stack
-
+      
     serviceAccount:
-      create: false
       name: platform-external-secrets
       annotations:
-        azure.workload.identity/client-id: ""
         "helm.sh/hook": pre-install,pre-upgrade
-        "helm.sh/hook-weight": "-11"
+        "helm.sh/hook-weight": "-30"
+
+        # If using AZURE
+        # azure.workload.identity/client-id: ""
+
+        # If Using AWS
+        # eks.amazonaws.com/role-arn: "<external-secret-role-arn>"
+
     secrets:
       - name: onprem
         target:
           name: onprem
           namespace: enkryptai-stack
-        refreshInterval: 5h
+        refreshInterval: 120m
         dataFrom:
           - extract:
               key: enkryptai-onprem
@@ -1425,7 +1436,7 @@ platform:
         target:
           name: openfga-env-secret
           namespace: enkryptai-stack
-        refreshInterval: 5h
+        refreshInterval: 120m
         dataFrom:
           - extract:
               key: enkryptai-openfga-env-secret
@@ -1434,15 +1445,17 @@ platform:
         target:
           name: opensearch-cred
           namespace: enkryptai-stack
-        refreshInterval: 5h
+        refreshInterval: 120m
         dataFrom:
           - extract:
               key: enkryptai-opensearch-cred
+
+
       - name: postgres-superuser-secret
         target:
           name: postgres-superuser-secret
           namespace: enkryptai-stack
-        refreshInterval: 5h
+        refreshInterval: 120m
         dataFrom:
           - extract:
               key: enkryptai-postgres-superuser-secret
@@ -1451,7 +1464,7 @@ platform:
         target:
           name: s3-cred
           namespace: enkryptai-stack
-        refreshInterval: 5h
+        refreshInterval: 120m
         dataFrom:
           - extract:
               key: enkryptai-s3-cred
@@ -1460,14 +1473,10 @@ platform:
         target:
           name: superuser-secret
           namespace: enkryptai-stack
-        refreshInterval: 5h
+        refreshInterval: 120m
         dataFrom:
           - extract:
-              key: enkryptai-superuser-secret 
-  external-secrets:
-    installCRDs: false
-    serviceAccount:
-      create: false
+              key: enkryptai-superuser-secret
 
   traefik-stack:
     enabled: false

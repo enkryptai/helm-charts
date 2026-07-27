@@ -129,76 +129,23 @@ gpu-operator:
     image: onprem/kubevirt-gpu-device-plugin
     version: "v1.2.10"
 
-keydb:
+valkey:
   enabled: true
-  nameOverride: "keydb"
-  fullnameOverride: "keydb"
-  imageRepository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/keydb
-  imageTag: x86_64_v6.3.2
-  imagePullPolicy: IfNotPresent
-  nodes: 3
-  password: ""
-  existingSecret: ""
-  existingSecretPasswordKey: "password"
-  port: 6379
-  portName: server
-  internalPort: 6379
-  internalPortName: keydb
-  threads: 2
-  multiMaster: "yes"
-  activeReplicas: "yes"
-  protectedMode: "no"
-  appendonly: "no"
-  podDisruptionBudget:
+  fullnameOverride: "valkey"
+  image:
+    registry: "docker.io"
+    repository: valkey/valkey
+    pullPolicy: IfNotPresent
+    tag: ""
+  replica:
     enabled: true
-    maxUnavailable: 100
-  livenessProbe:
-    enabled: true
-    initialDelaySeconds: 20
-    periodSeconds: 5
-    timeoutSeconds: 5
-    successThreshold: 1
-    failureThreshold: 5
-  readinessProbe:
-    enabled: true
-    custom: {}
-    initialDelaySeconds: 20
-    periodSeconds: 5
-    timeoutSeconds: 1
-    successThreshold: 1
-    failureThreshold: 5
-  readinessProbeRandomUuid: "90f717dd-0e68-43b8-9363-fddaad00d6c9"
-  startupProbe:
-    enabled: true
-    periodSeconds: 5
-    timeoutSeconds: 1
-    failureThreshold: 24
-  persistentVolume:
-    enabled: true
-    accessModes:
-      - ReadWriteOnce
-    size: 1Gi
-  keydb:
-    securityContext: {}
-  service:
-    annotations: {}
-    appProtocol:
-      enabled: false
-  serviceAccount:
-    enabled: false
-    create: true
-    name: ""
-    extraSpec: {}
-  loadBalancer:
-    enabled: false
-    annotations: {}
-    extraSpec: {}
-  serviceMonitor:
-    enabled: false
-  exporter:
-    enabled: false
-  scripts:
-    enabled: false
+    replicas: 2
+    persistence:
+      size: "1Gi"
+      storageClass: "gp3-encrypted"
+      accessModes:
+        - ReadWriteOnce
+  imagePullSecrets: []
 
 nats: 
   enabled: true

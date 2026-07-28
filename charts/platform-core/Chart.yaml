@@ -2,8 +2,8 @@ apiVersion: v2
 name: platform-core
 description: Core dependency components for platform helm chart
 type: application
-version: 1.2.1
-appVersion: "1.2.1"
+version: 1.3.0
+appVersion: "1.3.0"
 dependencies:
   
   - name: argo-events
@@ -49,9 +49,9 @@ dependencies:
     repository: "https://helm.ngc.nvidia.com/nvidia"
     condition: gpu-operator.enabled
   
-  - name: keydb
-    version: 0.48.0
-    alias: keydb
-    repository: "https://enapter.github.io/charts/"
-    condition: keydb.enabled
+  - name: valkey
+    version: 0.10.0
+    alias: valkey
+    repository: "https://valkey.io/valkey-helm/"
+    condition: valkey.enabled
 

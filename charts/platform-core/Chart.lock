@@ -23,8 +23,8 @@ dependencies:
 - name: gpu-operator
   repository: https://helm.ngc.nvidia.com/nvidia
   version: v26.3.1
-- name: keydb
-  repository: https://enapter.github.io/charts/
-  version: 0.48.0
-digest: sha256:5beac88dba2ac7d36e8af5ef361e7dbb09f17a68cb09db89e135238f3324b300
-generated: "2026-05-20T13:58:08.033980253+05:30"
+- name: valkey
+  repository: https://valkey.io/valkey-helm/
+  version: 0.10.0
+digest: sha256:cf937cc5ccc04083e06983aa4275a83f45af7b08dfa21eb491f00ff2ed168b27
+generated: "2026-07-27T17:08:03.678020178+05:30"

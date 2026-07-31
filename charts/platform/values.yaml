@@ -223,11 +223,11 @@ platform-core:
       version: "v1.5.0"
       imagePullSecrets: []
       # - example-registry
-  keydb:
-    imageRepository: vpcdeployment.azurecr.io/onprem/keydb
-    imageTag: x86_64_v6.3.2
-    imagePullSecrets: []
-    #- name: example-registry
+  valkey:
+    image:
+      registry: "vpcdeployment.azurecr.io"
+      repository: onprem/valkey
+      tag: "latest"
   nats:
     natsBox:
       container:

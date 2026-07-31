@@ -61,6 +61,8 @@ spec:
                   envFrom:
                   - secretRef:
                       name: redteam-proxy-env-secret
+                  - configMapRef:
+                      name: redteam-proxy-env-cm
                   image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
                   imagePullPolicy: Always
                   command: ["python", "job/job_service_sync.py"]

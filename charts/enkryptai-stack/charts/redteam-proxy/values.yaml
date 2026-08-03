@@ -90,7 +90,7 @@ configMapNamespaces:
 configMap:
   # NEXT_PUBLIC_SUPABASE_URL: "https://auth.example.com/"
   ENDPOINT: http://supabase-storage.enkryptai-stack:5000/s3
-  REDIS_URL: redis://keydb.enkryptai-stack:6379
+  REDIS_URL: redis://valkey.enkryptai-stack:6379
   REGION: us-east-1
   SENTRY_LITELLM_GATEWAY_TIMEOUT: "300"
   SENTRY_LITELLM_GATEWAY_URL: http://enkryptai-litellm.enkryptai-stack:4000

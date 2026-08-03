@@ -78,6 +78,7 @@ affinity: {}
 
 configMap:
   GR_MODELS_MODE: local
-  REDIS_URL: redis://keydb:6379/2
+  REDIS_URL: redis://valkey:6379/2
   SENTRY_LITELLM_GATEWAY_TIMEOUT: '300'
   SENTRY_LITELLM_GATEWAY_URL: http://enkryptai-litellm:4000
+  SENTRY_GR_MODEL_URL: http://enkryptai-guardrails-model:8080

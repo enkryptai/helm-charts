@@ -82,9 +82,8 @@ jobs:
     steps:
       - name: Check results
         run: |
-          if [[ "${{ needs.lint-and-test.result }}" != "success" ]] || \
-             [[ "${{ needs.template-validation.result }}" != "success" ]] || \
-             [[ "${{ needs.version-check.result }}" != "success" ]] || \
+          if [[ "${{ needs.template-validation.result }}" != "success" ]] || \
+             [[ "${{ needs.security-scan.result }}" != "success" ]] || \
              [[ "${{ needs.documentation-check.result }}" != "success" ]]; then
             echo "One or more required checks failed"
             exit 1

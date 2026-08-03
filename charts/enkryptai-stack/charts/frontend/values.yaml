@@ -85,7 +85,6 @@ affinity: {}
 
 configMap:
 
-  name: frontend-env-cm
   APIAAS_KONG_URL: http://gateway-kong
   DEFAULT_ENTERPRISE: 'true'
   FGA_API_URL: http://openfga:8080

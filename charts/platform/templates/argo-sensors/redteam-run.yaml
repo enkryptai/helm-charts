@@ -1,18 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
-  name: redteam-generate-data-sensor
+  name: redteam-run-sensor
   namespace: argo-events
-  annotations:
-    "helm.sh/hook": post-install, post-upgrade
-    "helm.sh/hook-weight": "10"
-  labels:
-    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  
   dependencies:
   - eventName: redteam
-    eventSourceName: redteam-generate-data
-    name: redteam-generate-data
+    eventSourceName: redteam-run
+    name: redteam-run
   eventBusName: redteam-eventbus
   template:
     serviceAccountName: argo-events-sa
@@ -24,20 +20,15 @@ spec:
         - dest: spec.arguments.parameters.0.value
           src:
             dataKey: body
-            dependencyName: redteam-generate-data
+            dependencyName: redteam-run
         source:
           resource:
             apiVersion: argoproj.io/v1alpha1
             kind: Workflow
             metadata:
-              generateName: redteam-generate-data-job-
+              generateName: redteam-run-job-
               namespace: redteam-jobs
             spec:
-              tolerations:
-              - effect: NoSchedule
-                key: app
-                operator: Equal
-                value: redteaming
               affinity:
                 nodeAffinity:
                   requiredDuringSchedulingIgnoredDuringExecution:
@@ -52,26 +43,33 @@ spec:
                 - name: event-data
                   value: '{{"{{.Input.body}}"}}'
               entrypoint: process-order
-              {{- with .Values.global.imagePullSecrets }}
-              imagePullSecrets:
-              {{ toYaml . | nindent 14 }}
-              {{- end }}
               templates:
               - container:
-                  {{- if $.Values.sensor.env }}
+                  command:
+                  - python
+                  - -m
+                  - sentry.redteam.runner
                   env:
-                    {{- toYaml $.Values.sensor.env | nindent 20 }}
-                  {{- end }}
+                  - name: PYTHONPATH
+                    value: /app
+                  - name: NATS_URL
+                    value: nats://nats.nats:4222
+                  - name: RT_NATS_PAYLOAD
+                    value: '{{"{{inputs.parameters.event-data}}"}}'
                   envFrom:
                   - secretRef:
                       name: redteam-proxy-env-secret
                   - configMapRef:
-                      name: redteam-proxy-env-cm
+                      name: redteam-proxy-env-config
                   image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
-                  imagePullPolicy: Always
-                  command: ["python", "job/job_service_sync.py"]
+                  workingDir: /app
                 inputs:
                   parameters:
                   - name: event-data
                 name: process-order
+              tolerations:
+              - effect: NoSchedule
+                key: app
+                operator: Equal
+                value: redteaming
       name: argo-workflow-trigger

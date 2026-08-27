@@ -148,12 +148,16 @@ apiVersion: argoproj.io/v1alpha1
 kind: EventSource
 metadata:
   name: redteam-run
+  namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install, post-upgrade
 spec:
   insecure: true
   eventBusName: redteam-eventbus 
   nats:
     redteam:
-      url: nats://nats.nats:4222
+      url: {{ .Values.sensor.natsURL }}
       jsonBody: true
       subject: run.request
       connectionBackoff:

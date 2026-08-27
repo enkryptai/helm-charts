@@ -40,6 +40,8 @@ sensor:
       value: "300"
     - name: SENTRY_LITELLM_GATEWAY_URL
       value: "http://enkryptai-litellm.enkryptai-stack:4000"
+    - name: PYTHONPATH
+      value: /app
 
 adminpassword:
   secretName: "opensearch-cred"

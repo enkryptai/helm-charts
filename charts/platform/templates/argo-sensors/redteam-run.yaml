@@ -3,8 +3,12 @@ kind: Sensor
 metadata:
   name: redteam-run-sensor
   namespace: argo-events
+  annotations:
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook": post-install, post-upgrade
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
-  
   dependencies:
   - eventName: redteam
     eventSourceName: redteam-run
@@ -43,26 +47,27 @@ spec:
                 - name: event-data
                   value: '{{"{{.Input.body}}"}}'
               entrypoint: process-order
+              {{- with .Values.global.imagePullSecrets }}
+              imagePullSecrets:
+              {{ toYaml . | nindent 14 }}
+              {{- end }}
               templates:
               - container:
                   command:
                   - python
                   - -m
                   - sentry.redteam.runner
-                  env:
-                  - name: PYTHONPATH
-                    value: /app
-                  - name: NATS_URL
-                    value: nats://nats.nats:4222
-                  - name: RT_NATS_PAYLOAD
-                    value: '{{"{{inputs.parameters.event-data}}"}}'
                   envFrom:
                   - secretRef:
                       name: redteam-proxy-env-secret
                   - configMapRef:
-                      name: redteam-proxy-env-config
+                      name: redteam-proxy-env-cm
                   image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
                   workingDir: /app
+                  {{- if $.Values.sensor.env }}
+                  env:
+                    {{- toYaml $.Values.sensor.env | nindent 20 }}
+                  {{- end }}
                 inputs:
                   parameters:
                   - name: event-data

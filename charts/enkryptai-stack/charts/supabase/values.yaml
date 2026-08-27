@@ -655,7 +655,7 @@ configMap:
   STUDIO_PG_META_URL: http://enkrytpai-supabase-meta:8080
   STUDIO_PORT: '3000'
   SUPABASE_URL: http://enkrytpai-supabase-kong:8000
-  
+  DB_DRIVER: postgres
   API_EXTERNAL_URL: https://app.example.com
   GOTRUE_EXTERNAL_REDIRECT_URLS: http://localhost:3000/api/auth/callback,https://auth.example.com/api/auth/callback
   GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: https://auth.example.com/auth/v1/callback
@@ -664,3 +664,9 @@ configMap:
   SUPABASE_PUBLIC_URL: https://auth.example.com
   GOTRUE_ADDITIONAL_REDIRECT_URLS: http://localhost:3000/red-teaming, http://localhost:3000/**,
     https://app.example.com/**
+  GOTRUE_EXTERNAL_AZURE_ENABLED: "true"
+  GOTRUE_EXTERNAL_AZURE_REDIRECT_URI: ""
+  GOTRUE_EXTERNAL_URL: ""
+  GOTRUE_SAML_DEFAULT_REDIRECT_URL: ""
+  GOTRUE_SAML_ENABLED: "true"
+  S3_PROTOCOL_ALLOWS_SERVICE_KEY_AS_SECRET: "true"

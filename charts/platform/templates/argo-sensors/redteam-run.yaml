@@ -1,18 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
 metadata:
-  name: redteam-generate-data-sensor
+  name: redteam-run-sensor
   namespace: argo-events
   annotations:
-    "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "10"
+    "helm.sh/hook": post-install, post-upgrade
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   dependencies:
   - eventName: redteam
-    eventSourceName: redteam-generate-data
-    name: redteam-generate-data
+    eventSourceName: redteam-run
+    name: redteam-run
   eventBusName: redteam-eventbus
   template:
     serviceAccountName: argo-events-sa
@@ -24,20 +24,15 @@ spec:
         - dest: spec.arguments.parameters.0.value
           src:
             dataKey: body
-            dependencyName: redteam-generate-data
+            dependencyName: redteam-run
         source:
           resource:
             apiVersion: argoproj.io/v1alpha1
             kind: Workflow
             metadata:
-              generateName: redteam-generate-data-job-
+              generateName: redteam-run-job-
               namespace: redteam-jobs
             spec:
-              tolerations:
-              - effect: NoSchedule
-                key: app
-                operator: Equal
-                value: redteaming
               affinity:
                 nodeAffinity:
                   requiredDuringSchedulingIgnoredDuringExecution:
@@ -58,20 +53,28 @@ spec:
               {{- end }}
               templates:
               - container:
-                  {{- if $.Values.sensor.env }}
-                  env:
-                    {{- toYaml $.Values.sensor.env | nindent 20 }}
-                  {{- end }}
+                  command:
+                  - python
+                  - -m
+                  - sentry.redteam.runner
                   envFrom:
                   - secretRef:
                       name: redteam-proxy-env-secret
                   - configMapRef:
                       name: redteam-proxy-env-cm
                   image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
-                  imagePullPolicy: Always
-                  command: ["python", "job/job_service_sync.py"]
+                  workingDir: /app
+                  {{- if $.Values.sensor.env }}
+                  env:
+                    {{- toYaml $.Values.sensor.env | nindent 20 }}
+                  {{- end }}
                 inputs:
                   parameters:
                   - name: event-data
                 name: process-order
+              tolerations:
+              - effect: NoSchedule
+                key: app
+                operator: Equal
+                value: redteaming
       name: argo-workflow-trigger

@@ -97,3 +97,7 @@ configMap:
   SIERRA_RELEASE: 59df177a7029c49f66ea01c0dddfbb5552b64f6d393ffe98a1ffa8bfaa0599d2
   SUPABASE_STORAGE_URL: http://supabase-storage.enkryptai-stack:5000/s3
   SUPABASE_URL: "https://auth.example.com"
+  RELAY_BACKPLANE: redis
+  RELAY_DB_LOG: "true"  
+  RELAY_ENDPOINT: http://redteam-proxy.redteam-jobs:9091/relay
+  RELAY_REDIS_URL: redis://valkey.dev:6379/3

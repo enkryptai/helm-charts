@@ -1,9 +1,9 @@
 apiVersion: opensearch.opster.io/v1
 kind: OpenSearchISMPolicy
 metadata:
-  name: rollbar-policy
+  name: rollover-policy
   annotations:
-    helm.sh/hook-weight: "18"
+    helm.sh/hook-weight: "17"
     helm.sh/hook: "post-install,post-upgrade"
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -12,10 +12,16 @@ spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
 
+  # The id the index templates point at (opendistro.index_state_management.policy_id).
+  policyId: rollover_policy
+
   description: "ISM policy equivalent to ES ILM"
 
   defaultState: hot
 
+  # Auto-attach to the data streams and the otel logs index. Priority 1000 (not 999) so an upgrade
+  # still works on a cluster where the retired rollbar-policy (priority 999, same patterns) exists:
+  # ISM rejects two policies with overlapping patterns at the same priority.
   ismTemplate:
     indexPatterns:
       - otel-*
@@ -25,17 +31,14 @@ spec:
       - leaderboard
       - red_teaming
       - .ds-*
-    priority: 999
+    priority: 1000
 
   states:
     - name: hot
       actions:
         - rollover:
             minIndexAge: "1d"
-            minSize: "50gb"
-
-        - replicaCount:
-            numberOfReplicas: 1
+            minPrimaryShardSize: "10gb"
 
       transitions:
         - stateName: warm
@@ -46,16 +49,10 @@ spec:
       actions:
         - readOnly: {}
 
-        - forceMerge:
-            maxNumSegments: 1
-
-        - replicaCount:
-            numberOfReplicas: 0
-
       transitions:
         - stateName: delete
           conditions:
-            minIndexAge: "{{ .Values.opensearch.ism.retentionDays }}d"
+            minIndexAge: "30d"
 
     - name: delete
       actions:

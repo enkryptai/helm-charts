@@ -16,49 +16,43 @@ spec:
   dataStream: {}
   template:
     mappings:
-      dynamic: "false"
+      dynamic: 'false'
       dynamic_templates:
-      - attack_method_params:
+      - rtv2_summary_category_asr:
+          path_match: response.body.summary.categories.*.asr
+          mapping:
+            type: float
+            ignore_malformed: true
+      - rtv2_summary_category_dicts:
+          path_match: response.body.summary.categories.*.*
+          match_mapping_type: object
           mapping:
             type: flat_object
-          path_match: request.body.redteam_test_configurations.*.attack_methods.*.*.params
-      - attack_method_names:
-          mapping:
-            fields:
-              keyword:
-                ignore_above: 256
-                type: keyword
-            type: text
-          match_pattern: regex
-          path_match: request.body.redteam_test_configurations.*.attack_methods.*.*
-          unmatch: ^params$
       properties:
         '@timestamp':
           type: date
-        authenticated_entity:
-          properties:
-            id:
-              type: keyword
-        client_ip:
-          type: keyword
-        consumer:
-          properties:
-            created_at:
-              type: long
-            custom_id:
-              type: keyword
-            id:
-              type: keyword
-            org_id:
-              type: keyword
-            project_name:
-              type: keyword
-            updated_at:
-              type: long
-            username:
-              type: keyword
+        started_at:
+          type: long
         correlation_id:
-          type: keyword
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        route:
+          properties:
+            name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            paths:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
         latencies:
           properties:
             kong:
@@ -67,342 +61,869 @@ spec:
               type: long
             request:
               type: long
+        client_ip:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        upstream_uri:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        authenticated_entity:
+          properties:
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        consumer:
+          properties:
+            created_at:
+              type: long
+            custom_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            updated_at:
+              type: long
+            username:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            org_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            project_name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
         request:
           properties:
+            is_public:
+              type: boolean
+            is_rtv2:
+              type: boolean
+            audit:
+              properties:
+                client_ip:
+                  type: keyword
+                  ignore_above: 64
+                client_user_agent:
+                  type: keyword
+                  ignore_above: 512
+                client_source:
+                  type: keyword
+                  ignore_above: 32
+                session_id:
+                  type: keyword
+                  ignore_above: 64
+                auth_type:
+                  type: keyword
+                  ignore_above: 32
+            type:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            coc_policy_id:
+              type: long
+            coc_policy_name:
+              type: keyword
+              ignore_above: 256
+            model_id:
+              type: long
+            deployment_id:
+              type: long
+            is_playground:
+              type: boolean
+            rt_credit_cost:
+              type: long
+              ignore_malformed: true
+            project_credits_used:
+              type: long
+              ignore_malformed: true
+            project_over_limit:
+              type: boolean
+            credits_used:
+              type: long
+              ignore_malformed: true
+            credits_limit:
+              type: long
+              ignore_malformed: true
+            over_limit:
+              type: boolean
+            credit_would_cost:
+              type: long
+              ignore_malformed: true
+            project_credits_limit:
+              type: long
+              ignore_malformed: true
+            exit_time:
+              type: float
+            id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            method:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            ngx_req_id:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            rt_metering_mode:
+              type: keyword
+              ignore_above: 256
+            rt_credit_error:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
             body:
               properties:
-                attacks:
+                user_metadata:
+                  type: flat_object
+                target:
+                  properties:
+                    endpoint:
+                      type: keyword
+                      ignore_above: 1024
+                    model_name:
+                      type: keyword
+                      ignore_above: 256
+                    provider:
+                      type: keyword
+                      ignore_above: 256
+                    system_type:
+                      type: keyword
+                      ignore_above: 256
+                    system_prompt:
+                      type: text
+                    input_modalities:
+                      type: keyword
+                      ignore_above: 256
+                    output_modalities:
+                      type: keyword
+                      ignore_above: 256
+                    tools:
+                      properties:
+                        name:
+                          type: keyword
+                          ignore_above: 256
+                        description:
+                          type: text
+                        parameters:
+                          type: flat_object
+                risk_categories:
+                  type: flat_object
+                compliance_frameworks:
                   type: keyword
-                metadata:
+                  ignore_above: 256
+                context:
                   properties:
-                    email_id:
-                      type: keyword
-                    user_id:
-                      type: keyword
-                redteam_test_configurations:
+                    system_description:
+                      type: text
+                    policy_description:
+                      type: text
+                generation_config:
                   properties:
-                    access_control_and_permissions_test:
+                    dataset_name:
+                      type: keyword
+                      ignore_above: 256
+                    max_prompts:
+                      type: long
+                      ignore_malformed: true
+                    include_standard_library:
+                      type: boolean
+                    seed_prompts:
                       properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    access_control_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    adv_bias_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    adv_command_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    adv_competitor_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    adv_info_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    adv_pii_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    adv_tool_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    agent_behaviour_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    agent_output_quality_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    alignment_and_governance_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    bias:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        test_methods:
+                        prompt:
+                          type: text
+                        category:
                           type: keyword
-                    bias_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    cbrn_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    competitor_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        competitors_list:
-                          type: keyword
-                        sample_percentage:
-                          type: long
-                    copyright_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    custom_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    governance_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    hallucination:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        test_methods:
-                          type: keyword
-                    harmful_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    human_factors_and_societal_impact_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    infrastructure_and_integration_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    input_and_content_integrity_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    insecure_code_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    jailbreak:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        test_methods:
-                          type: keyword
-                    malware:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        test_methods:
-                          type: keyword
-                    misinformation_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    physical_and_actuation_safety_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    pii_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    privacy_attack:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        test_methods:
-                          type: keyword
-                    privacy_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    reliability_and_monitoring_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    reliability_and_observability_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    security_and_privacy_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    sponge_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    system_prompt_extractions_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    tool_extraction_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    tool_misuse_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    toxicity:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        test_methods:
-                          type: keyword
-                    toxicity_test:
-                      properties:
-                        attack_methods:
-                          enabled: true
-                          type: object
-                        sample_percentage:
-                          type: long
-                    toxicityexploitation:
-                      properties:
-                        sample_percentage:
-                          type: long
-                        test_methods:
-                          type: keyword
+                          ignore_above: 256
+                run_name:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                attack_params:
+                  type: flat_object
+                attack_config:
+                  type: flat_object
+                system_prompt:
+                  type: text
+                goal:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                system_name:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                system_summary:
+                  type: text
+                deployment_context:
+                  type: text
+                grounding_rules:
+                  type: text
+                attacks:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
                 target_model_configuration:
                   properties:
+                    model_name:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    testing_for:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    model_provider:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
                     metadata:
                       properties:
                         enkryptai:
                           properties:
                             deployment_name:
-                              type: keyword
+                              type: text
+                              fields:
+                                keyword:
+                                  type: keyword
+                                  ignore_above: 256
                             project:
+                              type: text
+                              fields:
+                                keyword:
+                                  type: keyword
+                                  ignore_above: 256
+                redteam_test_configurations:
+                  properties:
+                    jailbreak:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        test_methods:
+                          type: text
+                          fields:
+                            keyword:
                               type: keyword
-                    model_name:
-                      type: keyword
-                    model_provider:
-                      type: keyword
-                    testing_for:
-                      type: keyword
-            coc_policy_id:
-              type: long
-            deployment_id:
-              type: long
-            exit_time:
-              type: float
-            id:
-              type: keyword
-            is_playground:
-              type: boolean
-            is_public:
-              type: boolean
-            method:
-              type: keyword
-            model_id:
-              type: long
-            ngx_req_id:
-              type: keyword
-            type:
-              type: keyword
+                              ignore_above: 256
+                    malware:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        test_methods:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    privacy_attack:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        test_methods:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    hallucination:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        test_methods:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    toxicity:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        test_methods:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    bias:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        test_methods:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    bias_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    cbrn_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    harmful_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    insecure_code_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    toxicity_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    pii_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    copyright_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    misinformation_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    system_prompt_extractions_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    sponge_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    competitor_test:
+                      properties:
+                        competitors_list:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    adv_bias_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    adv_info_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    adv_tool_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    adv_command_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    adv_pii_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    toxicityexploitation:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        test_methods:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                    adv_competitor_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    custom_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    alignment_and_governance_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    input_and_content_integrity_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    infrastructure_and_integration_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    security_and_privacy_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    human_factors_and_societal_impact_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    access_control_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    physical_and_actuation_safety_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    reliability_and_monitoring_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    governance_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    agent_output_quality_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    tool_misuse_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    privacy_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    reliability_and_observability_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    agent_behaviour_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    access_control_and_permissions_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                    tool_extraction_test:
+                      properties:
+                        sample_percentage:
+                          type: long
+                        attack_methods:
+                          type: object
+                          enabled: false
+                metadata:
+                  properties:
+                    user_id:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    email_id:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
         response:
           properties:
+            status:
+              type: long
+            headers:
+              properties:
+                x-enkrypt-cache-status:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-actioner:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-ratelimit-setting:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-ratelimit-identifier:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-ratelimit-limit-min:
+                  type: float
+                  ignore_malformed: true
+                x-enkrypt-ratelimit-remaining-min:
+                  type: float
+                  ignore_malformed: true
+                x-enkrypt-ratelimit-limit-sec:
+                  type: float
+                  ignore_malformed: true
+                x-enkrypt-ratelimit-remaining-sec:
+                  type: float
+                  ignore_malformed: true
             body:
               properties:
+                user_metadata:
+                  type: flat_object
+                run_id:
+                  type: keyword
+                  ignore_above: 256
+                id:
+                  type: keyword
+                  ignore_above: 256
+                status:
+                  type: keyword
+                  ignore_above: 256
+                status_url:
+                  type: keyword
+                  ignore_above: 1024
+                results_url:
+                  type: keyword
+                  ignore_above: 1024
+                records_url:
+                  type: keyword
+                  ignore_above: 1024
+                websocket_url:
+                  type: keyword
+                  ignore_above: 1024
+                estimated_duration_seconds:
+                  type: long
+                  ignore_malformed: true
+                started_at:
+                  type: date
+                  ignore_malformed: true
+                completed_at:
+                  type: date
+                  ignore_malformed: true
+                summary:
+                  properties:
+                    overall_asr:
+                      type: float
+                      ignore_malformed: true
+                    total_attempts:
+                      type: long
+                      ignore_malformed: true
+                    coverage:
+                      type: float
+                      ignore_malformed: true
+                    categories:
+                      type: object
+                      dynamic: true
+                records:
+                  properties:
+                    query:
+                      type: text
+                    response:
+                      type: text
+                    test_type:
+                      type: keyword
+                      ignore_above: 256
+                    category:
+                      type: keyword
+                      ignore_above: 256
+                    sub_category:
+                      type: keyword
+                      ignore_above: 256
+                    goal:
+                      type: text
+                      fields:
+                        keyword:
+                          type: keyword
+                          ignore_above: 256
+                    success:
+                      type: boolean
+                    response_classification:
+                      type: keyword
+                      ignore_above: 256
+                    reasoning:
+                      type: text
+                    confidence:
+                      type: float
+                      ignore_malformed: true
+                    blob_url:
+                      type: keyword
+                      ignore_above: 1024
+                    tags:
+                      type: flat_object
+                key_findings:
+                  properties:
+                    text:
+                      type: text
+                analysis:
+                  type: text
+                system_prompt:
+                  type: text
+                guardrails_policy:
+                  type: flat_object
+                framework:
+                  type: keyword
+                  ignore_above: 256
+                framework_version:
+                  type: keyword
+                  ignore_above: 256
+                controls:
+                  type: flat_object
+                overall_asr:
+                  type: float
+                  ignore_malformed: true
+                overall_coverage:
+                  type: float
+                  ignore_malformed: true
+                evidence_count:
+                  type: long
+                  ignore_malformed: true
+                generated_at:
+                  type: date
+                  ignore_malformed: true
+                job_id:
+                  type: keyword
+                  ignore_above: 256
+                dataset_name:
+                  type: keyword
+                  ignore_above: 256
+                prompt_count:
+                  type: long
+                  ignore_malformed: true
+                coverage:
+                  type: float
+                  ignore_malformed: true
+                download_url:
+                  type: keyword
+                  ignore_above: 1024
+                created_at:
+                  type: date
+                  ignore_malformed: true
+                system_name:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                system_summary:
+                  type: text
+                deployment_context:
+                  type: text
+                grounding_rules:
+                  type: text
+                risk_categories:
+                  type: flat_object
+                goal:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                duration_seconds:
+                  type: float
+                  ignore_malformed: true
+                results:
+                  properties:
+                    attack_method:
+                      type: keyword
+                      ignore_above: 256
+                    attack_params:
+                      type: flat_object
+                    prompt:
+                      type: text
+                    jailbreak_prompt:
+                      type: text
+                    response:
+                      type: text
+                    success:
+                      type: boolean
+                    response_classification:
+                      type: keyword
+                      ignore_above: 256
+                    reasoning:
+                      type: text
+                    confidence:
+                      type: float
+                      ignore_malformed: true
+                    latency_ms:
+                      type: long
+                      ignore_malformed: true
+                    attack_trace:
+                      type: flat_object
+                signal:
+                  type: keyword
+                  ignore_above: 256
+                resumed_cells:
+                  type: long
+                  ignore_malformed: true
+                skipped_done:
+                  type: long
+                  ignore_malformed: true
+                failed_cells:
+                  type: long
+                  ignore_malformed: true
+                code:
+                  type: keyword
+                  ignore_above: 256
+                category:
+                  type: keyword
+                  ignore_above: 256
+                message:
+                  type: text
+                trace_id:
+                  type: keyword
+                  ignore_above: 256
+                retry_after_s:
+                  type: long
+                  ignore_malformed: true
+                hint:
+                  type: text
+                task_id:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                single_shot:
+                  properties:
+                    success:
+                      type: long
                 iterative:
                   properties:
                     success:
@@ -411,25 +932,9 @@ spec:
                   properties:
                     success:
                       type: long
-                single_shot:
-                  properties:
-                    success:
-                      type: long
-                task_id:
-                  type: keyword
-            status:
-              type: long
-        route:
-          properties:
-            name:
-              type: keyword
-            paths:
-              type: keyword
-        started_at:
-          type: long
-        upstream_uri:
-          type: keyword
     settings:
       index.mapping.total_fields.limit: 3000
       number_of_replicas: 0
       number_of_shards: 1
+      opendistro.index_state_management.policy_id: rollover_policy
+      plugins.index_state_management.rollover_alias: rollover_policy

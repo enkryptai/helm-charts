@@ -7795,6 +7795,2355 @@ data:
     --
     -- Migration Complete
     --
+  049-add-compliance-scans-table.sql: |
+    --
+    -- Migration: 034_add_compliance_scans_table
+    -- Description: Compliance scans. One row per scan_id (platform-generated
+    --              UUID; the NATS subject, log_files FK, and URL path).
+    --              UNIQUE (id, scan_name, project_name) keeps one scan name per
+    --              project per owner; those names stay renameable. Stores the
+    --              provider workspace, encrypted compliance API key, selected
+    --              EVENT_TYPE services, the shared cursor, and last_polled_at
+    --              (written on every successful poll so a frozen cursor can be
+    --              told from a dead pod).
+    --              Also creates public.EVENT_TYPE, public.CONNECTION_STATUS,
+    --              public.PROVIDER. All enum values are defined up front —
+    --              ALTER TYPE ... ADD VALUE cannot run in the same transaction
+    --              that creates the type.
+    --              RLS-locked like every other public business table
+    --              (service_role backend only); see migration 011.
+    --              Identical for dev and prod (only the psql host/path below differ).
+    -- psql -h localhost -U postgres -d postgres -f database/dev/public/migrations/034_add_compliance_scans_table.sql
+    --
+
+
+    BEGIN;
+
+    -- ============================================================================
+    -- Enums. Idempotent CREATE TYPE: 007 is not re-runnable; this one is.
+    -- ============================================================================
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'EVENT_TYPE'
+      ) THEN
+        CREATE TYPE public."EVENT_TYPE" AS ENUM (
+          'CONVERSATION_MESSAGE',
+          'CODEX_LOG',
+          'APP_LOG',
+          'CUSTOM_AGENTS_LOG',
+          'CHATGPT_PLUGIN_SPREADSHEET'
+        );
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'CONNECTION_STATUS'
+      ) THEN
+        CREATE TYPE public."CONNECTION_STATUS" AS ENUM (
+          'active',
+          'paused',
+          'needs_reconnect',
+          'disabled'
+        );
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'PROVIDER'
+      ) THEN
+        CREATE TYPE public."PROVIDER" AS ENUM (
+          'openai',
+          'anthropic'
+        );
+      END IF;
+    END $$;
+
+    COMMENT ON TYPE public."EVENT_TYPE" IS 'Compliance-scan event/log services: CONVERSATION_MESSAGE, CODEX_LOG, APP_LOG, CUSTOM_AGENTS_LOG, CHATGPT_PLUGIN_SPREADSHEET.';
+
+    COMMENT ON TYPE public."CONNECTION_STATUS" IS 'Scan lifecycle: active (pod picks this up), paused, needs_reconnect, disabled.';
+
+    COMMENT ON TYPE public."PROVIDER" IS 'Provider the workspace lives on: openai | anthropic.';
+
+    -- ============================================================================
+    -- Table: compliance_scans
+    -- PK is scan_id. id is the owning subscription and repeats across rows.
+    -- ============================================================================
+
+    CREATE TABLE IF NOT EXISTS public.compliance_scans (
+        scan_id            uuid NOT NULL DEFAULT gen_random_uuid(),
+        id                 uuid NOT NULL,
+        project_name       text NOT NULL DEFAULT 'default',
+        scan_name          text NOT NULL,
+        created_by         uuid NOT NULL,
+        updated_by         uuid NOT NULL,
+        provider           public."PROVIDER" NOT NULL,
+        workspace_id       uuid NOT NULL,
+        compliance_api_key text NOT NULL,
+        event_types        public."EVENT_TYPE"[] NOT NULL,
+        guardrails_name    text NOT NULL,
+        cursor_end_time    timestamp with time zone NOT NULL,
+        cursor_file_id     text,
+        last_polled_at     timestamp with time zone,
+        list_interval_s    integer NOT NULL DEFAULT 60,
+        pending_cap        integer NOT NULL DEFAULT 5000,
+        status             public."CONNECTION_STATUS" NOT NULL,
+        created_at         timestamp with time zone NOT NULL DEFAULT now(),
+        updated_at         timestamp with time zone NOT NULL DEFAULT now()
+    );
+
+    --
+    -- Table / Column Comments
+    --
+
+    COMMENT ON TABLE public.compliance_scans IS 'Compliance scans. PK is scan_id (platform-generated). UNIQUE (id, scan_name, project_name) is one scan name per project per owner; names may be renamed.';
+
+    COMMENT ON COLUMN public.compliance_scans.scan_id IS 'Platform-generated scan id (DEFAULT gen_random_uuid()). Stable single-column key for the NATS subject, log_files FK, and URL paths. Not a provider-side identifier — the OpenAI Compliance API has no connection object.';
+
+    COMMENT ON COLUMN public.compliance_scans.id IS 'Owning subscription (user_id or org_id). Repeats across rows. FK to public.subscription(id).';
+
+    COMMENT ON COLUMN public.compliance_scans.project_name IS 'Project this scan belongs to. Display name; may be renamed.';
+
+    COMMENT ON COLUMN public.compliance_scans.scan_name IS 'User-chosen display name for the scan. May be renamed.';
+
+    COMMENT ON COLUMN public.compliance_scans.created_by IS 'Platform user who started the scan. FK to public.subscription(id).';
+
+    COMMENT ON COLUMN public.compliance_scans.updated_by IS 'Platform user who last updated the scan; initially the same as created_by. FK to public.subscription(id).';
+
+    COMMENT ON COLUMN public.compliance_scans.provider IS 'PROVIDER enum: openai | anthropic.';
+
+    COMMENT ON COLUMN public.compliance_scans.workspace_id IS 'Provider workspace this scan polls.';
+
+    COMMENT ON COLUMN public.compliance_scans.compliance_api_key IS 'Encrypted compliance API key.';
+
+    COMMENT ON COLUMN public.compliance_scans.event_types IS 'Selected EVENT_TYPE services. All share one cursor.';
+
+    COMMENT ON COLUMN public.compliance_scans.guardrails_name IS 'Guardrails policy name; the compliance pod resolves this to a detector config.';
+
+    COMMENT ON COLUMN public.compliance_scans.cursor_end_time IS 'The provider API last_end_time cursor.';
+
+    COMMENT ON COLUMN public.compliance_scans.cursor_file_id IS 'Cursor file id, for audit only.';
+
+    COMMENT ON COLUMN public.compliance_scans.last_polled_at IS 'Set on every successful poll, whether or not new files came back. Distinguishes a frozen cursor on a live pod from a dead pod.';
+
+    COMMENT ON COLUMN public.compliance_scans.list_interval_s IS 'Seconds between list polls. Default 60.';
+
+    COMMENT ON COLUMN public.compliance_scans.pending_cap IS 'Max pending events before the poller backs off. Default 5000.';
+
+    COMMENT ON COLUMN public.compliance_scans.status IS 'CONNECTION_STATUS enum. The pod picks up work with status = active.';
+
+    --
+    -- Primary key, unique, foreign keys. Guarded so the migration is re-runnable.
+    --
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND constraint_name = 'compliance_scans_pkey'
+      ) THEN
+        ALTER TABLE ONLY public.compliance_scans
+          ADD CONSTRAINT compliance_scans_pkey PRIMARY KEY (scan_id);
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND constraint_name = 'compliance_scans_id_scan_name_project_name_key'
+      ) THEN
+        ALTER TABLE ONLY public.compliance_scans
+          ADD CONSTRAINT compliance_scans_id_scan_name_project_name_key
+          UNIQUE (id, scan_name, project_name);
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND constraint_name = 'compliance_scans_id_fkey'
+      ) THEN
+        ALTER TABLE ONLY public.compliance_scans
+          ADD CONSTRAINT compliance_scans_id_fkey
+          FOREIGN KEY (id) REFERENCES public.subscription(id)
+          ON UPDATE CASCADE ON DELETE CASCADE;
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND constraint_name = 'compliance_scans_created_by_fkey'
+      ) THEN
+        ALTER TABLE ONLY public.compliance_scans
+          ADD CONSTRAINT compliance_scans_created_by_fkey
+          FOREIGN KEY (created_by) REFERENCES public.subscription(id)
+          ON UPDATE CASCADE;
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND constraint_name = 'compliance_scans_updated_by_fkey'
+      ) THEN
+        ALTER TABLE ONLY public.compliance_scans
+          ADD CONSTRAINT compliance_scans_updated_by_fkey
+          FOREIGN KEY (updated_by) REFERENCES public.subscription(id)
+          ON UPDATE CASCADE;
+      END IF;
+    END $$;
+
+    --
+    -- Row Level Security: locked (service_role backend only), matching the
+    -- RESTRICTIVE deny-all posture established for every public table in 011.
+    --
+
+    -- anon / authenticated ship with Supabase, but not with a plain-Postgres
+    -- dev/test or on-prem-operator database, where the policy below would fail with
+    -- `role "anon" does not exist`. Create them idempotently — the same guard 014
+    -- uses for `authenticated` and 022 uses for both.
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+            CREATE ROLE anon NOLOGIN NOINHERIT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+            CREATE ROLE authenticated NOLOGIN NOINHERIT;
+        END IF;
+    END
+    $$;
+
+    ALTER TABLE public.compliance_scans ENABLE ROW LEVEL SECURITY;
+
+    DROP POLICY IF EXISTS deny_all_compliance_scans ON public.compliance_scans;
+
+    CREATE POLICY deny_all_compliance_scans
+        ON public.compliance_scans
+        AS RESTRICTIVE FOR ALL TO anon, authenticated
+        USING (false) WITH CHECK (false);
+
+    --
+    -- Indexes for list-by-project queries. UNIQUE is (id, scan_name, project_name),
+    -- so (id, project_name) is not a prefix and would otherwise seq-scan.
+    -- Same shape as 029/030 on guardrails/models/deployments.
+    --
+
+    CREATE INDEX IF NOT EXISTS idx_compliance_scans_user_project
+        ON public.compliance_scans (id, project_name);
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'EVENT_TYPE'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: EVENT_TYPE enum was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'CONNECTION_STATUS'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: CONNECTION_STATUS enum was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'PROVIDER'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: PROVIDER enum was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_scans table was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND column_name = 'last_polled_at'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_scans.last_polled_at was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND constraint_name = 'compliance_scans_pkey'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_scans primary key was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND constraint_name = 'compliance_scans_id_scan_name_project_name_key'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: UNIQUE (id, scan_name, project_name) was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND constraint_name = 'compliance_scans_id_fkey'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_scans.id FK to subscription was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_policy p
+        JOIN pg_class c ON c.oid = p.polrelid
+        JOIN pg_namespace ns ON ns.oid = c.relnamespace
+        WHERE ns.nspname = 'public' AND c.relname = 'compliance_scans'
+          AND p.polname = 'deny_all_compliance_scans'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: deny-all RLS policy was not created';
+      END IF;
+
+      RAISE NOTICE 'SUCCESS: compliance_scans table created and locked down';
+    END $$;
+
+    COMMIT;
+
+    --
+    -- Migration Complete
+    --
+  050-add-log-files-table.sql: |
+    --
+    -- Migration: 035_add_log_files_table
+    -- Description: Per-scan log files opened and closed by the compliance scan
+    --              loop. One row per (scan_id, log_file_id). scan_id FKs
+    --              compliance_scans.scan_id (the PK from 034), so no extra UNIQUE
+    --              is needed. Also creates public.LOG_FILE_STATUS (open, done,
+    --              partial, skipped) — all values up front because ALTER TYPE
+    --              ... ADD VALUE cannot run in the same transaction that
+    --              creates the type. skipped = aged out of OpenAI's 30-day
+    --              retention before download; partial is defined but not yet
+    --              written by the pod.
+    --              Carries four distinct clocks, which is the whole reason the
+    --              column comments below are worth reading: first_event_at /
+    --              last_event_at are the provider's message timestamps inside the
+    --              file, started_at / ended_at are the scanner's own, and end_time
+    --              is when the provider closed the file.
+    --              RLS-locked like every other public business table
+    --              (service_role backend only); see migration 011.
+    --              Requires: migration 034 (compliance_scans, EVENT_TYPE).
+    --              Identical for dev and prod (only the psql host/path below differ).
+    --
+
+
+    BEGIN;
+
+    -- ============================================================================
+    -- Enum: LOG_FILE_STATUS
+    -- ============================================================================
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'LOG_FILE_STATUS'
+      ) THEN
+        CREATE TYPE public."LOG_FILE_STATUS" AS ENUM (
+          'open',
+          'done',
+          'partial',
+          'skipped'
+        );
+      END IF;
+    END $$;
+
+    COMMENT ON TYPE public."LOG_FILE_STATUS" IS 'open | done | partial (defined, not yet written by the pod) | skipped (aged out of OpenAI 30-day retention before download).';
+
+    -- ============================================================================
+    -- Table: log_files
+    -- Opened and closed by the scan loop. One row per log file of a scan.
+    -- ============================================================================
+
+    CREATE TABLE IF NOT EXISTS public.log_files (
+        scan_id        uuid NOT NULL,
+        log_file_id    text NOT NULL,
+        event_type     public."EVENT_TYPE",
+        end_time       timestamp with time zone,
+        file_size      bigint,
+        first_event_at timestamp with time zone,
+        last_event_at  timestamp with time zone,
+        started_at     timestamp with time zone,
+        ended_at       timestamp with time zone,
+        messages_count integer,
+        flagged_count  integer,
+        status         public."LOG_FILE_STATUS" NOT NULL,
+        error          text
+    );
+
+    --
+    -- Table / Column Comments
+    --
+
+    COMMENT ON TABLE public.log_files IS 'Log files opened and closed by the compliance scan loop. One row per (scan_id, log_file_id).';
+
+    COMMENT ON COLUMN public.log_files.scan_id IS 'FK to public.compliance_scans(scan_id). Cascades on scan delete.';
+
+    COMMENT ON COLUMN public.log_files.log_file_id IS 'Provider log-file identifier.';
+
+    COMMENT ON COLUMN public.log_files.event_type IS 'EVENT_TYPE this file covers. NULL when not yet known.';
+
+    COMMENT ON COLUMN public.log_files.end_time IS 'When the provider closed/wrote this log file. Provider clock. There is no matching start time - the provider does not report one, which is why first_event_at exists.';
+
+    COMMENT ON COLUMN public.log_files.first_event_at IS 'Timestamp of the earliest message inside this file. Provider clock, not the scanner''s - use this and last_event_at to say which period the file covers.';
+
+    COMMENT ON COLUMN public.log_files.last_event_at IS 'Timestamp of the latest message inside this file. Provider clock. Pairs with first_event_at; both are NULL until the file is parsed.';
+
+    COMMENT ON COLUMN public.log_files.file_size IS 'File size in bytes, when reported.';
+
+    COMMENT ON COLUMN public.log_files.started_at IS 'When the scan loop opened this file (is_first). Scanner clock - when the work happened, not when the messages did.';
+
+    COMMENT ON COLUMN public.log_files.ended_at IS 'When the scan loop closed this file (is_last). Scanner clock.';
+
+    COMMENT ON COLUMN public.log_files.messages_count IS 'Message count from an aggregation at close time.';
+
+    COMMENT ON COLUMN public.log_files.flagged_count IS 'Flagged-message count from an aggregation at close time.';
+
+    COMMENT ON COLUMN public.log_files.status IS 'LOG_FILE_STATUS: open | done | partial | skipped.';
+
+    COMMENT ON COLUMN public.log_files.error IS 'Error text when status is partial; NULL otherwise.';
+
+    --
+    -- The two event-time columns are added separately as well as declared above:
+    -- CREATE TABLE IF NOT EXISTS is a no-op against a table created by an earlier
+    -- run of this file, so the columns would never appear there.
+    --
+
+    ALTER TABLE public.log_files
+      ADD COLUMN IF NOT EXISTS first_event_at timestamp with time zone,
+      ADD COLUMN IF NOT EXISTS last_event_at  timestamp with time zone;
+
+    --
+    -- Primary key + foreign key. Guarded so the migration is re-runnable.
+    -- Composite PK (scan_id, log_file_id): scan_id alone is not unique across
+    -- files of one scan. FK targets compliance_scans.scan_id (the PK).
+    --
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'log_files'
+          AND constraint_name = 'log_files_pkey'
+      ) THEN
+        ALTER TABLE ONLY public.log_files
+          ADD CONSTRAINT log_files_pkey PRIMARY KEY (scan_id, log_file_id);
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'log_files'
+          AND constraint_name = 'log_files_scan_id_fkey'
+      ) THEN
+        ALTER TABLE ONLY public.log_files
+          ADD CONSTRAINT log_files_scan_id_fkey
+          FOREIGN KEY (scan_id) REFERENCES public.compliance_scans(scan_id)
+          ON DELETE CASCADE;
+      END IF;
+    END $$;
+
+    --
+    -- Row Level Security: locked (service_role backend only), matching the
+    -- RESTRICTIVE deny-all posture established for every public table in 011.
+    --
+
+    -- anon / authenticated ship with Supabase, but not with a plain-Postgres
+    -- dev/test or on-prem-operator database, where the policy below would fail with
+    -- `role "anon" does not exist`. Create them idempotently — the same guard 014
+    -- uses for `authenticated` and 022 uses for both.
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+            CREATE ROLE anon NOLOGIN NOINHERIT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+            CREATE ROLE authenticated NOLOGIN NOINHERIT;
+        END IF;
+    END
+    $$;
+
+    ALTER TABLE public.log_files ENABLE ROW LEVEL SECURITY;
+
+    DROP POLICY IF EXISTS deny_all_log_files ON public.log_files;
+
+    CREATE POLICY deny_all_log_files
+        ON public.log_files
+        AS RESTRICTIVE FOR ALL TO anon, authenticated
+        USING (false) WITH CHECK (false);
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_type t
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'LOG_FILE_STATUS'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: LOG_FILE_STATUS enum was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'log_files'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: log_files table was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'log_files'
+          AND constraint_name = 'log_files_pkey'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: log_files primary key was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'log_files'
+          AND column_name IN ('first_event_at', 'last_event_at')
+        GROUP BY table_name HAVING count(*) = 2
+      ) THEN
+        RAISE EXCEPTION 'FAILED: log_files event-time columns were not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints
+        WHERE table_schema = 'public' AND table_name = 'log_files'
+          AND constraint_name = 'log_files_scan_id_fkey'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: log_files.scan_id FK was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_policy p
+        JOIN pg_class c ON c.oid = p.polrelid
+        JOIN pg_namespace ns ON ns.oid = c.relnamespace
+        WHERE ns.nspname = 'public' AND c.relname = 'log_files'
+          AND p.polname = 'deny_all_log_files'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: deny-all RLS policy was not created';
+      END IF;
+
+      RAISE NOTICE 'SUCCESS: log_files table created and locked down';
+    END $$;
+
+    COMMIT;
+
+    --
+    -- Migration Complete
+    --
+
+  051-add-compliance-aggregate-functions.sql: |
+    --
+    -- Migration: 036_add_compliance_aggregate_functions
+    -- Description: Two read-only aggregates over public.log_files, so the scans
+    --              table and its KPI strip do not have to fold every log-file row
+    --              in the application. PostgREST cannot express GROUP BY, which is
+    --              the whole reason these exist.
+    --              Both are SECURITY INVOKER. They read tables that carry a
+    --              RESTRICTIVE deny-all policy for anon/authenticated (011, 034,
+    --              035), so an invoker who is not service_role sees nothing even
+    --              with the EXECUTE grant — the RLS is the boundary, not the
+    --              grant. Neither function does tenancy of its own: the caller
+    --              passes ids it has already scoped, exactly as the application
+    --              does for every other compliance read.
+    --              Requires: migration 034 (compliance_scans, CONNECTION_STATUS)
+    --              and migration 035 (log_files).
+    --              Identical for dev and prod (only the psql host/path below differ).
+    --
+
+
+    BEGIN;
+
+    -- ============================================================================
+    -- compliance_scan_totals — per-scan rollup for the scans table
+    -- ============================================================================
+    --
+    -- Returns one row per scan that HAS log files. A scan with none is absent
+    -- rather than zero, and the caller renders that difference: nothing aggregated
+    -- yet is not the same answer as a scan that read nothing.
+    --
+    -- messages_count / flagged_count are written when a file closes, so an `open`
+    -- file contributes NULL and COALESCE counts it as zero. These are therefore
+    -- totals for completed work — a number that moved backwards when a file
+    -- reopened would be worse than one that lags.
+    --
+
+    CREATE OR REPLACE FUNCTION public.compliance_scan_totals(p_scan_ids uuid[])
+    RETURNS TABLE (
+        scan_id      uuid,
+        interactions bigint,
+        violations   bigint,
+        files        bigint,
+        started_at   timestamp with time zone
+    )
+    LANGUAGE sql
+    STABLE
+    SECURITY INVOKER
+    SET search_path = public, pg_temp
+    AS $$
+        SELECT lf.scan_id,
+               COALESCE(SUM(lf.messages_count), 0)::bigint,
+               COALESCE(SUM(lf.flagged_count), 0)::bigint,
+               COUNT(*)::bigint,
+               -- Scanner clock, not the provider's: when this scan first did work.
+               MIN(lf.started_at)
+        FROM public.log_files lf
+        WHERE lf.scan_id = ANY(p_scan_ids)
+        GROUP BY lf.scan_id;
+    $$;
+
+    COMMENT ON FUNCTION public.compliance_scan_totals(uuid[]) IS 'Per-scan log_files rollup for the compliance scans table. Scans with no log files are omitted, not returned as zero. Does no tenancy: pass scan ids already scoped by the caller.';
+
+    -- ============================================================================
+    -- compliance_project_totals — the KPI strip above that table
+    -- ============================================================================
+    --
+    -- One row, always. p_project_name NULL means every project of that owner,
+    -- which is what individual (non-org) mode asks for — it is the one account
+    -- type updateQueryWithUser does not filter by project.
+    --
+    -- The flag rate is deliberately NOT returned: it is violations/interactions and
+    -- has to be computed from the sums. Averaging the per-scan rates instead would
+    -- weight a ten-message scan like a ten-million-message one.
+    --
+
+    CREATE OR REPLACE FUNCTION public.compliance_project_totals(
+        p_owner_id     uuid,
+        p_project_name text DEFAULT NULL
+    )
+    RETURNS TABLE (
+        scans           bigint,
+        active          bigint,
+        needs_reconnect bigint,
+        interactions    bigint,
+        violations      bigint
+    )
+    LANGUAGE sql
+    STABLE
+    SECURITY INVOKER
+    SET search_path = public, pg_temp
+    AS $$
+        WITH s AS (
+            SELECT cs.scan_id, cs.status
+            FROM public.compliance_scans cs
+            WHERE cs.id = p_owner_id
+              AND (p_project_name IS NULL OR cs.project_name = p_project_name)
+        )
+        SELECT
+            (SELECT COUNT(*) FROM s)::bigint,
+            (SELECT COUNT(*) FROM s WHERE s.status = 'active')::bigint,
+            -- Its own number because total and active both hide it: the provider
+            -- rejected the key and the scan is silently not running.
+            (SELECT COUNT(*) FROM s WHERE s.status = 'needs_reconnect')::bigint,
+            COALESCE(SUM(lf.messages_count), 0)::bigint,
+            COALESCE(SUM(lf.flagged_count), 0)::bigint
+        FROM s
+        LEFT JOIN public.log_files lf ON lf.scan_id = s.scan_id;
+    $$;
+
+    COMMENT ON FUNCTION public.compliance_project_totals(uuid, text) IS 'Scan counts and log_files totals for one owner, optionally one project (NULL = all projects, which is individual account mode). Does no tenancy: pass an owner id already resolved by the caller.';
+
+    --
+    -- Grants. service_role only, matching every other compliance object.
+    --
+    -- anon / authenticated ship with Supabase but not with a plain-Postgres
+    -- dev/test or on-prem-operator database, where the REVOKE below would fail with
+    -- `role "anon" does not exist`. Create them idempotently, the same guard 035
+    -- uses.
+    --
+
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+            CREATE ROLE anon NOLOGIN NOINHERIT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+            CREATE ROLE authenticated NOLOGIN NOINHERIT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+            CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+        END IF;
+    END
+    $$;
+
+    REVOKE EXECUTE ON FUNCTION public.compliance_scan_totals(uuid[])         FROM PUBLIC, anon, authenticated;
+    REVOKE EXECUTE ON FUNCTION public.compliance_project_totals(uuid, text)  FROM PUBLIC, anon, authenticated;
+
+    GRANT EXECUTE ON FUNCTION public.compliance_scan_totals(uuid[])          TO service_role;
+    GRANT EXECUTE ON FUNCTION public.compliance_project_totals(uuid, text)   TO service_role;
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname = 'compliance_scan_totals'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_scan_totals was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = 'public' AND p.proname = 'compliance_project_totals'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_project_totals was not created';
+      END IF;
+
+      IF NOT has_function_privilege('service_role', 'public.compliance_scan_totals(uuid[])', 'EXECUTE') THEN
+        RAISE EXCEPTION 'FAILED: service_role cannot execute compliance_scan_totals';
+      END IF;
+
+      IF NOT has_function_privilege('service_role', 'public.compliance_project_totals(uuid, text)', 'EXECUTE') THEN
+        RAISE EXCEPTION 'FAILED: service_role cannot execute compliance_project_totals';
+      END IF;
+
+      RAISE NOTICE 'SUCCESS: compliance aggregate functions created and granted';
+    END $$;
+
+    COMMIT;
+
+  052-add-compliance-indexes.sql: |
+    --
+    -- Migration: 037_add_compliance_indexes
+    -- Description: Two indexes for the compliance module's read paths — the scans
+    --              list and everything the scan report derives from log_files.
+    --              Deliberately two, not a set per query. Both tables are written
+    --              by the compliance-scan pod (log_files takes an INSERT when a
+    --              file opens and an UPDATE when it closes), so every extra index
+    --              is paid for on ingest, and an index on a column the pod updates
+    --              also costs the HOT-update path.
+    --              Requires: migration 034 (compliance_scans) and 035 (log_files).
+    --              Identical for dev and prod (only the psql host/path below differ).
+    --
+
+
+    BEGIN;
+
+    -- ============================================================================
+    -- compliance_scans — the scans list
+    -- ============================================================================
+    --
+    -- The list filters `id` + `project_name` and then orders by `created_at DESC`
+    -- with a LIMIT. 034 already indexes (id, project_name), which serves the filter
+    -- and then leaves a sort. Adding `created_at DESC` to the same index lets the
+    -- ORDER BY ... LIMIT walk it instead.
+    --
+    -- This REPLACES the 034 index rather than sitting beside it: (id, project_name)
+    -- is a strict prefix of the new one, so every lookup that used the old index
+    -- uses this one, and keeping both would be a second index the pod pays to
+    -- maintain for nothing.
+    --
+    -- Not indexed: `status`. The tab filter narrows an already small per-project
+    -- result, and a fourth column would only help once a project has thousands of
+    -- scans — which is not the shape of this table.
+    --
+    -- `scan_name` lookups are already covered: UNIQUE (id, scan_name, project_name)
+    -- from 034 gives the (id, scan_name) prefix that get-scan and the miss
+    -- diagnosis both use.
+    --
+
+    CREATE INDEX IF NOT EXISTS idx_compliance_scans_owner_project_created
+        ON public.compliance_scans (id, project_name, created_at DESC);
+
+    DROP INDEX IF EXISTS public.idx_compliance_scans_user_project;
+
+    COMMENT ON INDEX public.idx_compliance_scans_owner_project_created IS 'Scans list: filter by owner + project, newest first. Supersedes idx_compliance_scans_user_project from 034, whose (id, project_name) is a prefix of this.';
+
+    -- ============================================================================
+    -- log_files — the report timeline and the log-file list
+    -- ============================================================================
+    --
+    -- The timeline reads every log file of one scan newest-first; the log-file list
+    -- pages the same order. The PK is (scan_id, log_file_id), which finds the scan's
+    -- rows but then orders them by log_file_id, so the sort is done in memory over
+    -- the whole scan's history.
+    --
+    -- NULLS LAST matches the query: `end_time` is nullable until the provider
+    -- reports it, and the reads order `end_time DESC NULLS LAST`. An index with the
+    -- other null ordering cannot serve that sort.
+    --
+    -- No INCLUDE columns. A covering index over messages_count / flagged_count
+    -- would make the per-scan aggregates index-only, but those are exactly the
+    -- columns the pod writes when a file closes, and including them would cost the
+    -- HOT-update path on every close. The aggregates already reach their rows
+    -- through the PK's scan_id prefix.
+    --
+
+    CREATE INDEX IF NOT EXISTS idx_log_files_scan_end_time
+        ON public.log_files (scan_id, end_time DESC NULLS LAST);
+
+    COMMENT ON INDEX public.idx_log_files_scan_end_time IS 'Report timeline and log-file list: one scan''s files, newest provider end_time first. The PK (scan_id, log_file_id) finds the rows but cannot serve this sort.';
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE schemaname = 'public' AND indexname = 'idx_compliance_scans_owner_project_created'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: idx_compliance_scans_owner_project_created was not created';
+      END IF;
+
+      IF EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE schemaname = 'public' AND indexname = 'idx_compliance_scans_user_project'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: idx_compliance_scans_user_project was not dropped';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE schemaname = 'public' AND indexname = 'idx_log_files_scan_end_time'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: idx_log_files_scan_end_time was not created';
+      END IF;
+
+      RAISE NOTICE 'SUCCESS: compliance read-path indexes in place';
+    END $$;
+
+    COMMIT;
+
+  053-add-project-credits-usage-updated-at.sql: |
+    --
+    -- Migration: 038_add_project_credits_usage_updated_at
+    -- Description: Window marker for the per-project GR credit mirror (018), so a
+    --              project's GR credit usage resets with the org's billing window
+    --              instead of accumulating forever. Kong seeds the per-project
+    --              usage hash from these columns when it expires; without the
+    --              marker there is no way to tell this window's usage from last
+    --              window's, which is the same job guardrails_usage_updated_at
+    --              does for the org counters on subscription.
+    --              NULL = no flush has landed yet, which reads as "not in the
+    --              current window", so existing rows start the next window at 0.
+    --              Requires: key 033 (projects credit columns).
+    --              Identical for dev and prod (only the psql host/path below differ).
+    --
+
+    BEGIN;
+
+    ALTER TABLE public.projects
+        ADD COLUMN IF NOT EXISTS credits_usage_updated_at timestamptz;
+
+    COMMENT ON COLUMN public.projects.credits_usage_updated_at IS 'When the per-project GR credit mirror was last flushed. Compared with the org billing window: a marker outside it means gr_credits_used belongs to a previous window and reads as 0. rt_credits_used is an ad-hoc lifetime balance and ignores it.';
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'projects'
+          AND column_name = 'credits_usage_updated_at'
+          AND data_type = 'timestamp with time zone'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: projects.credits_usage_updated_at was not added';
+      END IF;
+
+      RAISE NOTICE 'SUCCESS: projects.credits_usage_updated_at in place';
+    END $$;
+
+    COMMIT;
+
+    --
+    -- Rollback (manual):
+    --   ALTER TABLE public.projects DROP COLUMN IF EXISTS credits_usage_updated_at;
+    -- The Next.js routes select this column, so roll the code back first.
+    --
+
+  054-add-anthropic-compliance-support.sql: |
+    --
+    -- Migration: 039_add_anthropic_compliance_support
+    -- Description: Anthropic (Claude Enterprise) support for compliance scans.
+    --              Mirrors compliance-scanner deploy/migrations/036_anthropic_support.sql
+    --              (the pod's numbering), with the same object names, made
+    --              re-runnable. Adds the six CLAUDE_* EVENT_TYPE values; makes
+    --              compliance_scans.workspace_id nullable (an Anthropic scan
+    --              covers everything its key can read) while a CHECK keeps it
+    --              required for OpenAI; adds compliance_scans.cursors, the pod's
+    --              per-endpoint-family cursor (chats, local); and creates
+    --              anthropic_scan_windows, the log_files counterpart for Anthropic
+    --              (one row per scan, product and cursor window).
+    --              Two transactions: an enum value cannot be used in the
+    --              transaction that adds it.
+    --              Order: after the OpenSearch scan.window_id mapping and before
+    --              the Anthropic pod image; safe with the older pod running.
+    --              Requires: keys 049 (compliance_scans, EVENT_TYPE,
+    --              PROVIDER) and 050 (LOG_FILE_STATUS).
+    --              Identical for dev and prod (only the psql host/path below differ).
+    --
+
+    -- ============================================================================
+    -- 1. Event types (own transaction)
+    -- ============================================================================
+
+    BEGIN;
+
+    ALTER TYPE public."EVENT_TYPE" ADD VALUE IF NOT EXISTS 'CLAUDE_CHAT';
+    ALTER TYPE public."EVENT_TYPE" ADD VALUE IF NOT EXISTS 'CLAUDE_CODE';
+    ALTER TYPE public."EVENT_TYPE" ADD VALUE IF NOT EXISTS 'CLAUDE_COWORK';
+    ALTER TYPE public."EVENT_TYPE" ADD VALUE IF NOT EXISTS 'CLAUDE_OFFICE';
+    ALTER TYPE public."EVENT_TYPE" ADD VALUE IF NOT EXISTS 'CLAUDE_SCIENCE';
+    ALTER TYPE public."EVENT_TYPE" ADD VALUE IF NOT EXISTS 'CLAUDE_IN_CHROME';
+
+    COMMIT;
+
+    -- ============================================================================
+    -- 2. compliance_scans and anthropic_scan_windows
+    -- ============================================================================
+
+    BEGIN;
+
+    COMMENT ON TYPE public."EVENT_TYPE" IS 'Compliance-scan event types. OpenAI: CONVERSATION_MESSAGE, CODEX_LOG, APP_LOG, CUSTOM_AGENTS_LOG, CHATGPT_PLUGIN_SPREADSHEET. Anthropic: CLAUDE_CHAT, CLAUDE_CODE, CLAUDE_COWORK, CLAUDE_OFFICE, CLAUDE_SCIENCE, CLAUDE_IN_CHROME.';
+
+    ALTER TABLE public.compliance_scans
+        ALTER COLUMN workspace_id DROP NOT NULL;
+
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'compliance_scans_workspace_required_for_openai'
+          AND conrelid = 'public.compliance_scans'::regclass
+      ) THEN
+        ALTER TABLE public.compliance_scans
+          ADD CONSTRAINT compliance_scans_workspace_required_for_openai
+          CHECK (provider <> 'openai' OR workspace_id IS NOT NULL);
+      END IF;
+    END $$;
+
+    COMMENT ON COLUMN public.compliance_scans.workspace_id IS 'OpenAI: the ChatGPT workspace this scan polls (required, by CHECK). Anthropic: NULL; the scan covers everything its key can read.';
+
+    ALTER TABLE public.compliance_scans
+        ADD COLUMN IF NOT EXISTS cursors jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+    COMMENT ON COLUMN public.compliance_scans.cursors IS 'Anthropic only: per endpoint family (chats, local) cursor written by the pod.';
+
+    CREATE TABLE IF NOT EXISTS public.anthropic_scan_windows (
+        scan_id             uuid NOT NULL REFERENCES public.compliance_scans(scan_id) ON DELETE CASCADE,
+        window_id           text NOT NULL,
+        surface             text NOT NULL,
+        event_type          public."EVENT_TYPE" NOT NULL,
+        window_start        timestamptz,
+        window_end          timestamptz,
+        read_from           timestamptz,
+        conversations_count integer,
+        published_count     integer,
+        messages_count      integer,
+        flagged_count       integer,
+        first_event_at      timestamptz,
+        last_event_at       timestamptz,
+        started_at          timestamptz,
+        ended_at            timestamptz,
+        status              public."LOG_FILE_STATUS" NOT NULL,
+        error               text,
+        PRIMARY KEY (scan_id, window_id)
+    );
+
+    COMMENT ON TABLE public.anthropic_scan_windows IS 'Anthropic counterpart of log_files: one row per (scan, product, cursor window), written by the pod only for windows that published at least one new message.';
+    COMMENT ON COLUMN public.anthropic_scan_windows.window_id IS '<EVENT_TYPE>:<window end>, e.g. CLAUDE_CODE:2026-10-07T18:50:59.147161Z. Matches scan.window_id on the OpenSearch records.';
+    COMMENT ON COLUMN public.anthropic_scan_windows.surface IS 'Endpoint family: chats or local.';
+    COMMENT ON COLUMN public.anthropic_scan_windows.window_start IS 'lo: the family cursor before this window.';
+    COMMENT ON COLUMN public.anthropic_scan_windows.window_end IS 'hi: the family cursor after this window.';
+    COMMENT ON COLUMN public.anthropic_scan_windows.read_from IS 'lo minus the replay tail, clamped to the scan''s start.';
+    COMMENT ON COLUMN public.anthropic_scan_windows.published_count IS 'Messages the producer published as new.';
+    COMMENT ON COLUMN public.anthropic_scan_windows.messages_count IS 'Records that landed in OpenSearch, counted at close.';
+    COMMENT ON COLUMN public.anthropic_scan_windows.status IS 'open, then done; partial if records are missing or a conversation was unreadable; skipped if the window''s only content was unreadable.';
+
+    CREATE INDEX IF NOT EXISTS anthropic_scan_windows_scan_type_end
+        ON public.anthropic_scan_windows (scan_id, event_type, window_end);
+
+    CREATE INDEX IF NOT EXISTS anthropic_scan_windows_open
+        ON public.anthropic_scan_windows (status, started_at)
+        WHERE status IN ('open', 'partial');
+
+    -- anon / authenticated do not exist on a plain-Postgres or on-prem database.
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+            CREATE ROLE anon NOLOGIN NOINHERIT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+            CREATE ROLE authenticated NOLOGIN NOINHERIT;
+        END IF;
+    END
+    $$;
+
+    ALTER TABLE public.anthropic_scan_windows ENABLE ROW LEVEL SECURITY;
+
+    DROP POLICY IF EXISTS anthropic_scan_windows_deny_anon ON public.anthropic_scan_windows;
+    CREATE POLICY anthropic_scan_windows_deny_anon
+        ON public.anthropic_scan_windows
+        AS RESTRICTIVE FOR ALL TO anon
+        USING (false) WITH CHECK (false);
+
+    DROP POLICY IF EXISTS anthropic_scan_windows_deny_authenticated ON public.anthropic_scan_windows;
+    CREATE POLICY anthropic_scan_windows_deny_authenticated
+        ON public.anthropic_scan_windows
+        AS RESTRICTIVE FOR ALL TO authenticated
+        USING (false) WITH CHECK (false);
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    DECLARE
+      missing text;
+    BEGIN
+      SELECT string_agg(v, ', ') INTO missing
+      FROM unnest(ARRAY['CLAUDE_CHAT', 'CLAUDE_CODE', 'CLAUDE_COWORK',
+                        'CLAUDE_OFFICE', 'CLAUDE_SCIENCE', 'CLAUDE_IN_CHROME']) AS v
+      WHERE NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON t.oid = e.enumtypid
+        JOIN pg_namespace n ON n.oid = t.typnamespace
+        WHERE n.nspname = 'public' AND t.typname = 'EVENT_TYPE' AND e.enumlabel = v
+      );
+      IF missing IS NOT NULL THEN
+        RAISE EXCEPTION 'FAILED: EVENT_TYPE is missing %', missing;
+      END IF;
+
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND column_name = 'workspace_id' AND is_nullable = 'NO'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_scans.workspace_id is still NOT NULL';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'compliance_scans_workspace_required_for_openai'
+          AND conrelid = 'public.compliance_scans'::regclass
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_scans_workspace_required_for_openai was not created';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'compliance_scans'
+          AND column_name = 'cursors' AND data_type = 'jsonb' AND is_nullable = 'NO'
+      ) THEN
+        RAISE EXCEPTION 'FAILED: compliance_scans.cursors was not added';
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public' AND c.relname = 'anthropic_scan_windows'
+          AND c.relrowsecurity
+      ) THEN
+        RAISE EXCEPTION 'FAILED: anthropic_scan_windows missing or RLS not enabled';
+      END IF;
+
+      IF (SELECT count(*) FROM pg_policies
+          WHERE schemaname = 'public' AND tablename = 'anthropic_scan_windows'
+            AND permissive = 'RESTRICTIVE') <> 2 THEN
+        RAISE EXCEPTION 'FAILED: anthropic_scan_windows deny policies not in place';
+      END IF;
+
+      RAISE NOTICE 'SUCCESS: Anthropic compliance support in place';
+    END $$;
+
+    COMMIT;
+
+    --
+    -- Rollback (manual). Deletes every Anthropic scan row; stop those scans through
+    -- the pod first. Enum values cannot be dropped, so the CLAUDE_* values stay.
+    --   BEGIN;
+    --   DROP TABLE IF EXISTS public.anthropic_scan_windows;
+    --   ALTER TABLE public.compliance_scans DROP COLUMN IF EXISTS cursors;
+    --   ALTER TABLE public.compliance_scans
+    --     DROP CONSTRAINT IF EXISTS compliance_scans_workspace_required_for_openai;
+    --   DELETE FROM public.compliance_scans WHERE provider = 'anthropic';
+    --   ALTER TABLE public.compliance_scans ALTER COLUMN workspace_id SET NOT NULL;
+    --   COMMIT;
+    --
+
+  055-compliance-totals-include-anthropic-windows.sql: |
+    --
+    -- Migration: 040_compliance_totals_include_anthropic_windows
+    -- Description: compliance_scan_totals and compliance_project_totals (036) read
+    --              only public.log_files, which Anthropic scans never write: their
+    --              progress lands in public.anthropic_scan_windows (039). So every
+    --              Anthropic scan reported 0 messages, 0 violations and a 0% flag
+    --              rate while its findings were indexed. Both functions now sum
+    --              the two tables. Same signatures, same semantics: messages_count
+    --              and flagged_count are written at close in both, so an open row
+    --              still counts as zero, and `files` counts log files plus windows.
+    --              Requires: keys 051 (the functions) and 054
+    --              (anthropic_scan_windows). SQL function bodies are validated at
+    --              creation, so this cannot run before 039.
+    --              Identical for dev and prod (only the psql host/path below differ).
+    --
+
+    BEGIN;
+
+    CREATE OR REPLACE FUNCTION public.compliance_scan_totals(p_scan_ids uuid[])
+    RETURNS TABLE (
+        scan_id      uuid,
+        interactions bigint,
+        violations   bigint,
+        files        bigint,
+        started_at   timestamp with time zone
+    )
+    LANGUAGE sql
+    STABLE
+    SECURITY INVOKER
+    SET search_path = public, pg_temp
+    AS $$
+        WITH u AS (
+            SELECT lf.scan_id, lf.messages_count, lf.flagged_count, lf.started_at
+            FROM public.log_files lf
+            WHERE lf.scan_id = ANY(p_scan_ids)
+            UNION ALL
+            SELECT w.scan_id, w.messages_count, w.flagged_count, w.started_at
+            FROM public.anthropic_scan_windows w
+            WHERE w.scan_id = ANY(p_scan_ids)
+        )
+        SELECT u.scan_id,
+               COALESCE(SUM(u.messages_count), 0)::bigint,
+               COALESCE(SUM(u.flagged_count), 0)::bigint,
+               COUNT(*)::bigint,
+               -- Scanner clock, not the provider's: when this scan first did work.
+               MIN(u.started_at)
+        FROM u
+        GROUP BY u.scan_id;
+    $$;
+
+    COMMENT ON FUNCTION public.compliance_scan_totals(uuid[]) IS 'Per-scan rollup of log_files (OpenAI) and anthropic_scan_windows (Anthropic) for the compliance scans table. Scans with neither are omitted, not returned as zero. Does no tenancy: pass scan ids already scoped by the caller.';
+
+    CREATE OR REPLACE FUNCTION public.compliance_project_totals(
+        p_owner_id     uuid,
+        p_project_name text DEFAULT NULL
+    )
+    RETURNS TABLE (
+        scans           bigint,
+        active          bigint,
+        needs_reconnect bigint,
+        interactions    bigint,
+        violations      bigint
+    )
+    LANGUAGE sql
+    STABLE
+    SECURITY INVOKER
+    SET search_path = public, pg_temp
+    AS $$
+        WITH s AS (
+            SELECT cs.scan_id, cs.status
+            FROM public.compliance_scans cs
+            WHERE cs.id = p_owner_id
+              AND (p_project_name IS NULL OR cs.project_name = p_project_name)
+        ),
+        u AS (
+            SELECT lf.messages_count, lf.flagged_count
+            FROM public.log_files lf JOIN s ON s.scan_id = lf.scan_id
+            UNION ALL
+            SELECT w.messages_count, w.flagged_count
+            FROM public.anthropic_scan_windows w JOIN s ON s.scan_id = w.scan_id
+        )
+        SELECT
+            (SELECT COUNT(*) FROM s)::bigint,
+            (SELECT COUNT(*) FROM s WHERE s.status = 'active')::bigint,
+            (SELECT COUNT(*) FROM s WHERE s.status = 'needs_reconnect')::bigint,
+            (SELECT COALESCE(SUM(u.messages_count), 0) FROM u)::bigint,
+            (SELECT COALESCE(SUM(u.flagged_count), 0) FROM u)::bigint;
+    $$;
+
+    COMMENT ON FUNCTION public.compliance_project_totals(uuid, text) IS 'Scan counts and log_files + anthropic_scan_windows totals for one owner, optionally one project (NULL = all projects, which is individual account mode). Does no tenancy: pass an owner id already resolved by the caller.';
+
+    -- CREATE OR REPLACE keeps 036's grants; re-asserted so this file stands alone.
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+            CREATE ROLE anon NOLOGIN NOINHERIT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+            CREATE ROLE authenticated NOLOGIN NOINHERIT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+            CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+        END IF;
+    END
+    $$;
+
+    REVOKE EXECUTE ON FUNCTION public.compliance_scan_totals(uuid[])         FROM PUBLIC, anon, authenticated;
+    REVOKE EXECUTE ON FUNCTION public.compliance_project_totals(uuid, text)  FROM PUBLIC, anon, authenticated;
+
+    GRANT EXECUTE ON FUNCTION public.compliance_scan_totals(uuid[])          TO service_role;
+    GRANT EXECUTE ON FUNCTION public.compliance_project_totals(uuid, text)   TO service_role;
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    BEGIN
+      IF position('anthropic_scan_windows' IN pg_get_functiondef('public.compliance_scan_totals(uuid[])'::regprocedure)) = 0 THEN
+        RAISE EXCEPTION 'FAILED: compliance_scan_totals does not read anthropic_scan_windows';
+      END IF;
+
+      IF position('anthropic_scan_windows' IN pg_get_functiondef('public.compliance_project_totals(uuid, text)'::regprocedure)) = 0 THEN
+        RAISE EXCEPTION 'FAILED: compliance_project_totals does not read anthropic_scan_windows';
+      END IF;
+
+      IF NOT has_function_privilege('service_role', 'public.compliance_scan_totals(uuid[])', 'EXECUTE')
+         OR NOT has_function_privilege('service_role', 'public.compliance_project_totals(uuid, text)', 'EXECUTE') THEN
+        RAISE EXCEPTION 'FAILED: service_role lost EXECUTE on the compliance totals';
+      END IF;
+
+      IF has_function_privilege('anon', 'public.compliance_scan_totals(uuid[])', 'EXECUTE')
+         OR has_function_privilege('authenticated', 'public.compliance_project_totals(uuid, text)', 'EXECUTE') THEN
+        RAISE EXCEPTION 'FAILED: anon/authenticated can execute the compliance totals';
+      END IF;
+
+      RAISE NOTICE 'SUCCESS: compliance totals include anthropic_scan_windows';
+    END $$;
+
+    COMMIT;
+
+    --
+    -- Rollback (manual): re-run 036_add_compliance_aggregate_functions.sql, which
+    -- restores the log_files-only bodies.
+    --
+
+  056-add-audit-export.sql: |
+    --
+    -- Migration: 041_add_audit_export
+    -- Description: Customer audit-log export to each client's SIEM (Splunk HEC) plus a
+    --              Supabase Storage archive. Design, decisions and verified Supabase facts:
+    --              docs/claude/audit-log-export.md and code/audit-exporter/STATE.md.
+    --                * audit_outbox / audit_outbox_dead: changes captured by fail-open
+    --                  triggers on auth.audit_log_entries (exported actions only),
+    --                  audit_logs and redteam_v2 (status / is_deleted changes only).
+    --                * audit_export_logs: normalized exported events; monthly partitions
+    --                  plus a DEFAULT partition; a ~45-day send buffer, not the archive.
+    --                * audit_export_routes: which client each event went to and the exact
+    --                  line sent, so a retry resends identical bytes.
+    --                * audit_export_batches: per-client HEC deliveries + archive bookkeeping.
+    --                * audit_export_checkpoints: OpenSearch / failed-login / backfill cursors.
+    --                * role audit_exporter: least-privilege LOGIN role, no password here. It
+    --                  reads auth.* only through the audit_export_auth_* definer functions:
+    --                  Supabase gives postgres no GRANT OPTION on auth tables.
+    --              Test harness: scripts/manage/test-audit-export-041/run.sh (PG16, the
+    --              supabase/postgres image, and a bare Postgres).
+    --              Triggers FAIL OPEN: any error inside them becomes a WARNING, so an
+    --              outbox problem never blocks a sign-in, a role change or a run update.
+    --              Triggers are (re)installed by audit_export_install_triggers(), which
+    --              the exporter calls every run: a table that appears after this
+    --              migration (e.g. audit_logs on a fresh on-prem install) gets its
+    --              trigger on the next run instead of never.
+    --              audit_export_logs uses a sequence, not an identity column: identity
+    --              columns on partitioned tables need Postgres 17, prod is 15.
+    --              Every partition gets its own RLS lockdown and REVOKE, because a
+    --              partition can be queried by name and Supabase default privileges
+    --              grant anon/authenticated on every new table.
+    --              lock_timeout is 5s so a long reader on a hot table fails this
+    --              migration instead of queueing sign-ins behind it: on a lock
+    --              timeout, just re-run it (it is re-runnable).
+    --              Requires: key 037 (redteam_v2).
+    --              Identical for dev and prod (only the psql host/path below differ).
+    --
+
+    BEGIN;
+
+    SET LOCAL lock_timeout = '5s';
+
+    -- anon / authenticated ship with Supabase but not with plain Postgres or the
+    -- on-prem operator; the policies below need them (same guard as 022 / 033).
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+            CREATE ROLE anon NOLOGIN NOINHERIT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+            CREATE ROLE authenticated NOLOGIN NOINHERIT;
+        END IF;
+        -- Password set out-of-band, never in git: ALTER ROLE audit_exporter WITH PASSWORD '<from the secret store>';
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'audit_exporter') THEN
+            CREATE ROLE audit_exporter LOGIN NOINHERIT CONNECTION LIMIT 5;
+        END IF;
+    END
+    $$;
+
+    -- ============================================================================
+    -- Outbox
+    -- ============================================================================
+
+    CREATE TABLE IF NOT EXISTS public.audit_outbox (
+        id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        source      text NOT NULL,        -- auth.audit_log_entries | public.audit_logs | public.redteam_v2
+        op          text NOT NULL,        -- INSERT | UPDATE
+        payload     jsonb NOT NULL,       -- allowlisted fields only
+        occurred_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+        attempts    integer NOT NULL DEFAULT 0
+    );
+
+    COMMENT ON TABLE public.audit_outbox IS 'Audit export: changes captured by triggers, waiting for the exporter. Rows are deleted once exported.';
+
+    CREATE TABLE IF NOT EXISTS public.audit_outbox_dead (
+        id          bigint PRIMARY KEY,   -- the original audit_outbox.id
+        source      text NOT NULL,
+        op          text NOT NULL,
+        payload     jsonb NOT NULL,
+        occurred_at timestamptz NOT NULL,
+        attempts    integer NOT NULL,
+        last_error  text,
+        dead_at     timestamptz NOT NULL DEFAULT now()
+    );
+
+    COMMENT ON TABLE public.audit_outbox_dead IS 'Audit export: outbox rows the exporter failed on repeatedly. Alerted on; replayed by hand after a fix.';
+
+    -- ============================================================================
+    -- Reader checkpoints
+    -- ============================================================================
+
+    CREATE TABLE IF NOT EXISTS public.audit_export_checkpoints (
+        reader        text NOT NULL,                       -- os:admin | os:red_teaming | failed_logins | backfill:<source>
+        client_id     text NOT NULL DEFAULT '',            -- '' = shared live reader; a client id = that client's backfill
+        cursor_ts     timestamptz,
+        cursor        jsonb NOT NULL DEFAULT '{}'::jsonb,  -- reader-specific position (search_after, last id, ...)
+        recent_ids    jsonb NOT NULL DEFAULT '{}'::jsonb,  -- ids already handled inside the overlap window
+        state         text NOT NULL DEFAULT 'active' CHECK (state IN ('active', 'paused', 'done')),
+        backfill_from timestamptz,                         -- backfill: the configured start it was begun with
+        target_ts     timestamptz,                         -- backfill: stop here (where the live reader began)
+        started_at    timestamptz NOT NULL DEFAULT now(),
+        completed_at  timestamptz,
+        updated_at    timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY (reader, client_id)
+    );
+
+    -- Earlier applies created the default as '[]'; the exporter reads an object.
+    DO $$
+    BEGIN
+        IF (SELECT column_default FROM information_schema.columns
+             WHERE table_schema = 'public' AND table_name = 'audit_export_checkpoints'
+               AND column_name = 'recent_ids') IS DISTINCT FROM '''{}''::jsonb' THEN
+            ALTER TABLE public.audit_export_checkpoints ALTER COLUMN recent_ids SET DEFAULT '{}'::jsonb;
+        END IF;
+    END
+    $$;
+
+    COMMENT ON TABLE public.audit_export_checkpoints IS 'Audit export: one cursor per reader (and per client for backfill).';
+
+    -- ============================================================================
+    -- Event store (send buffer), partitioned by month
+    -- ============================================================================
+
+    CREATE SEQUENCE IF NOT EXISTS public.audit_export_logs_id_seq;
+
+    CREATE TABLE IF NOT EXISTS public.audit_export_logs (
+        id              bigint NOT NULL DEFAULT nextval('public.audit_export_logs_id_seq'),
+        event_id        text NOT NULL,             -- stable across re-reads; CEF externalId
+        org_id          uuid,                      -- NULL for personal-account events
+        owner_user_id   uuid,                      -- tenant when org_id is NULL, e.g. redteam_v2.id of a personal run
+        project_name    text,
+        signature_id    text NOT NULL,
+        category        text NOT NULL,
+        action          text NOT NULL,
+        outcome         text NOT NULL CHECK (outcome IN ('success', 'failure')),
+        reason          text,
+        severity        smallint NOT NULL CHECK (severity BETWEEN 0 AND 10),
+        occurred_at     timestamptz NOT NULL,
+        started_at      timestamptz,
+        ended_at        timestamptz,
+        duration_ms     bigint,
+        actor_user_id   uuid,
+        actor_email     text,
+        employee_id     text,
+        idp_subject     text,
+        session_id      text,
+        client_ip       text,                      -- text, not inet: one malformed value must not fail a run
+        user_agent      text,
+        end_user_ip     text,                      -- caller-asserted (user_metadata), never replaces client_ip
+        end_user_agent  text,
+        access_method   text,
+        auth_type       text,
+        object_type     text,
+        object_id       text,
+        correlation_id  text,
+        source          text NOT NULL,
+        service         text NOT NULL,
+        environment     text NOT NULL,
+        attributes      jsonb NOT NULL DEFAULT '{}'::jsonb,
+        created_at      timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY (id, occurred_at),
+        CONSTRAINT audit_export_logs_routable
+            CHECK (org_id IS NOT NULL OR owner_user_id IS NOT NULL OR actor_user_id IS NOT NULL OR actor_email IS NOT NULL)
+    ) PARTITION BY RANGE (occurred_at);
+
+    ALTER SEQUENCE public.audit_export_logs_id_seq OWNED BY public.audit_export_logs.id;
+
+    COMMENT ON TABLE public.audit_export_logs IS 'Audit export: normalized exported events (send buffer, ~45 days). Monthly partitions via audit_export_maintain_partitions(); out-of-range rows land in audit_export_logs_default.';
+
+    -- A unique index on a partitioned table must include the partition key.
+    CREATE UNIQUE INDEX IF NOT EXISTS audit_export_logs_event_id_key
+        ON public.audit_export_logs (event_id, occurred_at);
+    CREATE INDEX IF NOT EXISTS idx_audit_export_logs_org_time
+        ON public.audit_export_logs (org_id, occurred_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_audit_export_logs_owner_time
+        ON public.audit_export_logs (owner_user_id, occurred_at DESC) WHERE owner_user_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_audit_export_logs_actor_time
+        ON public.audit_export_logs (actor_user_id, occurred_at DESC);
+
+    -- Catches any timestamp without a monthly partition, so one bad row never fails a run.
+    CREATE TABLE IF NOT EXISTS public.audit_export_logs_default
+        PARTITION OF public.audit_export_logs DEFAULT;
+
+    -- ============================================================================
+    -- Batches and per-client routes
+    -- ============================================================================
+
+    CREATE TABLE IF NOT EXISTS public.audit_export_batches (
+        id                   bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        client_id            text NOT NULL,             -- clients[].id in the exporter YAML
+        sequence             bigint NOT NULL,           -- per client, gapless; assigned under the exporter's advisory lock
+        format               text NOT NULL CHECK (format IN ('cef', 'json')),
+        parent_batch_id      bigint REFERENCES public.audit_export_batches (id),  -- set on the 1-event quarantine children of a refused batch
+        event_count          integer NOT NULL CHECK (event_count > 0),
+        first_log_id         bigint NOT NULL,           -- informational; membership is audit_export_routes.batch_id
+        last_log_id          bigint NOT NULL,
+        window_start         timestamptz NOT NULL,      -- min / max occurred_at of the member events
+        window_end           timestamptz NOT NULL,
+        body_sha256          text NOT NULL,             -- of the uncompressed HEC body; a retry must reproduce it
+        body_bytes           integer NOT NULL,
+        status               text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'delivered', 'failed', 'split')),  -- 'split' is never set
+        attempts             integer NOT NULL DEFAULT 0,
+        next_attempt_at      timestamptz NOT NULL DEFAULT now(),
+        last_attempt_at      timestamptz,
+        last_status          integer,                   -- last HTTP status from the endpoint
+        last_response        text,
+        delivered_at         timestamptz,
+        archived_at          timestamptz,               -- every archive object for this batch written
+        archive_object_keys  text[] NOT NULL DEFAULT '{}',  -- one per org / 5-minute bucket the batch spans
+        created_at           timestamptz NOT NULL DEFAULT now(),
+        UNIQUE (client_id, sequence),
+        CHECK (first_log_id <= last_log_id),
+        CHECK (window_start <= window_end)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_export_batches_pending
+        ON public.audit_export_batches (client_id, sequence) WHERE status = 'pending';
+    CREATE INDEX IF NOT EXISTS idx_audit_export_batches_unarchived
+        ON public.audit_export_batches (client_id, sequence) WHERE archived_at IS NULL;
+
+    COMMENT ON TABLE public.audit_export_batches IS 'Audit export: one HEC request per row, per client. Members are the audit_export_routes rows with this batch_id.';
+
+    CREATE TABLE IF NOT EXISTS public.audit_export_routes (
+        client_id    text NOT NULL,
+        log_id       bigint NOT NULL,                   -- audit_export_logs.id; no FK, retention drops partitions
+        occurred_at  timestamptz NOT NULL,              -- the event's partition key, for joins and retention
+        event_id     text NOT NULL,
+        format       text NOT NULL CHECK (format IN ('cef', 'json')),
+        line         text NOT NULL,                     -- the exact formatted line sent as the HEC event
+        batch_id     bigint REFERENCES public.audit_export_batches (id),  -- NULL until batched
+        created_at   timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY (client_id, log_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_export_routes_batch
+        ON public.audit_export_routes (batch_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_export_routes_unbatched
+        ON public.audit_export_routes (client_id, log_id) WHERE batch_id IS NULL;
+    CREATE INDEX IF NOT EXISTS idx_audit_export_routes_time
+        ON public.audit_export_routes (occurred_at);
+
+    COMMENT ON TABLE public.audit_export_routes IS 'Audit export: the clients each event was routed to, with the exact line, so routing and bytes are frozen once decided.';
+
+    -- ============================================================================
+    -- Partitions and retention
+    -- ============================================================================
+
+    CREATE OR REPLACE FUNCTION public.audit_export_ensure_partition(p_month date)
+    RETURNS text
+    LANGUAGE plpgsql
+    SECURITY DEFINER  -- attaching a partition needs ownership of the parent; the exporter is not the owner
+    SET search_path = ''
+    AS $$
+    DECLARE
+        v_start  date := date_trunc('month', p_month)::date;
+        -- Bounds in UTC explicitly, so they don't depend on the session TimeZone.
+        v_from   timestamptz := v_start::timestamp AT TIME ZONE 'UTC';
+        v_to     timestamptz := (v_start + interval '1 month')::timestamp AT TIME ZONE 'UTC';
+        v_name   text := 'audit_export_logs_' || to_char(v_start, 'YYYYMM');
+        v_oid    oid;
+        v_role   text;
+    BEGIN
+        IF to_regclass('public.' || v_name) IS NULL THEN
+            -- Rows parked in DEFAULT for this month must move first, or ATTACH rejects the bound.
+            EXECUTE format('CREATE TABLE public.%I (LIKE public.audit_export_logs INCLUDING DEFAULTS INCLUDING CONSTRAINTS)', v_name);
+            EXECUTE format(
+                'WITH moved AS (DELETE FROM public.audit_export_logs_default WHERE occurred_at >= %L AND occurred_at < %L RETURNING *) '
+                'INSERT INTO public.%I SELECT * FROM moved', v_from, v_to, v_name);
+            EXECUTE format('ALTER TABLE public.audit_export_logs ATTACH PARTITION public.%I FOR VALUES FROM (%L) TO (%L)',
+                           v_name, v_from, v_to);
+        END IF;
+        -- Lock down only what is missing: ENABLE RLS / CREATE POLICY take ACCESS EXCLUSIVE, and this runs every 5 minutes.
+        v_oid := to_regclass('public.' || v_name);
+        IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid = v_oid) THEN
+            EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', v_name);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_policy WHERE polrelid = v_oid AND polname = 'deny_all_' || v_name) THEN
+            EXECUTE format(
+                'CREATE POLICY %I ON public.%I AS RESTRICTIVE FOR ALL TO anon, authenticated USING (false) WITH CHECK (false)',
+                'deny_all_' || v_name, v_name);
+        END IF;
+        -- Supabase default privileges grant every new table to these roles directly; the exporter reads via the parent.
+        IF EXISTS (SELECT 1 FROM pg_class c, aclexplode(c.relacl) a WHERE c.oid = v_oid AND a.grantee = 0) THEN
+            EXECUTE format('REVOKE ALL ON TABLE public.%I FROM PUBLIC', v_name);
+        END IF;
+        FOREACH v_role IN ARRAY ARRAY['anon', 'authenticated', 'service_role'] LOOP
+            IF EXISTS (SELECT 1 FROM pg_class c, aclexplode(c.relacl) a, pg_roles r
+                        WHERE c.oid = v_oid AND r.rolname = v_role AND a.grantee = r.oid) THEN
+                EXECUTE format('REVOKE ALL ON TABLE public.%I FROM %I', v_name, v_role);
+            END IF;
+        END LOOP;
+        RETURN v_name;
+    END;
+    $$;
+
+    COMMENT ON FUNCTION public.audit_export_ensure_partition(date) IS 'Creates (if missing), fills from DEFAULT and locks down the audit_export_logs partition for the month containing p_month. Call it before a backfill into an old month.';
+
+    CREATE OR REPLACE FUNCTION public.audit_export_maintain_partitions(p_months_ahead integer DEFAULT 2, p_keep_days integer DEFAULT 45)
+    RETURNS text[]
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    SET search_path = ''
+    AS $$
+    DECLARE
+        v_this  date := date_trunc('month', now() AT TIME ZONE 'UTC')::date;
+        v_month date;
+        v_out   text[] := '{}';
+    BEGIN
+        FOR v_month IN
+            SELECT (v_this + make_interval(months => m))::date FROM generate_series(0, greatest(p_months_ahead, 0)) AS m
+        LOOP
+            v_out := v_out || public.audit_export_ensure_partition(v_month);
+        END LOOP;
+        -- Late rows parked in DEFAULT inside the buffer window get their real partition; far-off garbage stays parked.
+        FOR v_month IN
+            SELECT DISTINCT date_trunc('month', occurred_at AT TIME ZONE 'UTC')::date
+              FROM public.audit_export_logs_default
+             WHERE occurred_at >= now() - make_interval(days => p_keep_days)
+               AND occurred_at < v_this::timestamp AT TIME ZONE 'UTC'
+        LOOP
+            v_out := v_out || public.audit_export_ensure_partition(v_month);
+        END LOOP;
+        RETURN v_out;
+    END;
+    $$;
+
+    COMMENT ON FUNCTION public.audit_export_maintain_partitions(integer, integer) IS 'Partition upkeep, called by the exporter each run: this month plus p_months_ahead, and rehoming late DEFAULT rows.';
+
+    CREATE OR REPLACE FUNCTION public.audit_export_apply_retention(p_keep_days integer DEFAULT 45, p_force boolean DEFAULT false)
+    RETURNS text[]
+    LANGUAGE plpgsql
+    SECURITY DEFINER  -- dropping a partition needs ownership; the exporter is not the owner
+    SET search_path = ''
+    AS $$
+    DECLARE
+        v_cutoff  timestamptz;
+        v_from    timestamptz;
+        v_to      timestamptz;
+        v_count   bigint;
+        v_total   bigint := 0;
+        v_out     text[] := '{}';
+        r         record;
+    BEGIN
+        IF p_keep_days IS NULL OR p_keep_days < 1 THEN
+            RAISE EXCEPTION 'audit_export_apply_retention: p_keep_days must be >= 1, got %', p_keep_days;
+        END IF;
+        v_cutoff := now() - make_interval(days => p_keep_days);
+
+        FOR r IN
+            SELECT c.relname
+              FROM pg_inherits i
+              JOIN pg_class c ON c.oid = i.inhrelid
+             WHERE i.inhparent = 'public.audit_export_logs'::regclass
+               AND c.relname ~ '^audit_export_logs_[0-9]{6}$'
+             ORDER BY c.relname
+        LOOP
+            v_from := to_date(right(r.relname, 6), 'YYYYMM')::timestamp AT TIME ZONE 'UTC';
+            v_to   := (to_date(right(r.relname, 6), 'YYYYMM') + interval '1 month')::timestamp AT TIME ZONE 'UTC';
+            CONTINUE WHEN v_to > v_cutoff;
+            -- Never drop an event a client has not received and archived, unless forced.
+            IF NOT p_force AND EXISTS (
+                SELECT 1
+                  FROM public.audit_export_routes ro
+                  LEFT JOIN public.audit_export_batches b ON b.id = ro.batch_id
+                 WHERE ro.occurred_at >= v_from AND ro.occurred_at < v_to
+                   AND (b.id IS NULL OR b.status = 'pending' OR b.archived_at IS NULL)) THEN
+                RAISE WARNING 'audit_export_apply_retention: kept % (undelivered or unarchived events)', r.relname;
+                v_out := v_out || ('kept:' || r.relname);
+                CONTINUE;
+            END IF;
+            DELETE FROM public.audit_export_routes WHERE occurred_at >= v_from AND occurred_at < v_to;
+            EXECUTE format('DROP TABLE public.%I', r.relname);
+            v_out := v_out || ('dropped:' || r.relname);
+        END LOOP;
+
+        DELETE FROM public.audit_export_logs_default l
+         WHERE l.occurred_at < v_cutoff
+           AND (p_force OR NOT EXISTS (
+                SELECT 1
+                  FROM public.audit_export_routes ro
+                  LEFT JOIN public.audit_export_batches b ON b.id = ro.batch_id
+                 WHERE ro.log_id = l.id
+                   AND (b.id IS NULL OR b.status = 'pending' OR b.archived_at IS NULL)));
+        GET DIAGNOSTICS v_count = ROW_COUNT;
+        v_out := v_out || ('default_deleted:' || v_count);
+
+        DELETE FROM public.audit_export_routes ro
+         WHERE ro.occurred_at < v_cutoff
+           AND NOT EXISTS (SELECT 1 FROM public.audit_export_logs l WHERE l.id = ro.log_id AND l.occurred_at = ro.occurred_at);
+
+        -- Finished batches whose events are gone: never pending/unarchived, never a client's highest sequence
+        -- (max+1 would restart and reuse archive object names). Parents go once their quarantine children are gone.
+        LOOP
+            DELETE FROM public.audit_export_batches b
+             WHERE b.created_at < v_cutoff
+               AND ((b.status IN ('delivered', 'failed') AND b.archived_at IS NOT NULL) OR b.status = 'split')
+               AND b.sequence < (SELECT max(b2.sequence) FROM public.audit_export_batches b2 WHERE b2.client_id = b.client_id)
+               AND NOT EXISTS (SELECT 1 FROM public.audit_export_routes ro WHERE ro.batch_id = b.id)
+               AND NOT EXISTS (SELECT 1 FROM public.audit_export_batches ch WHERE ch.parent_batch_id = b.id);
+            GET DIAGNOSTICS v_count = ROW_COUNT;
+            EXIT WHEN v_count = 0;
+            v_total := v_total + v_count;
+        END LOOP;
+        v_out := v_out || ('batches_deleted:' || v_total);
+        RETURN v_out;
+    END;
+    $$;
+
+    COMMENT ON FUNCTION public.audit_export_apply_retention(integer, boolean) IS 'Send-buffer retention: drops audit_export_logs partitions (and DEFAULT rows) older than p_keep_days, keeping any with undelivered or unarchived events unless p_force; then prunes finished batches whose events are gone.';
+
+    -- ============================================================================
+    -- Capture trigger
+    -- ============================================================================
+
+    CREATE OR REPLACE FUNCTION public.audit_outbox_enqueue()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    SET search_path = ''
+    AS $$
+    DECLARE
+        v_payload  jsonb;
+        v_session  jsonb;
+        v_sid      text;
+        v_actor    text;
+        v_claims   jsonb;
+        v_deleter  text;
+        v_row      jsonb := to_jsonb(NEW);   -- column-agnostic reads: on-prem tables lack some Cloud columns
+    BEGIN
+        BEGIN
+            IF TG_TABLE_NAME = 'redteam_v2' THEN
+                IF TG_OP = 'UPDATE'
+                   AND OLD.status IS NOT DISTINCT FROM NEW.status
+                   AND OLD.is_deleted IS NOT DISTINCT FROM NEW.is_deleted THEN
+                    RETURN NULL;
+                END IF;
+                -- Deleter from PostgREST's per-request GUCs: trusted header only on service_role, else the user JWT's sub.
+                IF TG_OP = 'UPDATE' AND NEW.is_deleted IS TRUE AND OLD.is_deleted IS NOT TRUE THEN
+                    BEGIN
+                        v_claims := nullif(current_setting('request.jwt.claims', true), '')::jsonb;
+                        v_deleter := lower(CASE v_claims ->> 'role'
+                            WHEN 'service_role' THEN
+                                nullif(current_setting('request.headers', true), '')::jsonb ->> 'x-enkrypt-audit-actor-id'
+                            WHEN 'authenticated' THEN v_claims ->> 'sub' END);
+                        IF v_deleter !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+                            v_deleter := NULL;
+                        END IF;
+                    EXCEPTION WHEN OTHERS THEN
+                        v_deleter := NULL;  -- malformed GUC: still record the delete, just without a deleter
+                    END;
+                END IF;
+                v_payload := jsonb_build_object(
+                    'job_id',          v_row -> 'job_id',
+                    'owner_id',        v_row -> 'id',          -- run owner; the tenant when org_id is NULL
+                    'org_id',          v_row -> 'org_id',
+                    'project_name',    v_row -> 'project_name',
+                    'run_name',        v_row -> 'run_name',
+                    'created_by',      v_row -> 'created_by',
+                    'actioner_email',  v_row -> 'actioner_email',
+                    'old_status',      CASE WHEN TG_OP = 'UPDATE' THEN to_jsonb(OLD) -> 'status' END,
+                    'new_status',      v_row -> 'status',
+                    'old_is_deleted',  CASE WHEN TG_OP = 'UPDATE' THEN to_jsonb(OLD) -> 'is_deleted' END,
+                    'is_deleted',      v_row -> 'is_deleted',
+                    'deleted_by',      v_deleter,
+                    'created_at',      v_row -> 'created_at',
+                    'started_at',      v_row -> 'started_at',
+                    'ended_at',        v_row -> 'ended_at',
+                    'user_metadata',   jsonb_strip_nulls(jsonb_build_object(
+                        'user_id',           v_row #> '{user_metadata,user_id}',
+                        'organization_id',   v_row #> '{user_metadata,organization_id}',
+                        'project_id',        v_row #> '{user_metadata,project_id}',
+                        'email',             v_row #> '{user_metadata,email}',
+                        'client_ip',         v_row #> '{user_metadata,client_ip}',
+                        'client_user_agent', v_row #> '{user_metadata,client_user_agent}',
+                        'end_user_ip',       v_row #> '{user_metadata,end_user_ip}',
+                        'end_user_agent',    v_row #> '{user_metadata,end_user_agent}')));
+
+            ELSIF TG_TABLE_NAME = 'audit_logs' THEN
+                -- log carries the change detail (e.g. the role tuple); the exporter, not this trigger, allowlists it.
+                v_payload := jsonb_build_object(
+                    'audit_log_id',    v_row -> 'audit_log_id',
+                    'actioner',        v_row -> 'actioner',
+                    'org_or_user_id',  v_row -> 'org_or_user_id',
+                    'type',            v_row -> 'type',
+                    'action',          v_row -> 'action',
+                    'log',             v_row -> 'log',
+                    'created_at',      v_row -> 'created_at');
+
+            ELSE  -- auth.audit_log_entries; the WHEN clause already filtered the action
+                v_payload := jsonb_build_object(
+                    'id',              v_row -> 'id',
+                    'created_at',      v_row -> 'created_at',
+                    'ip_address',      v_row ->> 'ip_address',   -- empty on Supabase Cloud; sessions has it
+                    'action',          v_row #>> '{payload,action}',
+                    'actor_id',        v_row #>> '{payload,actor_id}',
+                    'actor_username',  v_row #>> '{payload,actor_username}',
+                    'actor_via_sso',   v_row #> '{payload,actor_via_sso}',
+                    'log_type',        v_row #>> '{payload,log_type}',
+                    'traits',          v_row #> '{payload,traits}');
+                -- Logout deletes the session in the same transaction; snapshot it now or it is gone.
+                IF v_row #>> '{payload,action}' = 'logout' THEN
+                    BEGIN
+                        v_sid := coalesce(v_row #>> '{payload,traits,session_id}', v_row #>> '{payload,session_id}');
+                        v_actor := v_row #>> '{payload,actor_id}';
+                        -- Native uuid compares so the sessions indexes are used: this runs inside GoTrue's logout.
+                        IF v_sid ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+                            SELECT jsonb_build_object('id', s ->> 'id', 'ip', s ->> 'ip', 'user_agent', s ->> 'user_agent',
+                                                      'aal', s ->> 'aal', 'created_at', s ->> 'created_at',
+                                                      'match', 'payload_session_id', 'candidates', 1)
+                              INTO v_session
+                              FROM (SELECT to_jsonb(ss) AS s FROM auth.sessions ss WHERE ss.id = v_sid::uuid) one;
+                        END IF;
+                        IF v_session IS NULL AND v_actor ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+                            -- No session id in the payload: most recently active session; candidates > 1 means ambiguous.
+                            SELECT jsonb_build_object('id', s ->> 'id', 'ip', s ->> 'ip', 'user_agent', s ->> 'user_agent',
+                                                      'aal', s ->> 'aal', 'created_at', s ->> 'created_at',
+                                                      'match', 'most_recent_session', 'candidates', n)
+                              INTO v_session
+                              FROM (SELECT to_jsonb(ss) AS s, count(*) OVER () AS n
+                                      FROM auth.sessions ss
+                                     WHERE ss.user_id = v_actor::uuid
+                                     ORDER BY coalesce(to_jsonb(ss) ->> 'updated_at', to_jsonb(ss) ->> 'created_at')::timestamptz DESC
+                                     LIMIT 1) latest;
+                        END IF;
+                        v_payload := v_payload || jsonb_build_object(
+                            'session', coalesce(v_session, jsonb_build_object('match', 'none', 'candidates', 0)));
+                    EXCEPTION WHEN OTHERS THEN
+                        v_payload := v_payload || jsonb_build_object('session', jsonb_build_object('match', 'error', 'error', SQLERRM));
+                    END;
+                END IF;
+            END IF;
+
+            INSERT INTO public.audit_outbox (source, op, payload)
+            VALUES (TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME, TG_OP, v_payload);
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'audit_outbox_enqueue failed on %.% (%): %',
+                TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_OP, SQLERRM;
+        END;
+        RETURN NULL;
+    END;
+    $$;
+
+    COMMENT ON FUNCTION public.audit_outbox_enqueue() IS 'Audit export capture trigger. Fail-open: errors become WARNINGs and never block the triggering write.';
+
+    CREATE OR REPLACE FUNCTION public.audit_export_install_triggers(p_replace boolean DEFAULT false)
+    RETURNS text[]
+    LANGUAGE plpgsql
+    SECURITY DEFINER  -- CREATE TRIGGER needs the owner's TRIGGER privilege; the exporter calls this every run
+    SET search_path = ''
+    SET lock_timeout = '5s'  -- DROP TRIGGER queued behind a long reader would stall sign-ins
+    AS $$
+    DECLARE
+        v_out text[] := '{}';
+    BEGIN
+        IF to_regclass('public.redteam_v2') IS NULL THEN
+            v_out := v_out || 'public.redteam_v2:absent'::text;
+        ELSIF p_replace OR NOT EXISTS (SELECT 1 FROM pg_trigger
+                                        WHERE tgrelid = to_regclass('public.redteam_v2') AND tgname = 'audit_outbox_redteam_v2'
+                                          AND tgenabled <> 'D') THEN
+            DROP TRIGGER IF EXISTS audit_outbox_redteam_v2 ON public.redteam_v2;
+            CREATE TRIGGER audit_outbox_redteam_v2
+                AFTER INSERT OR UPDATE OF status, is_deleted ON public.redteam_v2
+                FOR EACH ROW EXECUTE FUNCTION public.audit_outbox_enqueue();
+            v_out := v_out || 'public.redteam_v2:installed'::text;
+        ELSE
+            v_out := v_out || 'public.redteam_v2:present'::text;
+        END IF;
+
+        IF to_regclass('public.audit_logs') IS NULL THEN
+            v_out := v_out || 'public.audit_logs:absent'::text;
+        ELSIF p_replace OR NOT EXISTS (SELECT 1 FROM pg_trigger
+                                        WHERE tgrelid = to_regclass('public.audit_logs') AND tgname = 'audit_outbox_audit_logs'
+                                          AND tgenabled <> 'D') THEN
+            DROP TRIGGER IF EXISTS audit_outbox_audit_logs ON public.audit_logs;
+            CREATE TRIGGER audit_outbox_audit_logs
+                AFTER INSERT ON public.audit_logs
+                FOR EACH ROW EXECUTE FUNCTION public.audit_outbox_enqueue();
+            v_out := v_out || 'public.audit_logs:installed'::text;
+        ELSE
+            v_out := v_out || 'public.audit_logs:present'::text;
+        END IF;
+
+        IF to_regclass('auth.audit_log_entries') IS NULL THEN
+            v_out := v_out || 'auth.audit_log_entries:absent'::text;
+        ELSIF p_replace OR NOT EXISTS (SELECT 1 FROM pg_trigger
+                                        WHERE tgrelid = to_regclass('auth.audit_log_entries') AND tgname = 'audit_outbox_auth_audit_log_entries'
+                                          AND tgenabled <> 'D') THEN
+            DROP TRIGGER IF EXISTS audit_outbox_auth_audit_log_entries ON auth.audit_log_entries;
+            -- Not exported: token_refreshed / token_revoked (high volume) and user_confirmation_requested (an email send).
+            CREATE TRIGGER audit_outbox_auth_audit_log_entries
+                AFTER INSERT ON auth.audit_log_entries
+                FOR EACH ROW
+                WHEN ((NEW.payload ->> 'action') IN ('login', 'logout', 'user_signedup', 'user_invited',
+                                                     'user_deleted', 'user_modified', 'user_updated_password',
+                                                     'user_recovery_requested'))
+                EXECUTE FUNCTION public.audit_outbox_enqueue();
+            v_out := v_out || 'auth.audit_log_entries:installed'::text;
+        ELSE
+            v_out := v_out || 'auth.audit_log_entries:present'::text;
+        END IF;
+        RETURN v_out;
+    END;
+    $$;
+
+    COMMENT ON FUNCTION public.audit_export_install_triggers(boolean) IS 'Installs any missing or disabled capture trigger and reports each as installed / present / absent. p_replace recreates them (migration only: it locks the tables briefly).';
+
+    -- ============================================================================
+    -- auth.* lookups for the exporter
+    -- ============================================================================
+    -- Supabase gives postgres no GRANT OPTION on auth.* (a GRANT there is a silent WARNING no-op),
+    -- so the exporter reads allowlisted auth columns through these definer functions instead.
+
+    CREATE OR REPLACE FUNCTION public.audit_export_auth_users(p_user_ids uuid[])
+    RETURNS SETOF jsonb
+    LANGUAGE plpgsql
+    STABLE
+    SECURITY DEFINER
+    SET search_path = ''
+    AS $$
+    BEGIN
+        IF to_regclass('auth.users') IS NULL THEN
+            RETURN;
+        END IF;
+        RETURN QUERY
+            SELECT jsonb_build_object('id', u.id, 'email', u.email)
+              FROM auth.users u
+             WHERE u.id = ANY (p_user_ids);
+    END;
+    $$;
+
+    CREATE OR REPLACE FUNCTION public.audit_export_auth_sessions(p_user_ids uuid[])
+    RETURNS SETOF jsonb
+    LANGUAGE plpgsql
+    STABLE
+    SECURITY DEFINER
+    SET search_path = ''
+    AS $$
+    BEGIN
+        IF to_regclass('auth.sessions') IS NULL THEN
+            RETURN;
+        END IF;
+        RETURN QUERY
+            SELECT jsonb_build_object('id', s -> 'id', 'user_id', s -> 'user_id', 'created_at', s -> 'created_at',
+                                      'updated_at', s -> 'updated_at', 'ip', s -> 'ip', 'user_agent', s -> 'user_agent',
+                                      'aal', s -> 'aal')
+              FROM (SELECT to_jsonb(ss) AS s FROM auth.sessions ss WHERE ss.user_id = ANY (p_user_ids)) x;
+    END;
+    $$;
+
+    CREATE OR REPLACE FUNCTION public.audit_export_auth_identities(p_user_ids uuid[])
+    RETURNS SETOF jsonb
+    LANGUAGE plpgsql
+    STABLE
+    SECURITY DEFINER
+    SET search_path = ''
+    AS $$
+    BEGIN
+        IF to_regclass('auth.identities') IS NULL THEN
+            RETURN;
+        END IF;
+        RETURN QUERY
+            -- identity_data narrowed to the subject and the employee-id keys pgstore reads (_EMPLOYEE_KEYS).
+            SELECT jsonb_build_object('id', i -> 'id', 'user_id', i -> 'user_id', 'provider', i -> 'provider',
+                                      'provider_id', i -> 'provider_id',
+                                      'identity_data', jsonb_strip_nulls(jsonb_build_object(
+                                          'sub',             d -> 'sub',
+                                          'employee_id',     d -> 'employee_id',
+                                          'employeeId',      d -> 'employeeId',
+                                          'employeeID',      d -> 'employeeID',
+                                          'employee_number', d -> 'employee_number',
+                                          'employeeNumber',  d -> 'employeeNumber',
+                                          'custom_claims',   nullif(jsonb_strip_nulls(jsonb_build_object(
+                                              'employee_id',     d #> '{custom_claims,employee_id}',
+                                              'employeeId',      d #> '{custom_claims,employeeId}',
+                                              'employeeID',      d #> '{custom_claims,employeeID}',
+                                              'employee_number', d #> '{custom_claims,employee_number}',
+                                              'employeeNumber',  d #> '{custom_claims,employeeNumber}')), '{}'::jsonb))),
+                                      'created_at', i -> 'created_at', 'last_sign_in_at', i -> 'last_sign_in_at')
+              FROM (SELECT to_jsonb(ii) AS i,
+                           CASE WHEN jsonb_typeof(to_jsonb(ii) -> 'identity_data') = 'object'
+                                THEN to_jsonb(ii) -> 'identity_data' END AS d
+                      FROM auth.identities ii WHERE ii.user_id = ANY (p_user_ids)) x;
+    END;
+    $$;
+
+    -- Backfill page: exported actions only, keyset on (created_at, id). Full scan per page: we cannot index this table.
+    CREATE OR REPLACE FUNCTION public.audit_export_auth_audit_log(p_after timestamptz, p_after_id uuid, p_until timestamptz,
+                                                                 p_limit integer DEFAULT 1000)
+    RETURNS SETOF jsonb
+    LANGUAGE plpgsql
+    STABLE
+    SECURITY DEFINER
+    SET search_path = ''
+    AS $$
+    BEGIN
+        IF to_regclass('auth.audit_log_entries') IS NULL THEN
+            RETURN;
+        END IF;
+        RETURN QUERY
+            SELECT jsonb_build_object('id', e.id, 'created_at', e.created_at, 'ip_address', to_jsonb(e) ->> 'ip_address',
+                                      'payload', e.payload)
+              FROM auth.audit_log_entries e
+             WHERE (e.created_at, e.id) > (coalesce(p_after, '-infinity'::timestamptz),
+                                           coalesce(p_after_id, '00000000-0000-0000-0000-000000000000'::uuid))
+               AND e.created_at < p_until
+               AND (e.payload ->> 'action') IN ('login', 'logout', 'user_signedup', 'user_invited',
+                                                'user_deleted', 'user_modified', 'user_updated_password',
+                                                'user_recovery_requested')
+             ORDER BY e.created_at, e.id
+             LIMIT least(greatest(coalesce(p_limit, 1000), 1), 10000);
+    END;
+    $$;
+
+    SELECT public.audit_export_install_triggers(true);
+
+    -- Last month (late events), this month and the next two.
+    SELECT public.audit_export_ensure_partition((date_trunc('month', now() AT TIME ZONE 'UTC') - interval '1 month')::date);
+    SELECT public.audit_export_maintain_partitions(2, 45);
+
+    -- ============================================================================
+    -- Lockdown: RLS deny-all (011 model), REVOKE from anon / authenticated by name
+    -- ============================================================================
+
+    DO $$
+    DECLARE
+        t      text;
+        v_seq  text;
+    BEGIN
+        FOREACH t IN ARRAY ARRAY['audit_outbox', 'audit_outbox_dead', 'audit_export_checkpoints', 'audit_export_logs',
+                                 'audit_export_logs_default', 'audit_export_batches', 'audit_export_routes']
+        LOOP
+            EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+            EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', 'deny_all_' || t, t);
+            EXECUTE format(
+                'CREATE POLICY %I ON public.%I AS RESTRICTIVE FOR ALL TO anon, authenticated USING (false) WITH CHECK (false)',
+                'deny_all_' || t, t);
+            -- The exporter is not the owner, so RLS applies to it: it needs its own permissive policy.
+            EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', 'audit_exporter_all_' || t, t);
+            EXECUTE format('CREATE POLICY %I ON public.%I FOR ALL TO audit_exporter USING (true) WITH CHECK (true)',
+                           'audit_exporter_all_' || t, t);
+            EXECUTE format('REVOKE ALL ON TABLE public.%I FROM PUBLIC, anon, authenticated', t);
+            -- service_role has BYPASSRLS, so only a REVOKE keeps it out (absent on plain Postgres).
+            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+                EXECUTE format('REVOKE ALL ON TABLE public.%I FROM service_role', t);
+            END IF;
+        END LOOP;
+
+        -- Monthly partitions that already exist (e.g. from an earlier apply) get the same lockdown.
+        FOR t IN
+            SELECT c.relname FROM pg_inherits i JOIN pg_class c ON c.oid = i.inhrelid
+             WHERE i.inhparent = 'public.audit_export_logs'::regclass AND c.relname ~ '^audit_export_logs_[0-9]{6}$'
+        LOOP
+            PERFORM public.audit_export_ensure_partition(to_date(right(t, 6), 'YYYYMM'));
+        END LOOP;
+
+        FOREACH v_seq IN ARRAY ARRAY['public.audit_export_logs_id_seq',
+                                     pg_get_serial_sequence('public.audit_outbox', 'id'),
+                                     pg_get_serial_sequence('public.audit_export_batches', 'id')]
+        LOOP
+            EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM PUBLIC, anon, authenticated', v_seq);
+            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+                EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM service_role', v_seq);
+            END IF;
+            EXECUTE format('GRANT USAGE, SELECT ON SEQUENCE %s TO audit_exporter', v_seq);
+        END LOOP;
+    END
+    $$;
+
+    -- Supabase grants EXECUTE on new public functions directly to anon/authenticated/service_role,
+    -- so REVOKE FROM PUBLIC alone is a no-op there (checklist §6). Only the exporter may call these.
+    DO $$
+    DECLARE
+        f      text;
+        v_role text;
+    BEGIN
+        FOREACH f IN ARRAY ARRAY['public.audit_export_ensure_partition(date)',
+                                 'public.audit_export_maintain_partitions(integer, integer)',
+                                 'public.audit_export_apply_retention(integer, boolean)',
+                                 'public.audit_export_install_triggers(boolean)',
+                                 'public.audit_export_auth_users(uuid[])',
+                                 'public.audit_export_auth_sessions(uuid[])',
+                                 'public.audit_export_auth_identities(uuid[])',
+                                 'public.audit_export_auth_audit_log(timestamptz, uuid, timestamptz, integer)',
+                                 'public.audit_outbox_enqueue()']
+        LOOP
+            EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC', f);
+            FOREACH v_role IN ARRAY ARRAY['anon', 'authenticated', 'service_role'] LOOP
+                IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = v_role) THEN
+                    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM %I', f, v_role);
+                END IF;
+            END LOOP;
+            IF f <> 'public.audit_outbox_enqueue()' THEN
+                EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO audit_exporter', f);
+            END IF;
+        END LOOP;
+    END
+    $$;
+
+    -- ============================================================================
+    -- audit_exporter grants
+    -- ============================================================================
+
+    GRANT USAGE ON SCHEMA public TO audit_exporter;
+    GRANT SELECT, UPDATE, DELETE ON public.audit_outbox TO audit_exporter;
+    GRANT SELECT, INSERT ON public.audit_outbox_dead TO audit_exporter;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON public.audit_export_checkpoints, public.audit_export_logs,
+        public.audit_export_batches, public.audit_export_routes TO audit_exporter;
+
+    -- Enrichment / backfill lookups on public tables: column-level SELECT on the columns that exist
+    -- here. auth.* goes through the audit_export_auth_* functions above instead.
+    DO $$
+    DECLARE
+        r       record;
+        v_cols  text;
+    BEGIN
+        FOR r IN
+            SELECT * FROM (VALUES
+                ('public', 'profiles',          ARRAY['id', 'email']),
+                ('public', 'subscription',      ARRAY['id', 'org_id', 'is_org', 'consumer_id']),
+                ('public', 'api_keys',          ARRAY['id', 'consumer_id', 'name', 'created_at']),
+                ('public', 'project_api_keys',  ARRAY['id', 'consumer_id', 'name', 'user_id', 'org_id', 'project_name', 'created_at']),
+                ('public', 'redteam_v2',        ARRAY['job_id', 'id', 'org_id', 'project_name', 'run_name', 'created_by',
+                                                      'actioner_email', 'status', 'is_deleted', 'created_at', 'started_at',
+                                                      'ended_at', 'user_metadata'])
+            ) AS t(sch, tbl, cols)
+        LOOP
+            CONTINUE WHEN to_regclass(format('%I.%I', r.sch, r.tbl)) IS NULL;
+            SELECT string_agg(quote_ident(a.attname), ', ' ORDER BY a.attnum) INTO v_cols
+              FROM pg_attribute a
+             WHERE a.attrelid = format('%I.%I', r.sch, r.tbl)::regclass
+               AND a.attnum > 0 AND NOT a.attisdropped AND a.attname = ANY (r.cols);
+            CONTINUE WHEN v_cols IS NULL;
+            BEGIN
+                EXECUTE format('GRANT SELECT (%s) ON %I.%I TO audit_exporter', v_cols, r.sch, r.tbl);
+            EXCEPTION WHEN insufficient_privilege THEN
+                RAISE WARNING 'audit_exporter: cannot grant SELECT on %.%: %', r.sch, r.tbl, SQLERRM;
+            END;
+            -- Lookup tables run RLS deny-all (011): without its own policy the exporter reads zero rows.
+            IF (SELECT relrowsecurity FROM pg_class WHERE oid = format('%I.%I', r.sch, r.tbl)::regclass) THEN
+                BEGIN
+                    -- Only when missing: CREATE POLICY takes ACCESS EXCLUSIVE on a hot table.
+                    IF NOT EXISTS (SELECT 1 FROM pg_policy WHERE polrelid = format('%I.%I', r.sch, r.tbl)::regclass
+                                                             AND polname = 'audit_exporter_read') THEN
+                        EXECUTE format('CREATE POLICY audit_exporter_read ON %I.%I FOR SELECT TO audit_exporter USING (true)',
+                                       r.sch, r.tbl);
+                    END IF;
+                EXCEPTION WHEN insufficient_privilege THEN
+                    RAISE WARNING 'audit_exporter: RLS is on for %.% and no policy could be added, reads return no rows: %',
+                        r.sch, r.tbl, SQLERRM;
+                END;
+            END IF;
+        END LOOP;
+    END
+    $$;
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    DECLARE
+        t        text;
+        f        text;
+        v_role   text;
+        v_part   text := 'audit_export_logs_' || to_char(now() AT TIME ZONE 'UTC', 'YYYYMM');
+    BEGIN
+        IF to_regclass('public.audit_export_destinations') IS NOT NULL THEN
+            RAISE EXCEPTION 'FAILED: public.audit_export_destinations exists: an older draft of this migration was applied here, drop its tables first';
+        END IF;
+
+        FOREACH t IN ARRAY ARRAY['audit_outbox', 'audit_outbox_dead', 'audit_export_checkpoints', 'audit_export_logs',
+                                 'audit_export_logs_default', 'audit_export_batches', 'audit_export_routes', v_part]
+        LOOP
+            IF to_regclass('public.' || t) IS NULL THEN
+                RAISE EXCEPTION 'FAILED: public.% was not created', t;
+            END IF;
+            IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid = ('public.' || t)::regclass) THEN
+                RAISE EXCEPTION 'FAILED: RLS not enabled on public.%', t;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_policy
+                            WHERE polrelid = ('public.' || t)::regclass AND polname = 'deny_all_' || t) THEN
+                RAISE EXCEPTION 'FAILED: deny-all policy missing on public.%', t;
+            END IF;
+        END LOOP;
+
+        -- Every audit table, partition and sequence: no API role holds anything (service_role would bypass RLS).
+        FOR t IN
+            SELECT c.relname FROM pg_class c
+             WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r', 'p', 'S')
+               AND (c.relname LIKE 'audit_export%' OR c.relname LIKE 'audit_outbox%')
+        LOOP
+            FOREACH v_role IN ARRAY ARRAY['anon', 'authenticated', 'service_role'] LOOP
+                CONTINUE WHEN NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = v_role);
+                IF (SELECT relkind FROM pg_class WHERE oid = to_regclass('public.' || t)) = 'S' THEN
+                    IF has_sequence_privilege(v_role, 'public.' || t, 'USAGE, SELECT, UPDATE') THEN
+                        RAISE EXCEPTION 'FAILED: % still has a privilege on sequence public.%', v_role, t;
+                    END IF;
+                ELSIF has_table_privilege(v_role, 'public.' || t, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER') THEN
+                    RAISE EXCEPTION 'FAILED: % still has a privilege on public.%', v_role, t;
+                END IF;
+            END LOOP;
+        END LOOP;
+
+        -- Catches a stale table shape left by an older draft (CREATE TABLE IF NOT EXISTS would keep it).
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                        WHERE table_schema = 'public' AND table_name = 'audit_export_logs' AND column_name = 'owner_user_id')
+           OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                        WHERE table_schema = 'public' AND table_name = 'audit_export_batches' AND column_name = 'client_id')
+           OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                        WHERE table_schema = 'public' AND table_name = 'audit_export_checkpoints' AND column_name = 'client_id')
+           OR EXISTS (SELECT 1 FROM information_schema.columns
+                        WHERE table_schema = 'public' AND table_name = 'audit_export_logs' AND column_name = 'org_id'
+                          AND is_nullable = 'NO') THEN
+            RAISE EXCEPTION 'FAILED: audit export tables have a stale shape';
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM pg_partitioned_table pt
+                         JOIN pg_inherits i ON i.inhparent = pt.partrelid
+                        WHERE pt.partrelid = 'public.audit_export_logs'::regclass
+                          AND pt.partdefid = i.inhrelid
+                          AND i.inhrelid = 'public.audit_export_logs_default'::regclass) THEN
+            RAISE EXCEPTION 'FAILED: audit_export_logs_default is not the DEFAULT partition';
+        END IF;
+
+        IF to_regclass('public.redteam_v2') IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM pg_trigger WHERE tgrelid = to_regclass('public.redteam_v2') AND tgname = 'audit_outbox_redteam_v2' AND tgenabled <> 'D'
+        ) THEN
+            RAISE EXCEPTION 'FAILED: trigger audit_outbox_redteam_v2 missing';
+        END IF;
+        IF to_regclass('public.audit_logs') IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM pg_trigger WHERE tgrelid = to_regclass('public.audit_logs') AND tgname = 'audit_outbox_audit_logs' AND tgenabled <> 'D'
+        ) THEN
+            RAISE EXCEPTION 'FAILED: trigger audit_outbox_audit_logs missing';
+        END IF;
+        IF to_regclass('auth.audit_log_entries') IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM pg_trigger WHERE tgrelid = to_regclass('auth.audit_log_entries')
+                                       AND tgname = 'audit_outbox_auth_audit_log_entries' AND tgenabled <> 'D'
+        ) THEN
+            RAISE EXCEPTION 'FAILED: trigger audit_outbox_auth_audit_log_entries missing';
+        END IF;
+
+        FOREACH f IN ARRAY ARRAY['public.audit_export_ensure_partition(date)',
+                                 'public.audit_export_maintain_partitions(integer, integer)',
+                                 'public.audit_export_apply_retention(integer, boolean)',
+                                 'public.audit_export_install_triggers(boolean)',
+                                 'public.audit_export_auth_users(uuid[])',
+                                 'public.audit_export_auth_sessions(uuid[])',
+                                 'public.audit_export_auth_identities(uuid[])',
+                                 'public.audit_export_auth_audit_log(timestamptz, uuid, timestamptz, integer)',
+                                 'public.audit_outbox_enqueue()']
+        LOOP
+            IF EXISTS (SELECT 1 FROM pg_proc p, aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+                        WHERE p.oid = f::regprocedure AND a.grantee = 0) THEN
+                RAISE EXCEPTION 'FAILED: PUBLIC can execute %', f;
+            END IF;
+            FOREACH v_role IN ARRAY ARRAY['anon', 'authenticated', 'service_role'] LOOP
+                IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = v_role) AND has_function_privilege(v_role, f, 'EXECUTE') THEN
+                    RAISE EXCEPTION 'FAILED: % can execute %', v_role, f;
+                END IF;
+            END LOOP;
+            IF f <> 'public.audit_outbox_enqueue()' AND NOT has_function_privilege('audit_exporter', f, 'EXECUTE') THEN
+                RAISE EXCEPTION 'FAILED: audit_exporter cannot execute %', f;
+            END IF;
+        END LOOP;
+
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'audit_exporter'
+                    AND (rolsuper OR rolbypassrls OR rolcreaterole OR rolcreatedb OR NOT rolcanlogin)) THEN
+            RAISE EXCEPTION 'FAILED: audit_exporter is not a plain least-privilege login role';
+        END IF;
+        -- One privilege per call: a comma list is true when ANY of them is held.
+        IF EXISTS (SELECT 1 FROM (VALUES
+                       ('public.audit_outbox', 'SELECT'), ('public.audit_outbox', 'UPDATE'), ('public.audit_outbox', 'DELETE'),
+                       ('public.audit_outbox_dead', 'SELECT'), ('public.audit_outbox_dead', 'INSERT'),
+                       ('public.audit_export_logs', 'SELECT'), ('public.audit_export_logs', 'INSERT'),
+                       ('public.audit_export_routes', 'SELECT'), ('public.audit_export_routes', 'INSERT'),
+                       ('public.audit_export_routes', 'UPDATE'),
+                       ('public.audit_export_batches', 'SELECT'), ('public.audit_export_batches', 'INSERT'),
+                       ('public.audit_export_batches', 'UPDATE'),
+                       ('public.audit_export_checkpoints', 'SELECT'), ('public.audit_export_checkpoints', 'INSERT'),
+                       ('public.audit_export_checkpoints', 'UPDATE')) AS g(tbl, priv)
+                    WHERE NOT has_table_privilege('audit_exporter', g.tbl, g.priv))
+           OR has_table_privilege('audit_exporter', 'public.audit_outbox', 'INSERT') THEN
+            RAISE EXCEPTION 'FAILED: audit_exporter grants on the export tables are wrong';
+        END IF;
+
+        FOREACH t IN ARRAY ARRAY['public.profiles', 'public.subscription', 'public.api_keys',
+                                 'public.project_api_keys', 'public.redteam_v2']
+        LOOP
+            CONTINUE WHEN to_regclass(t) IS NULL;
+            IF NOT has_any_column_privilege('audit_exporter', t, 'SELECT') THEN
+                RAISE EXCEPTION 'FAILED: audit_exporter has no SELECT on %', t;
+            END IF;
+            IF (SELECT relrowsecurity FROM pg_class WHERE oid = to_regclass(t))
+               AND NOT EXISTS (SELECT 1 FROM pg_policy WHERE polrelid = to_regclass(t) AND polname = 'audit_exporter_read') THEN
+                RAISE EXCEPTION 'FAILED: RLS on % has no audit_exporter_read policy', t;
+            END IF;
+        END LOOP;
+        IF to_regclass('public.profiles') IS NOT NULL AND has_table_privilege('audit_exporter', 'public.profiles', 'SELECT') THEN
+            RAISE EXCEPTION 'FAILED: audit_exporter has table-wide SELECT on public.profiles';
+        END IF;
+
+        RAISE NOTICE 'SUCCESS: audit export tables, partitions, triggers, exporter role and lockdown in place';
+    END $$;
+
+    COMMIT;
+
+  057-audit-export-projects-read.sql: |
+    --
+    -- Migration: 042_audit_export_projects_read
+    -- Description: Lets the audit exporter verify the projects its customer clients are pinned to
+    --              (code/audit-exporter, `scope: project` clients; docs/claude/audit-log-export.md).
+    --                * column-level SELECT on public.projects(id, name, project_id) for the
+    --                  audit_exporter role, nothing else on the table (no config, description,
+    --                  credit or usage columns, no writes);
+    --                * an audit_exporter_read RLS policy, because projects runs RLS deny-all and
+    --                  the role does not bypass RLS (the 041 lookup-table pattern).
+    --              Every run the exporter checks that each pinned project_id still carries the
+    --              pinned name in the pinned org; a rename, a delete or a reused name stops that
+    --              client (fail closed) until its config is fixed.
+    --              lock_timeout is 5s: CREATE POLICY takes ACCESS EXCLUSIVE on projects; on a lock
+    --              timeout just re-run it (it is re-runnable).
+    --              Test harness: scripts/manage/test-audit-export-041/run.sh (applies 041 then 042).
+    --              Requires: key 056 (role audit_exporter).
+    --              Identical for dev and prod (only the psql host/path below differ).
+    --
+
+    BEGIN;
+
+    SET LOCAL lock_timeout = '5s';
+
+    DO $$
+    DECLARE
+        v_cols text;
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'audit_exporter') THEN
+            RAISE EXCEPTION 'role audit_exporter does not exist: apply migration 041 first';
+        END IF;
+        IF to_regclass('public.projects') IS NULL THEN
+            RAISE NOTICE 'public.projects does not exist here: nothing to grant';
+            RETURN;
+        END IF;
+
+        SELECT string_agg(quote_ident(a.attname), ', ' ORDER BY a.attname) INTO v_cols
+          FROM pg_attribute a
+         WHERE a.attrelid = 'public.projects'::regclass
+           AND a.attnum > 0 AND NOT a.attisdropped AND a.attname IN ('id', 'name', 'project_id');
+        IF v_cols IS DISTINCT FROM 'id, name, project_id' THEN
+            RAISE EXCEPTION 'public.projects lacks one of id, name, project_id (found: %)', v_cols;
+        END IF;
+        -- No exception handler: without this grant every project client stops, so fail the migration loudly.
+        EXECUTE format('GRANT SELECT (%s) ON public.projects TO audit_exporter', v_cols);
+
+        IF (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.projects'::regclass)
+           AND NOT EXISTS (SELECT 1 FROM pg_policy WHERE polrelid = 'public.projects'::regclass
+                                                     AND polname = 'audit_exporter_read') THEN
+            -- Only when missing: CREATE POLICY takes ACCESS EXCLUSIVE on a hot table.
+            CREATE POLICY audit_exporter_read ON public.projects FOR SELECT TO audit_exporter USING (true);
+        END IF;
+    END
+    $$;
+
+    --
+    -- Verify the schema changes
+    --
+
+    DO $$
+    DECLARE
+        v_col text;
+    BEGIN
+        IF to_regclass('public.projects') IS NULL THEN
+            RAISE NOTICE 'SUCCESS: public.projects absent, nothing to verify';
+            RETURN;
+        END IF;
+        FOREACH v_col IN ARRAY ARRAY['id', 'name', 'project_id'] LOOP
+            IF NOT has_column_privilege('audit_exporter', 'public.projects', v_col, 'SELECT') THEN
+                RAISE EXCEPTION 'FAILED: audit_exporter cannot SELECT public.projects.%', v_col;
+            END IF;
+        END LOOP;
+        -- One privilege per call: a comma list is true when ANY of them is held.
+        IF has_table_privilege('audit_exporter', 'public.projects', 'SELECT')
+           OR has_table_privilege('audit_exporter', 'public.projects', 'INSERT')
+           OR has_table_privilege('audit_exporter', 'public.projects', 'UPDATE')
+           OR has_table_privilege('audit_exporter', 'public.projects', 'DELETE') THEN
+            RAISE EXCEPTION 'FAILED: audit_exporter holds a table-wide privilege on public.projects';
+        END IF;
+        SELECT a.attname INTO v_col
+          FROM pg_attribute a
+         WHERE a.attrelid = 'public.projects'::regclass AND a.attnum > 0 AND NOT a.attisdropped
+           AND a.attname NOT IN ('id', 'name', 'project_id')
+           AND has_column_privilege('audit_exporter', 'public.projects', a.attname, 'SELECT')
+         LIMIT 1;
+        IF v_col IS NOT NULL THEN
+            RAISE EXCEPTION 'FAILED: audit_exporter can SELECT public.projects.%, only id, name, project_id are allowed', v_col;
+        END IF;
+        IF (SELECT relrowsecurity FROM pg_class WHERE oid = 'public.projects'::regclass)
+           AND NOT EXISTS (SELECT 1 FROM pg_policy WHERE polrelid = 'public.projects'::regclass
+                                                     AND polname = 'audit_exporter_read') THEN
+            RAISE EXCEPTION 'FAILED: RLS on public.projects has no audit_exporter_read policy';
+        END IF;
+        RAISE NOTICE 'SUCCESS: audit_exporter reads public.projects(id, name, project_id) and nothing else';
+    END $$;
+
+    COMMIT;
+
 kind: ConfigMap
 metadata:
   name: supabase-migration

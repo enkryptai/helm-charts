@@ -1,0 +1,67 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchIndexTemplate
+metadata:
+  name: compliance-policy-configs-index-template
+  annotations:
+    "helm.sh/hook-weight": "18"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  name: compliance-policy-configs-index-template
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  indexPatterns:
+    - "compliance_policy_configs"
+  priority: 600
+  template:
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 1
+      codec: best_compression
+    mappings:
+      dynamic: 'false'
+      properties:
+        guardrail_name:
+          type: text
+          fields:
+            keyword:
+              type: keyword
+              ignore_above: 256
+        guardrail_id:
+          type: keyword
+        guardrail_updated_at:
+          type: date
+        coc:
+          properties:
+            input:
+              properties:
+                name:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                id:
+                  type: keyword
+                is_v2:
+                  type: boolean
+            output:
+              properties:
+                name:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                id:
+                  type: keyword
+                is_v2:
+                  type: boolean
+        enabled_detectors:
+          type: keyword
+        fetched_at:
+          type: date
+        detectors:
+          type: object
+          enabled: false
+        config_sha256:
+          type: keyword

@@ -1,0 +1,350 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpensearchIndexTemplate
+metadata:
+  name: compliance-index-template
+  annotations:
+    "helm.sh/hook-weight": "18"
+    "helm.sh/hook": post-install, post-upgrade
+spec:
+  name: compliance-index-template
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+  indexPatterns:
+    - "compliance-*"
+  priority: 500
+  template:
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 1
+      codec: best_compression
+      opendistro.index_state_management.policy_id: compliance_retention_policy
+      plugins.index_state_management.rollover_alias: compliance
+      mapping.total_fields.limit: '2000'
+    mappings:
+      dynamic: 'false'
+      dynamic_templates:
+      - verdict_score_blocks_as_object:
+          path_match: verdict.scores.*
+          match_mapping_type: object
+          mapping:
+            type: object
+            dynamic: true
+      - verdict_scores_as_float:
+          path_match: verdict.scores.*
+          mapping:
+            type: float
+      - verdict_nested_scores_as_float:
+          path_match: verdict.scores.*.*
+          mapping:
+            type: float
+      - verdict_summary_blocks_as_flat:
+          path_match: verdict.summary.*
+          match_mapping_type: object
+          mapping:
+            type: flat_object
+      - verdict_summary_as_long:
+          path_match: verdict.summary.*
+          mapping:
+            type: long
+      - verdict_framework_blocks_as_flat:
+          path_match: verdict.frameworks.*
+          match_mapping_type: object
+          mapping:
+            type: flat_object
+      - verdict_frameworks_as_keyword:
+          path_match: verdict.frameworks.*
+          mapping:
+            type: keyword
+            ignore_above: 512
+      properties:
+        '@timestamp':
+          type: date
+        ingested_at:
+          type: date
+        consumer:
+          properties:
+            id:
+              type: keyword
+            username:
+              type: keyword
+            email:
+              type: keyword
+            user_id:
+              type: keyword
+            org_id:
+              type: keyword
+            subscription_id:
+              type: keyword
+            is_org:
+              type: boolean
+            plan:
+              type: keyword
+            project_name:
+              type: keyword
+            scan_name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            created_by:
+              type: keyword
+        scan:
+          properties:
+            id:
+              type: keyword
+            log_file_id:
+              type: keyword
+            window_id:
+              type: keyword
+            provider:
+              type: keyword
+            event_types:
+              type: keyword
+            updated_by:
+              type: keyword
+            key_fingerprint:
+              type: keyword
+            content_expires_at:
+              type: date
+        source:
+          properties:
+            provider:
+              type: keyword
+            workspace_id:
+              type: keyword
+            service:
+              type: keyword
+            event_type:
+              type: keyword
+            event_id:
+              type: keyword
+        interaction:
+          properties:
+            conversation_id:
+              type: keyword
+            message_id:
+              type: keyword
+            direction:
+              type: keyword
+            content_kind:
+              type: keyword
+            actor_id:
+              type: keyword
+            actor_email:
+              type: keyword
+            client_type:
+              type: keyword
+            model:
+              type: keyword
+            text_sha256:
+              type: keyword
+            text_len:
+              type: long
+            truncated:
+              type: boolean
+            has_files:
+              type: boolean
+            file_names:
+              type: keyword
+              ignore_above: 1024
+            tool_call_id:
+              type: keyword
+            tool_name:
+              type: keyword
+            integration_name:
+              type: keyword
+            mcp_server:
+              type: keyword
+            tool_is_error:
+              type: boolean
+            provenance:
+              type: keyword
+            provenance_reason:
+              type: keyword
+            project_id:
+              type: keyword
+            conversation_url:
+              type: keyword
+              index: false
+            console_workspace_id:
+              type: keyword
+            files:
+              properties:
+                id:
+                  type: keyword
+                name:
+                  type: keyword
+                  ignore_above: 1024
+                mime_type:
+                  type: keyword
+                size_bytes:
+                  type: long
+                md5:
+                  type: keyword
+            generated_files:
+              properties:
+                id:
+                  type: keyword
+                name:
+                  type: keyword
+                  ignore_above: 1024
+                mime_type:
+                  type: keyword
+                size_bytes:
+                  type: long
+                md5:
+                  type: keyword
+            artifacts:
+              properties:
+                id:
+                  type: keyword
+                version_id:
+                  type: keyword
+                title:
+                  type: keyword
+                  ignore_above: 1024
+                type:
+                  type: keyword
+        guardrails:
+          properties:
+            guardrail_name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            guardrail_id:
+              type: keyword
+            guardrail_updated_at:
+              type: date
+            config_sha256:
+              type: keyword
+            enabled_detectors:
+              type: keyword
+            mode:
+              type: keyword
+            coc_policy_name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            coc_policy_id:
+              type: keyword
+            is_v2_coc:
+              type: boolean
+            status:
+              type: long
+            cache_status:
+              type: keyword
+            latency_ms:
+              type: long
+            upstream_latency_ms:
+              type: long
+            request_id:
+              type: keyword
+            gr_metering_mode:
+              type: keyword
+            gr_credit_cost:
+              type: long
+            gr_credit_error:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            credits_used:
+              type: long
+            credits_limit:
+              type: long
+            over_limit:
+              type: boolean
+            credit_would_cost:
+              type: long
+            project_credits_used:
+              type: long
+            project_credits_limit:
+              type: long
+            project_over_limit:
+              type: boolean
+            requests_used:
+              type: long
+            project_requests_used:
+              type: long
+            usage_exceeded:
+              type: keyword
+            detect_status:
+              type: keyword
+            skip_reason:
+              type: keyword
+            error:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+        verdict:
+          properties:
+            flagged:
+              type: boolean
+            flagged_detectors:
+              type: keyword
+            summary:
+              type: object
+              dynamic: true
+              properties:
+                system_prompt_similarity:
+                  type: long
+                policy_violation:
+                  type: long
+                bias:
+                  type: long
+                copyright_ip_similarity:
+                  type: long
+                adherence_score:
+                  type: long
+                relevancy_score:
+                  type: long
+                on_topic:
+                  type: long
+                nsfw:
+                  type: long
+                injection_attack:
+                  type: long
+                keyword_detected:
+                  type: long
+                pii:
+                  type: long
+                toxicity:
+                  type: long
+                is_hallucination:
+                  type: long
+                sponge_attack:
+                  type: long
+            toxicity_categories:
+              type: keyword
+            detected_attacks:
+              type: keyword
+            scores:
+              type: object
+              dynamic: true
+            policy_violation:
+              properties:
+                violated:
+                  type: boolean
+                violating_policy:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+            pii_entities:
+              type: keyword
+            secret_leak:
+              type: boolean
+            frameworks:
+              type: object
+              dynamic: true
+            most_unsafe_content:
+              type: text

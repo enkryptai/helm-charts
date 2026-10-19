@@ -20,7 +20,7 @@ versions it published, and every change is prefixed with the chart it affects.
 
 | Chart             | Version          | Pull request |
 | ----------------- | ---------------- | ------------ |
-| `enkryptai-stack` | 1.2.0 → 1.2.1   | —            |
+| `enkryptai-stack` | 1.2.0 → 1.2.1   | [#129](https://github.com/enkryptai/helm-charts/pull/129) |
 
 ### Added
 

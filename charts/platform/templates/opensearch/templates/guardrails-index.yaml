@@ -19,9 +19,38 @@ spec:
       plugins.index_state_management.rollover_alias: "rollover_policy"
       mapping.total_fields.limit: "2000"
     mappings:
-      dynamic: "false"
+      dynamic: 'false'
+      dynamic_templates:
+      - toxicity_objects_as_flat:
+          path_match: '*.body.details.toxicity.*'
+          match_mapping_type: object
+          mapping:
+            type: flat_object
+      - nsfw_objects_as_flat:
+          path_match: '*.body.details.nsfw.*'
+          match_mapping_type: object
+          mapping:
+            type: flat_object
+      - toxicity_scores_as_float:
+          path_match: '*.body.details.toxicity.*'
+          mapping:
+            type: float
+      - nsfw_scores_as_float:
+          path_match: '*.body.details.nsfw.*'
+          mapping:
+            type: float
+      - user_metadata_objects_as_flat:
+          path_match: '*.body.user_metadata.*'
+          match_mapping_type: object
+          mapping:
+            type: flat_object
+      - user_metadata_leaves_as_keyword:
+          path_match: '*.body.user_metadata.*'
+          mapping:
+            type: keyword
+            ignore_above: 256
       properties:
-        "@timestamp":
+        '@timestamp':
           type: date
         started_at:
           type: long
@@ -119,6 +148,35 @@ spec:
                   ignore_above: 256
             is_playground:
               type: boolean
+            gr_metering_mode:
+              type: keyword
+              ignore_above: 256
+            gr_credit_error:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            gr_credit_cost:
+              type: long
+            project_credits_used:
+              type: long
+            project_over_limit:
+              type: boolean
+            credits_used:
+              type: long
+              ignore_malformed: true
+            credits_limit:
+              type: long
+              ignore_malformed: true
+            over_limit:
+              type: boolean
+            credit_would_cost:
+              type: long
+              ignore_malformed: true
+            project_credits_limit:
+              type: long
+              ignore_malformed: true
             exit_time:
               type: float
             id:
@@ -144,6 +202,8 @@ spec:
               ignore_above: 256
             coc_policy_id:
               type: long
+            is_v2_coc:
+              type: boolean
             headers:
               properties:
                 x-enkrypt-policy:
@@ -170,14 +230,56 @@ spec:
                     keyword:
                       type: keyword
                       ignore_above: 256
+                x-enkrypt-guardrail:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
+                x-enkrypt-mode:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      ignore_above: 256
             body:
               properties:
+                user_metadata:
+                  type: object
+                  dynamic: true
                 entities:
                   type: text
                   fields:
                     keyword:
                       type: keyword
                       ignore_above: 256
+                domain:
+                  type: keyword
+                  ignore_above: 256
+                questionnaire:
+                  properties:
+                    user_types:
+                      type: keyword
+                      ignore_above: 256
+                    data_access:
+                      type: keyword
+                      ignore_above: 256
+                    actions:
+                      type: keyword
+                      ignore_above: 256
+                    decision_impact:
+                      type: keyword
+                      ignore_above: 256
+                details:
+                  type: object
+                  dynamic: true
+                  properties:
+                    toxicity:
+                      type: object
+                      dynamic: true
+                    nsfw:
+                      type: object
+                      dynamic: true
                 detectors:
                   properties:
                     system_prompt:
@@ -194,6 +296,28 @@ spec:
                       properties:
                         enabled:
                           type: boolean
+                        rules:
+                          properties:
+                            id:
+                              type: keyword
+                              ignore_above: 256
+                            risk_category:
+                              type: keyword
+                              ignore_above: 256
+                            applicability:
+                              type: keyword
+                              ignore_above: 256
+                            severity:
+                              type: keyword
+                              ignore_above: 256
+                            frameworks:
+                              type: keyword
+                              ignore_above: 256
+                            source:
+                              type: keyword
+                              ignore_above: 256
+                            suggested:
+                              type: boolean
                     bias:
                       properties:
                         enabled:
@@ -269,8 +393,61 @@ spec:
                 x-enkrypt-ratelimit-identifier:
                   type: keyword
                   ignore_above: 256
+                x-enkrypt-ratelimit-limit-min:
+                  type: float
+                  ignore_malformed: true
+                x-enkrypt-ratelimit-remaining-min:
+                  type: float
+                  ignore_malformed: true
+                x-enkrypt-ratelimit-limit-sec:
+                  type: float
+                  ignore_malformed: true
+                x-enkrypt-ratelimit-remaining-sec:
+                  type: float
+                  ignore_malformed: true
+                x-enkrypt-credits-exceeded:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-credits-mode:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-credits-cost:
+                  type: keyword
+                  ignore_above: 32
+                x-enkrypt-credits-would-cost:
+                  type: keyword
+                  ignore_above: 32
+                x-enkrypt-credits-used:
+                  type: keyword
+                  ignore_above: 32
+                x-enkrypt-credits-limit:
+                  type: keyword
+                  ignore_above: 32
+                x-enkrypt-credits-remaining:
+                  type: keyword
+                  ignore_above: 32
+                x-enkrypt-project-credits-used:
+                  type: keyword
+                  ignore_above: 32
+                x-enkrypt-project-credits-limit:
+                  type: keyword
+                  ignore_above: 32
+                x-enkrypt-project-credits-remaining:
+                  type: keyword
+                  ignore_above: 32
             body:
               properties:
+                inferred:
+                  type: boolean
+                pages_processed:
+                  type: long
+                truncated:
+                  type: boolean
+                processing_time:
+                  type: float
+                domain:
+                  type: keyword
+                  ignore_above: 256
                 summary:
                   properties:
                     system_prompt_similarity:
@@ -305,11 +482,53 @@ spec:
                       type: boolean
                     sponge_attack:
                       type: long
+                details:
+                  type: object
+                  dynamic: true
+                  properties:
+                    toxicity:
+                      type: object
+                      dynamic: true
+                    nsfw:
+                      type: object
+                      dynamic: true
+                    policy_violation:
+                      type: object
+                      dynamic: true
+                    injection_attack:
+                      type: object
+                      dynamic: true
+                      properties:
+                        p_injection:
+                          type: float
+                          ignore_malformed: true
+                        p_jailbreak:
+                          type: float
+                          ignore_malformed: true
+                        detected_attacks:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
+                        explanation:
+                          type: text
+                          fields:
+                            keyword:
+                              type: keyword
+                              ignore_above: 256
                 key:
                   type: text
                   fields:
                     keyword:
                       type: keyword
-                      null_value: "NULL"
+                      null_value: 'NULL'
+                      ignore_above: 256
+                result_message:
+                  type: text
+                  fields:
+                    keyword:
+                      type: keyword
+                      null_value: 'NULL'
                       ignore_above: 256
   dataStream: {}

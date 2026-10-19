@@ -19,9 +19,9 @@ spec:
       plugins.index_state_management.rollover_alias: "rollover_policy"
       mapping.total_fields.limit: "2000"
     mappings:
-      dynamic: "false"
+      dynamic: 'false'
       properties:
-        "@timestamp":
+        '@timestamp':
           type: date
         started_at:
           type: long
@@ -135,6 +135,37 @@ spec:
                   ignore_above: 256
             is_playground:
               type: boolean
+            gr_metering_mode:
+              type: keyword
+              ignore_above: 256
+            gr_credit_error:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            gr_credit_cost:
+              type: long
+              ignore_malformed: true
+            project_credits_used:
+              type: long
+              ignore_malformed: true
+            project_over_limit:
+              type: boolean
+            credits_used:
+              type: long
+              ignore_malformed: true
+            credits_limit:
+              type: long
+              ignore_malformed: true
+            over_limit:
+              type: boolean
+            credit_would_cost:
+              type: long
+              ignore_malformed: true
+            project_credits_limit:
+              type: long
+              ignore_malformed: true
             exit_time:
               type: float
             id:
@@ -171,6 +202,16 @@ spec:
                       ignore_above: 256
             enkrypt:
               properties:
+                credits:
+                  properties:
+                    calls:
+                      properties:
+                        path:
+                          type: keyword
+                          ignore_above: 256
+                        cost:
+                          type: long
+                          ignore_malformed: true
                 tags:
                   type: text
                   fields:
@@ -219,6 +260,30 @@ spec:
                           ignore_above: 256
                     detect_response:
                       properties:
+                        details:
+                          type: object
+                          properties:
+                            injection_attack:
+                              type: object
+                              properties:
+                                p_injection:
+                                  type: float
+                                  ignore_malformed: true
+                                p_jailbreak:
+                                  type: float
+                                  ignore_malformed: true
+                                detected_attacks:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                                explanation:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
                         summary:
                           properties:
                             system_prompt_similarity:
@@ -252,7 +317,7 @@ spec:
                           fields:
                             keyword:
                               type: keyword
-                              null_value: "NULL"
+                              null_value: 'NULL'
                               ignore_above: 256
                     policy:
                       properties:
@@ -400,6 +465,8 @@ spec:
                           properties:
                             pii_redaction:
                               type: boolean
+                        is_guardrail:
+                          type: boolean
                     output_guardrails_policy:
                       properties:
                         enabled:
@@ -424,6 +491,8 @@ spec:
                               type: boolean
                             relevancy:
                               type: boolean
+                        is_guardrail:
+                          type: boolean
         response:
           properties:
             status:
@@ -442,6 +511,36 @@ spec:
                     keyword:
                       type: keyword
                       ignore_above: 256
+                x-enkrypt-credits-exceeded:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-credits-mode:
+                  type: keyword
+                  ignore_above: 256
+                x-enkrypt-credits-cost:
+                  type: long
+                  ignore_malformed: true
+                x-enkrypt-credits-would-cost:
+                  type: long
+                  ignore_malformed: true
+                x-enkrypt-credits-used:
+                  type: long
+                  ignore_malformed: true
+                x-enkrypt-credits-limit:
+                  type: long
+                  ignore_malformed: true
+                x-enkrypt-credits-remaining:
+                  type: long
+                  ignore_malformed: true
+                x-enkrypt-project-credits-used:
+                  type: long
+                  ignore_malformed: true
+                x-enkrypt-project-credits-limit:
+                  type: long
+                  ignore_malformed: true
+                x-enkrypt-project-credits-remaining:
+                  type: long
+                  ignore_malformed: true
             enkrypt:
               properties:
                 metrics:
@@ -502,6 +601,30 @@ spec:
                               type: long
                     detect_response:
                       properties:
+                        details:
+                          type: object
+                          properties:
+                            injection_attack:
+                              type: object
+                              properties:
+                                p_injection:
+                                  type: float
+                                  ignore_malformed: true
+                                p_jailbreak:
+                                  type: float
+                                  ignore_malformed: true
+                                detected_attacks:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
+                                explanation:
+                                  type: text
+                                  fields:
+                                    keyword:
+                                      type: keyword
+                                      ignore_above: 256
                         summary:
                           properties:
                             system_prompt_similarity:
@@ -535,7 +658,7 @@ spec:
                           fields:
                             keyword:
                               type: keyword
-                              null_value: "NULL"
+                              null_value: 'NULL'
                               ignore_above: 256
                     policy:
                       properties:

@@ -1,0 +1,47 @@
+apiVersion: opensearch.opster.io/v1
+kind: OpenSearchISMPolicy
+metadata:
+  name: compliance-retention-policy
+  annotations:
+    helm.sh/hook-weight: "17"
+    helm.sh/hook: "post-install,post-upgrade"
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+
+spec:
+  opensearchCluster:
+    name: {{ .Values.clustername }}
+
+  # The shared rollover policy deletes at 30 days, which is exactly when the provider deletes
+  # the source, so compliance records get their own policy with no delete state.
+  policyId: compliance_retention_policy
+
+  description: "Compliance records: roll over by size, then freeze. Never deleted."
+
+  defaultState: hot
+
+  ismTemplate:
+    indexPatterns:
+      - compliance-*
+    priority: 1000
+
+  states:
+    - name: hot
+      actions:
+        - rollover:
+            minPrimaryShardSize: "50gb"
+            minIndexAge: "30d"
+
+      transitions:
+        - stateName: warm
+          conditions:
+            minIndexAge: "45d"
+
+    - name: warm
+      actions:
+        - readOnly: {}
+
+        - forceMerge:
+            maxNumSegments: 1
+
+      transitions: []

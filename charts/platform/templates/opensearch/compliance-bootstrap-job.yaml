@@ -1,0 +1,83 @@
+# The operator CRDs only manage templates and policies; they cannot create indices. The compliance
+# pod writes with an explicit _id (so a redelivered message overwrites its own record), which data
+# streams forbid, so it needs a rollover alias backed by a real first index, plus a plain side index.
+# Indices are not retro-fitted from templates, so both must be created after the templates exist.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: opensearch-compliance-bootstrap
+  annotations:
+    "helm.sh/hook-weight": "22"
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: bootstrap
+          image: {{ .Values.opensearch.general.image }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -u
+              ES="https://enkryptai-opensearch-cluster:9200"
+              CURL="curl -sk -u $OPENSEARCH_USERNAME:$OPENSEARCH_PASSWORD"
+
+              # status <path> -> HTTP code of GET (000 if unreachable)
+              status() { $CURL -o /dev/null -w '%{http_code}' "$ES/$1"; }
+
+              # The templates and policy are applied asynchronously by the operator, so wait for them.
+              wait_for() {
+                tries=0
+                until [ "$(status "$1")" = "200" ]; do
+                  tries=$((tries+1))
+                  if [ "$tries" -ge 60 ]; then echo "ERROR: timed out waiting for $1"; exit 1; fi
+                  echo "Waiting for $1 ..."
+                  sleep 10
+                done
+              }
+              wait_for "_cluster/health?wait_for_status=yellow&timeout=5s"
+              wait_for "_plugins/_ism/policies/compliance_retention_policy"
+              wait_for "_index_template/compliance-index-template"
+              wait_for "_index_template/compliance-policy-configs-index-template"
+
+              if [ "$(status "_alias/compliance")" = "200" ]; then
+                echo "Alias compliance already exists. Skipping."
+              else
+                echo "Creating compliance-000001 with write alias compliance"
+                out=$($CURL -X PUT "$ES/compliance-000001" -H 'Content-Type: application/json' \
+                  -d '{"aliases": {"compliance": {"is_write_index": true}}}')
+                echo "$out"
+                echo "$out" | grep -q '"acknowledged":true' || exit 1
+              fi
+
+              if [ "$(status "compliance_policy_configs")" = "200" ]; then
+                echo "Index compliance_policy_configs already exists. Skipping."
+              else
+                echo "Creating compliance_policy_configs"
+                out=$($CURL -X PUT "$ES/compliance_policy_configs")
+                echo "$out"
+                echo "$out" | grep -q '"acknowledged":true' || exit 1
+              fi
+              echo "Compliance bootstrap complete"
+          env:
+            - name: OPENSEARCH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: opensearch-cred
+                  key: username
+            - name: OPENSEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opensearch-cred
+                  key: password
+          securityContext:
+            allowPrivilegeEscalation: false

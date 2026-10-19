@@ -20,9 +20,9 @@ spec:
       plugins.index_state_management.rollover_alias: "rollover_policy"
       mapping.total_fields.limit: "2000"
     mappings:
-      dynamic: "false"
+      dynamic: 'false'
       properties:
-        "@timestamp":
+        '@timestamp':
           type: date
         started_at:
           type: long
@@ -122,6 +122,23 @@ spec:
                   ignore_above: 256
             is_db_proxy:
               type: boolean
+            audit:
+              properties:
+                client_ip:
+                  type: keyword
+                  ignore_above: 64
+                client_user_agent:
+                  type: keyword
+                  ignore_above: 512
+                client_source:
+                  type: keyword
+                  ignore_above: 32
+                session_id:
+                  type: keyword
+                  ignore_above: 64
+                auth_type:
+                  type: keyword
+                  ignore_above: 32
             is_cache_only:
               type: boolean
             policy_name:
@@ -167,6 +184,15 @@ spec:
                   type: keyword
                   ignore_above: 256
             deployment_id:
+              type: keyword
+              ignore_above: 256
+            scan_name:
+              type: text
+              fields:
+                keyword:
+                  type: keyword
+                  ignore_above: 256
+            scan_id:
               type: keyword
               ignore_above: 256
             exit_time:

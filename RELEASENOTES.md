@@ -13,70 +13,8 @@ versions it published, and every change is prefixed with the chart it affects.
 | Chart             | Path                     | Latest version |
 | ----------------- | ------------------------ | -------------- |
 | `enkryptai-stack` | `charts/enkryptai-stack` | 1.2.0          |
-| `platform-stack`  | `charts/platform`        | 1.2.1          |
+| `platform-stack`  | `charts/platform`        | 1.2.0          |
 | `platform-core`   | `charts/platform-core`   | 1.3.0          |
-
-## 2026-10-19 — Compliance scan and OpenSearch sync (`platform-stack`)
-
-| Chart            | Version          | Pull request |
-| ---------------- | ---------------- | ------------ |
-| `platform-stack` | 1.2.0 → 1.2.1   | [#128](https://github.com/enkryptai/helm-charts/pull/128) |
-
-### Added
-
-- **platform-stack:** New Supabase migrations `049-add-compliance-scans-table.sql`
-  through `057-audit-export-projects-read.sql`, covering the compliance scans
-  and log files tables, compliance aggregate functions and indexes,
-  `project_credits_usage.updated_at`, Anthropic compliance support, and audit
-  export. The `supabase-migration` ConfigMap now matches the apiaas
-  `migration-sql.yaml`.
-- **platform-stack:** OpenSearch index templates for `compliance`
-  (`compliance-*`, priority 500), `compliance_policy_configs` (priority 600)
-  and `mcp-scanner` (data stream).
-- **platform-stack:** The `compliance_retention_policy` ISM policy for the
-  compliance index. It rolls over and then freezes, and has no delete state.
-- **platform-stack:** The `opensearch-compliance-bootstrap` hook job
-  (`post-install`/`post-upgrade`, weight 22). It waits for the templates and
-  policies, then creates `compliance-000001` with the write alias `compliance`
-  and the `compliance_policy_configs` index. It skips anything that already
-  exists.
-- **platform-stack:** The `rollover_policy` ISM policy, which every index
-  template already referenced but the chart never created.
-
-### Changed
-
-- **platform-stack:** The `admin`, `ai-proxy`, `guardrails` and `red_teaming`
-  index templates were regenerated from `scripts/install/opensearch` in the
-  apiaas repo. They add the audit, credit-metering, policy-violation rules,
-  questionnaire, rate-limit and Red Team v2 request and response fields, and
-  the six `guardrails` `dynamic_templates`. Thirty-two `red_teaming` fields
-  changed from `keyword` to `text` with a `.keyword` sub-field. The `red_teaming`
-  template now also sets the `rollover_policy` ISM settings. Replica counts and
-  the `red_teaming` `total_fields.limit` (3000) are unchanged. Template changes
-  apply to new indices only, so existing data streams pick them up at their
-  next rollover.
-- **platform-stack:** `rollover_policy` auto-attaches to `otel-*`, `admin`,
-  `guardrails`, `ai-proxy`, `leaderboard`, `red_teaming` and `.ds-*` at priority
-  1000. It rolls over at 1 day or 10gb per primary shard, goes read-only at 15
-  days and deletes at 30 days.
-
-### Removed
-
-- **platform-stack:** The `rollbar-policy` ISM policy (`ism-policy.yaml`). It is
-  replaced by `rollover_policy`, so `otel-*` retention changes from 15 to 30
-  days, and the replica-count and force-merge steps are gone. On existing
-  clusters the old policy object is not deleted automatically; remove it with
-  `kubectl delete opensearchismpolicy rollbar-policy -n <namespace>`.
-  The `opensearch.ism.*` values are now unused.
-
-### Notes
-
-- The compliance indices, ISM policy and templates created here are what the
-  `compliance-scan` app in `enkryptai-stack` 1.2.1 expects: the alias
-  `compliance`, the index `compliance_policy_configs` and the policy
-  `compliance_retention_policy`.
-- The `opensearch-compliance-bootstrap` job needs the OpenSearch `admin` user to
-  hold `all_access`, which comes from the security config.
 
 ## 2026-08-27 — Red Team v2
 

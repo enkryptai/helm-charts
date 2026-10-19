@@ -1,0 +1,113 @@
+enabled: false
+
+replicaCount: 1
+
+image:
+  repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-server
+  pullPolicy: IfNotPresent
+  tag: "main"
+
+nameOverride: ""
+fullnameOverride: "leaderboard-server"
+imagePullSecrets: []
+serviceAccountName: ""
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 1
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+
+podLabels:
+  app: leaderboard-server
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+
+env: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  name: http
+
+# Not exposed publicly by default; leaderboard-client reaches it in-cluster.
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: leaderboard-server.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: leaderboard-server-tls
+      hosts:
+        - leaderboard-server.example.com
+
+resources:
+  limits:
+    cpu: 2
+    memory: 1536Mi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+
+livenessProbe:
+  enabled: false
+  httpGet:
+    path: /
+    port: 8000
+  initialDelaySeconds: 30
+  timeoutSeconds: 10
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /
+    port: 8000
+    scheme: HTTP
+  failureThreshold: 3
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 80
+
+volumeMounts: []
+
+volumes: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+configMap:
+  SUPABASE_URL: "https://knrlxljjvsuakfzbeodl.supabase.co"
+
+externalSecrets:
+  enabled: false
+  secrets: []
+
+# Expected keys: SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, BASIC_AUTH
+secrets:
+  name: leaderboard-server-env-secret
+  enabled: false

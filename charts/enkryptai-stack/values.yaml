@@ -28,7 +28,7 @@ nginxalpine:
   tag: "alpine"
 openfgaSyncJob:
   repository: enkryptai-prod/openfga-sync
-  tag: v1.3.0
+  tag: v1.11.0
   annotations: 
     "helm.sh/hook-weight": "-6"    
     "helm.sh/hook": post-install,post-upgrade
@@ -151,6 +151,9 @@ gateway-kong:
       repository: vpcdeployment.azurecr.io/onprem/fluent-bit
       tag: "3.2.1"
       pullPolicy: IfNotPresent
+      envFrom:
+        - secretRef:
+            name: elastic-env-secret
   nameOverride: ""
   fullnameOverride: "gateway-kong"
   annotations: {}
@@ -977,3 +980,275 @@ guardrails-multi-modal:
   tolerations: []
 
   affinity: {}
+
+
+################COMPLIANCE_SCAN###########################
+compliance-scan:
+  enabled: false
+  image:
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/compliance-scan
+    pullPolicy: IfNotPresent
+    tag: "main"
+  # Internal service: it must not share a host with supabase (auth.*). The same host and path on two
+  # ingresses sends all supabase traffic to compliance-scan, which breaks its own startup.
+  ingress:
+    enabled: false
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    hosts:
+      - host: compliance-scan.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - compliance-scan.example.com
+        secretName: compliance-scan-tls
+
+  configMap:
+    GUARDRAILS_DETECT_URL: "http://guardrails:8000/guardrails-detect"
+    POLICY_CACHE_TTL_S: "600"
+    GUARDRAILS_MODE: "metered"
+    KONG_GATEWAY_URL: "http://gateway-kong"
+    NEXT_JS_URL: "http://frontend:3000"
+    VALKEY_HOST: "valkey"
+    VALKEY_PORT: "6379"
+    VALKEY_SSL: "false"
+    VALKEY_DB: "0"
+    STORE_BACKEND: "supabase"
+    SUPABASE_URL: "https://auth.example.com"
+    SUPABASE_SCANS_TABLE: "compliance_scans"
+    SUPABASE_LOG_FILES_TABLE: "log_files"
+    SUPABASE_SUBSCRIPTION_SELECT: "subscription:subscription!compliance_scans_id_fkey(email,consumer_id,plan_name,is_org,org_id)"
+    SINK_BACKEND: "opensearch"
+    OPENSEARCH_URL: "https://enkryptai-opensearch-cluster:9200"
+    OPENSEARCH_VERIFY_TLS: "/etc/opensearch-ca/ca.crt"
+    OPENSEARCH_INDEX: "compliance"
+    OPENSEARCH_POLICY_INDEX: "compliance_policy_configs"
+    QUEUE_BACKEND: "jetstream"
+    NATS_URL: "nats://nats:4222"
+    KEY_RESOLVER: "http"
+    KEY_DECRYPT_URL: "http://frontend:3000/api/compliance/scans"
+    KEY_DECRYPT_AUTH_HEADER: "Authorization"
+  externalSecrets:
+    enabled: false
+    secrets:
+      - name: compliance-scan-env-secret
+        target:
+          name: compliance-scan-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-compliance-scan-env-secret
+  secrets:
+    name: compliance-scan-env-secret
+    enabled: false
+    app: demo
+
+
+################LEADERBOARD_CLIENT###########################
+leaderboard-client:
+  enabled: false
+  image:
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-client
+    pullPolicy: IfNotPresent
+    tag: "main"
+  ingress:
+    enabled: false
+    className: nginx
+    hosts:
+      - host: leaderboard.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - leaderboard.example.com
+        secretName: leaderboard-client-tls
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 90
+  configMap:
+    LEADERBOARD_URL: "http://leaderboard-server:8000/api"
+    LOCAL_API_URL: "http://0.0.0.0:3000/api"
+    NEXT_PUBLIC_ENVIRONMENT: "development"
+    NEXT_PUBLIC_POSTHOG_HOST: "https://us.i.posthog.com"
+  externalSecrets:
+    enabled: false
+    secrets:
+      - name: leaderboard-client-env-secret
+        target:
+          name: leaderboard-client-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-leaderboard-client-env-secret
+  secrets:
+    name: leaderboard-client-env-secret
+    enabled: false
+
+
+################LEADERBOARD_SERVER###########################
+leaderboard-server:
+  enabled: false
+  image:
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-server
+    pullPolicy: IfNotPresent
+    tag: "main"
+  ingress:
+    enabled: false
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 80
+  configMap:
+    SUPABASE_URL: "https://knrlxljjvsuakfzbeodl.supabase.co"
+  externalSecrets:
+    enabled: false
+    secrets:
+      - name: leaderboard-server-env-secret
+        target:
+          name: leaderboard-server-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-leaderboard-server-env-secret
+  secrets:
+    name: leaderboard-server-env-secret
+    enabled: false
+
+
+################MCP_SCANNER###########################
+mcp-scanner:
+  enabled: false
+  image:
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/mcp-scanner
+    pullPolicy: IfNotPresent
+    tag: "main"
+  ingress:
+    enabled: false
+    className: nginx
+    hosts:
+      - host: mcpscanner.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - mcpscanner.example.com
+        secretName: mcp-scanner-tls
+  configMap:
+    MODEL: "gpt-4.1-mini"
+    FROM_EMAIL: "noreply@enkryptai.com"
+    SUPABASE_TABLE: "scan_jobs"
+    SUPABASE_URL: "https://nhecqixvcegdosnmprqn.supabase.co"
+    PRIMARY_MODEL: "gpt-4.1-mini"
+    FALLBACK_MODELS: "together/meta-llama/Llama-3.3-70B-Instruct-Turbo"
+  externalSecrets:
+    enabled: false
+    secrets:
+      - name: mcp-scanner-env-secret
+        target:
+          name: mcp-scanner-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-mcp-scanner-env-secret
+  secrets:
+    name: mcp-scanner-env-secret
+    enabled: false
+
+
+################SKILL_SCANNER###########################
+skill-scanner:
+  enabled: false
+  image:
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/skill-scanner
+    pullPolicy: IfNotPresent
+    tag: "main"
+  ingress:
+    enabled: false
+    className: nginx
+    hosts:
+      - host: skill-scanner.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - skill-scanner.example.com
+        secretName: skill-scanner-tls
+  configMap:
+    SUPABASE_URL: "https://cntaufdextzjjlwlvwws.supabase.co"
+    SUPABASE_TABLE: "scans"
+    OPENAI_MODEL_NAME: "gpt-5.4-mini"
+    MAX_CONCURRENT_SCANS: "16"
+    WORKER_POLL_INTERVAL_SECONDS: "2"
+    STALE_REQUEUE_SECONDS: "0"
+    SCAN_TIMEOUT_SECONDS: "300"
+    CLONE_TIMEOUT_SECONDS: "120"
+    MAX_REPO_SIZE_MB: "500"
+    WORK_DIR: "/work"
+    MOCK_SCANNER: "false"
+    FALLBACK_MODELS: "together_ai/zai-org/GLM-5.3"
+    PRIMARY_MODEL: "gpt-5.4-mini"
+  externalSecrets:
+    enabled: false
+    secrets:
+      - name: skill-scanner-env-secret
+        target:
+          name: skill-scanner-env-secret
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-skill-scanner-env-secret
+  secrets:
+    name: skill-scanner-env-secret
+    enabled: false
+
+
+################SECURE_MCP_GATEWAY###########################
+secure-mcp-gateway:
+  enabled: false
+  image:
+    repository: vpcdeployment.azurecr.io/enkryptai-prod/secure-mcp-gateway
+    pullPolicy: IfNotPresent
+    tag: "main"
+  ingress:
+    enabled: false
+    className: nginx
+    hosts:
+      - host: mcp.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - mcp.example.com
+        secretName: mcp-tls
+  # The config-downloader init container reads S3 credentials from this secret.
+  externalSecrets:
+    enabled: false
+    secrets:
+      - name: s3-credentials
+        target:
+          name: s3-credentials
+          namespace: enkryptai-stack
+        refreshInterval: 15m
+        dataFrom:
+          - extract:
+              key: enkryptaivpc-s3-credentials
+  secrets:
+    name: ""
+    enabled: false

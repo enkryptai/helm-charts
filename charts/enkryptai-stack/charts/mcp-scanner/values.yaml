@@ -1,0 +1,125 @@
+enabled: false
+
+replicaCount: 1
+
+image:
+  repository: vpcdeployment.azurecr.io/enkryptai-prod/mcp-scanner
+  pullPolicy: IfNotPresent
+  tag: "main"
+
+nameOverride: ""
+fullnameOverride: "mcp-scanner"
+imagePullSecrets: []
+serviceAccountName: ""
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+  instrumentation.opentelemetry.io/inject-nodejs: "true"
+
+podLabels:
+  app: mcp-scanner
+
+podSecurityContext:
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  runAsNonRoot: true
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+env: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  name: http
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+  hosts:
+    - host: mcpscanner.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mcp-scanner-tls
+      hosts:
+        - mcpscanner.example.com
+
+resources:
+  limits:
+    cpu: "2"
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 2Gi
+
+livenessProbe:
+  enabled: false
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 60
+  timeoutSeconds: 10
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: 8000
+    scheme: HTTP
+  failureThreshold: 3
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+volumeMounts: []
+
+volumes: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+configMap:
+  MODEL: "gpt-4.1-mini"
+  FROM_EMAIL: "noreply@enkryptai.com"
+  SUPABASE_TABLE: "scan_jobs"
+  SUPABASE_URL: "https://nhecqixvcegdosnmprqn.supabase.co"
+  PRIMARY_MODEL: "gpt-4.1-mini"
+  FALLBACK_MODELS: "together/meta-llama/Llama-3.3-70B-Instruct-Turbo"
+
+externalSecrets:
+  enabled: false
+  secrets: []
+
+# Expected keys: BASIC_AUTH_CRED, OPENAI_API_KEY, RESEND_API_KEY, SUPABASE_KEY,
+# STAKATER_MCP_SCANNER_ENV_SECRET_SECRET, TOGETHER_API_KEY
+secrets:
+  name: mcp-scanner-env-secret
+  enabled: false

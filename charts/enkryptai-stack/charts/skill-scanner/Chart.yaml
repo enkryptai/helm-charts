@@ -1,0 +1,6 @@
+apiVersion: v2
+name: skill-scanner
+description: A Helm chart for EnkryptAI skill-scanner application
+type: application
+version: 1.0.0
+appVersion: "main"

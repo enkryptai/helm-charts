@@ -1,0 +1,115 @@
+enabled: false
+
+replicaCount: 1
+
+image:
+  repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-client
+  pullPolicy: IfNotPresent
+  tag: "main"
+
+nameOverride: ""
+fullnameOverride: "leaderboard-client"
+imagePullSecrets: []
+serviceAccountName: ""
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 1
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+
+podLabels:
+  app: leaderboard-client
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+
+env: {}
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+  name: http
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: leaderboard.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: leaderboard-client-tls
+      hosts:
+        - leaderboard.example.com
+
+resources:
+  limits:
+    cpu: 3
+    memory: 4Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+
+livenessProbe:
+  enabled: false
+  httpGet:
+    path: /
+    port: 3000
+  initialDelaySeconds: 30
+  timeoutSeconds: 10
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /
+    port: 3000
+    scheme: HTTP
+  failureThreshold: 3
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 90
+
+volumeMounts: []
+
+volumes: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+configMap:
+  LEADERBOARD_URL: "http://leaderboard-server:8000/api"
+  LOCAL_API_URL: "http://0.0.0.0:3000/api"
+  NEXT_PUBLIC_ENVIRONMENT: "development"
+  NEXT_PUBLIC_POSTHOG_HOST: "https://us.i.posthog.com"
+
+externalSecrets:
+  enabled: false
+  secrets: []
+
+# Expected keys: DETAILS_PASSWORD, LEADERBOARD_BASIC_AUTH, NEXT_PUBLIC_POSTHOG_KEY
+secrets:
+  name: leaderboard-client-env-secret
+  enabled: false

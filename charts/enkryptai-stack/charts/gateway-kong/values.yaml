@@ -13,6 +13,9 @@ image:
     repository: fluent/fluent-bit
     tag: "3.2.1"
     pullPolicy: IfNotPresent
+    envFrom:
+      - secretRef:
+          name: elastic-env-secret
 
 nameOverride: ""
 fullnameOverride: "gateway-kong"
@@ -106,6 +109,8 @@ secrets:
     KONG_DATABASE: postgres
     KONG_LOG_LEVEL: info
     KONG_MEM_CACHE_SIZE: 128m
+    # Master key for cache value encryption; read by Kong via {vault://env/enkrypt-cache-encryption-key}.
+    ENKRYPT_CACHE_ENCRYPTION_KEY: ""
   gatewayMigration:
     KONG_DATABASE: postgres
     KONG_LOG_LEVEL: error
@@ -158,7 +163,7 @@ configMap:
     DECK_LEADERBOARD_HOST: leaderboard
     DECK_LEADERBOARD_PORT: leaderboard
     DECK_LEADERBOARD_SCHEME: http
-    DECK_MCP_SCANNER_URL: ""
+    DECK_MCP_SCANNER_URL: "http://mcp-scanner:8080"
     DECK_OPENFGA_AUTHORIZATION_MODEL_ID: 01KNHHGPDT5RSKJSBQSH5PP0EV
     DECK_OPENFGA_STORE_ID: 01KNHHGPDJCXMD6RTV06FMVB16
     DECK_OPENFGA_URL: http://openfga:8080
@@ -183,7 +188,9 @@ configMap:
     KONG_PROXY_LISTEN: 0.0.0.0:8000
     KONG_SSL_PROTOCOLS: TLSv1.1 TLSv1.2 TLSv1.3
     KONG_UPSTREAM_KEEPALIVE_MAX_REQUESTS: '100000'
-    DECK_SKILL_SCANNER_URL: ""
+    DECK_SKILL_SCANNER_URL: "http://skill-scanner:8080"
+    # Write-side switch for cache value encryption; read by Kong via {vault://env/enkrypt-cache-encryption-enabled}.
+    ENKRYPT_CACHE_ENCRYPTION_ENABLED: "false"
   migrationEnv:
     KONG_DATABASE: postgres
     KONG_LOG_LEVEL: error

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: leaderboard-server
+description: A Helm chart for EnkryptAI leaderboard-server application
+type: application
+version: 1.0.0
+appVersion: "main"

@@ -79,6 +79,8 @@ data:
           next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
           vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
           keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+          cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+          cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
           initial_sample_model_password: '${{ env "DECK_INITIAL_SAMPLE_MODEL_PASSWORD" }}'
         protocols:
         - http
@@ -94,6 +96,19 @@ data:
             debug_info: return nil
             http_log: return nil
             plugin_info: return nil
+            # Plaintext compliance key: dynamic:false still stores it in _source.
+            request.body.compliance_api_key: return nil
+            # Saved-model secrets: add/modify-model bodies and get-model responses carry
+            # real provider keys; the other services already scrub the request side.
+            request.body.model_config.apikeys: return nil
+            request.body.model_config.auth_data: return nil
+            request.body.model_config.model_jwt_config: return nil
+            request.body.endpoint_configuration.model_config.apikeys: return nil
+            request.body.endpoint_configuration.model_config.auth_data: return nil
+            request.body.endpoint_configuration.model_config.model_jwt_config: return nil
+            response.body.model_config.apikeys: return nil
+            response.body.model_config.auth_data: return nil
+            response.body.model_config.model_jwt_config: return nil
             request.body.password: return nil
             request.headers.api-key: return nil
             request.headers.api_key: return nil
@@ -185,6 +200,13 @@ data:
         - /dashboard/deployments/list-deployments
         - /dashboard/deployments/get-allowed-config
         - /dashboard/consumer-info
+        # rtv2 run READS, dashboard channel. get_common_path() strips the
+        # /dashboard/ prefix, so these hit the SAME whitelist entries, the same
+        # enkrypt-db-proxy branch and the same Next.js route as the direct /rt/
+        # ones -- only the route registration differs.
+        - "~/dashboard/rt/runs/[^/]+$"
+        - "~/dashboard/rt/runs/[^/]+/results$"
+        - "~/dashboard/rt/runs/[^/]+/records$"
         - /dashboard/mcp-hub/servers-list
         - /dashboard/mcp-hub/servers/job-status
         - /dashboard/mcp-hub/servers/summary
@@ -206,6 +228,17 @@ data:
         - /dashboard/mcp-registry/delete-registry
         - /dashboard/mcp-registry/list-registries
         - /dashboard/mcp-registry/bulk-add-servers
+        # Compliance -> Next.js only; the pod (no tenancy) and internal /api/compliance/scans stay unexposed.
+        - /dashboard/compliance/add-scan
+        - /dashboard/compliance/get-scan
+        - /dashboard/compliance/modify-scan
+        - /dashboard/compliance/delete-scan
+        - /dashboard/compliance/list-scans
+        - /dashboard/compliance/start-scan
+        - /dashboard/compliance/pause-scan
+        - /dashboard/compliance/list-log-files
+        - /dashboard/compliance/test-connection
+        - /dashboard/compliance/get-message
         preserve_host: false
         protocols:
         - http
@@ -255,6 +288,14 @@ data:
         - /deployments/list-deployments
         - /deployments/get-allowed-config
         - /consumer-info
+        # rtv2 run READS, served by Next.js rather than the RT proxy: they are
+        # pure DB reads with no runtime component. Launches, /resume, /signal/*,
+        # /compliance/* (framework projector) and the /stream SSE socket stay on
+        # enkrypt_sentry_redteam. Rewritten to /api/users/<id>/rt/runs/... by the
+        # enkrypt-db-proxy handler (is_upstream_path_same).
+        - "~/rt/runs/[^/]+$"
+        - "~/rt/runs/[^/]+/results$"
+        - "~/rt/runs/[^/]+/records$"
         - /redteam/get-task
         - /redteam/task-status
         - /redteam/delete-task
@@ -294,6 +335,17 @@ data:
         - /mcp-registry/delete-registry
         - /mcp-registry/list-registries
         - /mcp-registry/bulk-add-servers
+        # Compliance -> Next.js only; the pod (no tenancy) and internal /api/compliance/scans stay unexposed.
+        - /compliance/add-scan
+        - /compliance/get-scan
+        - /compliance/modify-scan
+        - /compliance/delete-scan
+        - /compliance/list-scans
+        - /compliance/start-scan
+        - /compliance/pause-scan
+        - /compliance/list-log-files
+        - /compliance/test-connection
+        - /compliance/get-message
         preserve_host: false
         protocols:
         - http
@@ -522,6 +574,8 @@ data:
           next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
           vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
           keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+          cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+          cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
         protocols:
         - http
         - https
@@ -659,6 +713,13 @@ data:
         response_buffering: true
         strip_path: true
     - name: enkrypt_red_teaming
+      # The legacy task-based WRITES (add-task, add-custom-task, cancel-task,
+      # model-health, the playground /attack pair and the /public add-custom-task
+      # route) were REMOVED on 2026-09-23: the plugin rewrites them to /v2/*, /v3/*,
+      # /add-task and /attack, and the RT host serves none of those -- it answers
+      # FastAPI's {"detail": "Not Found"}. Do not re-add them without a backend
+      # that implements those paths. What is left below is still live: /redteam/health
+      # (-> /health), and risk-mitigation/findings/datasets, which the dashboard calls.
 
       enabled: true
       host: ${{ env "DECK_RED_TEAMING_HOST" }}
@@ -683,6 +744,8 @@ data:
           next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
           vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
           keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+          cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+          cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
           sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
         protocols:
         - http
@@ -771,20 +834,6 @@ data:
         - /dashboard/redteam/risk-mitigation/system-prompt
         - /dashboard/redteam/risk-mitigation/guardrails-policy
         - /dashboard/redteam/findings
-        - /dashboard/redteam/add-task
-        - /dashboard/redteam/v2/add-task
-        - /dashboard/redteam/v2/add-custom-task
-        - /dashboard/redteam/v3/add-custom-task
-        - /dashboard/redteam/model/add-task
-        - /dashboard/redteam/v2/model/add-task
-        - /dashboard/redteam/v2/model/add-custom-task
-        - /dashboard/redteam/v3/model/add-custom-task
-        - /dashboard/redteam/model-health
-        - /dashboard/redteam/v3/model-health
-        - /dashboard/redteam/model/model-health
-        - /dashboard/redteam/v3/model/model-health
-        - /dashboard/playground/redteam/attack
-        - /dashboard/playground/redteam/model/attack
         preserve_host: false
         protocols:
         - http
@@ -809,22 +858,9 @@ data:
         - /redteam/health
         - /datasets/add-task
         - /datasets/model/add-task
-        - /redteam/model-health
-        - /redteam/v3/model-health
-        - /redteam/model/model-health
-        - /redteam/v3/model/model-health
         - /redteam/risk-mitigation/system-prompt
         - /redteam/risk-mitigation/guardrails-policy
         - /redteam/findings
-        - /redteam/add-task
-        - /redteam/v2/add-task
-        - /redteam/v2/add-custom-task
-        - /redteam/v3/add-custom-task
-        - /redteam/model/add-task
-        - /redteam/v2/model/add-task
-        - /redteam/v2/model/add-custom-task
-        - /redteam/v3/model/add-custom-task
-        - /redteam/cancel-task
         preserve_host: false
         protocols:
         - http
@@ -847,166 +883,6 @@ data:
             - apikey
             - api_key
             run_on_preflight: true
-          protocols:
-          - http
-          - https
-      - name: enkrypt_red_teaming_public
-        https_redirect_status_code: 426
-        path_handling: v0
-        paths:
-        - /public/redteam/v2/add-custom-task
-        - /public/redteam/v3/add-custom-task
-        preserve_host: false
-        protocols:
-        - http
-        - https
-        regex_priority: 0
-        request_buffering: true
-        response_buffering: true
-        strip_path: true
-        plugins:
-        - name: rate-limiting
-          # instance_name: enkrypt_red_teaming_public_rate_limiting
-          enabled: true
-          config:
-            limit_by: ip
-            second: 1
-            minute: 3
-            hour: 5
-            day: 5
-            policy: redis
-            fault_tolerant: false # To prevent abuse when redis is down
-            redis_database: 0
-            redis_host: ${{ env "DECK_KEYDB_HOST" }}
-            redis_port: 6379
-            redis_username: null
-            redis_password: null
-            redis_server_name: ${{ env "DECK_KEYDB_HOST" }}
-            redis_ssl: false
-            redis_ssl_verify: false
-            redis_timeout: 2000
-          protocols:
-          - http
-          - https
-    - name: enkrypt_red_teaming_playground
-
-      # Creating a new service with longer read_timeout
-      # As /attack API might take upto 15 min 
-      enabled: true
-      host: ${{ env "DECK_RED_TEAMING_HOST" }}
-      connect_timeout: 60000
-      port: ${{ env "DECK_RED_TEAMING_PORT" }}
-      protocol: ${{ env "DECK_RED_TEAMING_SCHEME" }}
-      read_timeout: 900000 # 15 min
-      retries: 5
-      write_timeout: 60000
-      plugins:
-      - name: enkrypt-red-teaming
-        # instance_name: enkrypt_red_teaming_playground
-        enabled: true
-        config:
-          enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
-          internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
-          openfga_url: ${{ env "DECK_OPENFGA_URL" }}
-          fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
-          fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
-          red_team_url: ${{ env "DECK_RED_TEAMING_URL" }}
-          next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
-          next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
-          vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
-          keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
-          sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
-        protocols:
-        - http
-        - https
-      - name: http-log
-        # instance_name: elastic_enkrypt_red_teaming_playground_log
-        enabled: true
-        config:
-          content_type: application/json
-          custom_fields_by_lua:
-            consumer.type: return nil
-            consumer.username_lower: return nil
-            debug_info: return nil
-            http_log: return nil
-            plugin_info: return nil
-            request.body.target_model_configuration.model_api_key: return nil
-            request.body.target_model_configuration.model_jwt_config: return nil
-            request.body.target_model_configuration.auth_data: return nil
-            request.body.target_model_configuration.metadata.relay.target_headers: return nil
-            request.headers.api-key: return nil
-            request.headers.api_key: return nil
-            request.headers.apikey: return nil
-            request.headers.authorization: return nil
-            request.headers.x-consumer-custom-id: return nil
-            request.headers.x-consumer-id: return nil
-            request.headers.x-consumer-username: return nil
-            request.headers.x-credential-identifier: return nil
-            request.headers.x-enkrypt-correlation-id: return nil
-            request.ngx_req_id: return ngx.var.request_id
-            request.tls: return nil
-            response.headers.x-kong-proxy-latency: return nil
-            response.headers.x-kong-response-latency: return nil
-            response.headers.x-kong-upstream-latency: return nil
-            route.created_at: return nil
-            route.https_redirect_status_code: return nil
-            route.id: return nil
-            route.path_handling: return nil
-            route.preserve_host: return nil
-            route.protocols: return nil
-            route.regex_priority: return nil
-            route.request_buffering: return nil
-            route.response_buffering: return nil
-            route.service: return nil
-            route.strip_path: return nil
-            route.tags: return nil
-            route.updated_at: return nil
-            route.ws_id: return nil
-            service: return nil
-            tls: return nil
-            tries: return nil
-            upstream_status: return nil
-            workspace: return nil
-            workspace_name: return nil
-          flush_timeout: null
-          headers: {}
-          http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5045
-          keepalive: 60000
-          method: POST
-          queue:
-            initial_retry_delay: 0.01
-            max_batch_size: 250
-            max_bytes: null
-            max_coalescing_delay: 5
-            max_entries: 25000
-            max_retry_delay: 60
-            max_retry_time: 60
-          queue_size: null
-          retry_count: null
-          timeout: 10000
-        protocols:
-        - http
-        - https
-      routes:
-      - name: enkrypt_dashboard_playground_red_teaming
-        https_redirect_status_code: 426
-        path_handling: v0
-        paths:
-        - /dashboard/playground/redteam
-        preserve_host: false
-        protocols:
-        - http
-        - https
-        regex_priority: 0
-        request_buffering: true
-        response_buffering: true
-        strip_path: true
-        plugins:
-        - name: basic-auth
-          # instance_name: enkrypt_dashboard_red_teaming_playground_basic_auth
-          enabled: true
-          config:
-            hide_credentials: true
           protocols:
           - http
           - https
@@ -1381,7 +1257,10 @@ data:
     - name: enkrypt_sentry_redteam
 
       # rev-4 rtv2 (rev-5: client prefix /rt/): forward run API (POST /rt/redteam|eval|threat-modeling|playground,
-      # /rt/runs/{id}/resume|signal; GET /rt/runs/{id}[/results|/records|/compliance]). Upstream = /v1/*.
+      # /rt/runs/{id}/resume|signal; GET /rt/runs/{id}/compliance/{framework}). Upstream = /v1/*.
+      # The run READS (GET /rt/runs/{id}, /results, /records) are NOT on this
+      # service: they are pure DB reads on enkrypt_db_proxy -> Next.js, and sentry
+      # no longer implements them at all. A route here would 404 upstream.
       # Upstream reuses DECK_RED_TEAMING_* (the sentry/redteam-proxy backend that
       # feat/relay-rtv2 extends with /v1/*). Plugin rewrites client /rt/* -> canonical /v1/* (rtv2_canonical).
       # SSE GET /rt/runs/{id}/stream rides the SEPARATE plugin-free service below
@@ -1409,6 +1288,8 @@ data:
           next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
           vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
           keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+          cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+          cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
           sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
         protocols:
         - http
@@ -1439,6 +1320,10 @@ data:
             # target_model_configuration/model_config/endpoint_configuration scrubs above
             # cover. Kong ships rtv2 request bodies to the log store, so null it here.
             request.body.target.api_key: return nil
+            # auth_data / jwt_config ride the rtv2 target too; their legacy twins are
+            # scrubbed above. Any new target field needs the same check.
+            request.body.target.auth_data: return nil
+            request.body.target.jwt_config: return nil
             # A relay target's target_headers carry the customer's own LLM credential;
             # get_cleaned_body copies every key given rather than whitelisting, so
             # both spellings (metadata.relay, bare relay) must be scrubbed.
@@ -1509,18 +1394,22 @@ data:
         path_handling: v0
         paths:
         - /rt/redteam
+        - /rt/redteam/jailbreak
         - /rt/eval
         - /rt/threat-modeling
         - /rt/threat-modeling/categories
         - /rt/threat-modeling/data
         - /rt/playground
+        - /rt/leaderboard
         # Saved-model variants: the caller names a stored model in X-Enkrypt-Model /
         # X-Enkrypt-Model-Version instead of inlining the target, exactly like the
         # legacy /redteam/model/... routes. The plugin resolves the model, projects it
         # into the rtv2 ModelConfig (or the legacy target_model_configuration for
         # model-health) and rewrites /rt/model/<x> to the SAME canonical /v1/<x>.
         - /rt/model/redteam
+        - /rt/model/redteam/jailbreak
         - /rt/model/playground
+        - /rt/model/leaderboard
         - /rt/model/model-health
         # v4.0.0 non-run endpoints. sentry mounts health.router at both / and /v1 and
         # findings/mitigation at /v1, so these canonicalise like everything else here.
@@ -1533,9 +1422,6 @@ data:
         - /rt/health
         - /rt/status-check
         - "~/rt/datasets/[^/]+$"
-        - "~/rt/runs/[^/]+$"
-        - "~/rt/runs/[^/]+/results$"
-        - "~/rt/runs/[^/]+/records$"
         - "~/rt/runs/[^/]+/compliance/[^/]+$"
         - "~/rt/runs/[^/]+/resume$"
         - "~/rt/runs/[^/]+/signal/[^/]+$"
@@ -1573,14 +1459,18 @@ data:
         path_handling: v0
         paths:
         - /dashboard/rt/redteam
+        - /dashboard/rt/redteam/jailbreak
         - /dashboard/rt/eval
         - /dashboard/rt/threat-modeling
         - /dashboard/rt/threat-modeling/categories
         - /dashboard/rt/threat-modeling/data
         - /dashboard/rt/playground
+        - /dashboard/rt/leaderboard
         # Saved-model variants + v4.0.0 non-run endpoints — full mirror of direct.
         - /dashboard/rt/model/redteam
+        - /dashboard/rt/model/redteam/jailbreak
         - /dashboard/rt/model/playground
+        - /dashboard/rt/model/leaderboard
         - /dashboard/rt/model/model-health
         - /dashboard/rt/model-health
         - /dashboard/rt/findings
@@ -1589,9 +1479,6 @@ data:
         - /dashboard/rt/health
         - /dashboard/rt/status-check
         - "~/dashboard/rt/datasets/[^/]+$"
-        - "~/dashboard/rt/runs/[^/]+$"
-        - "~/dashboard/rt/runs/[^/]+/results$"
-        - "~/dashboard/rt/runs/[^/]+/records$"
         - "~/dashboard/rt/runs/[^/]+/compliance/[^/]+$"
         - "~/dashboard/rt/runs/[^/]+/resume$"
         - "~/dashboard/rt/runs/[^/]+/signal/[^/]+$"
@@ -1620,11 +1507,8 @@ data:
         https_redirect_status_code: 426
         path_handling: v0
         paths:
-        - /public/rt/redteam
-        - "~/public/rt/runs/[^/]+$"
-        - "~/public/rt/runs/[^/]+/results$"
-        - "~/public/rt/runs/[^/]+/records$"
-        - "~/public/rt/runs/[^/]+/compliance/[^/]+$"
+        # Exact match: as a prefix this also routed /public/rt/redteam/jailbreak (not public).
+        - "~/public/rt/redteam$"
         preserve_host: false
         protocols:
         - http
@@ -1826,6 +1710,8 @@ data:
           leaderboard_details_password: '${{ env "DECK_LEADERBOARD_DETAILS_PASSWORD" }}'
           leaderboard_public_consumer_email: ${{ env "DECK_LEADERBOARD_PUBLIC_CONSUMER_EMAIL" }}
           keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+          cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+          cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
         protocols:
         - http
         - https
@@ -2007,6 +1893,8 @@ data:
           vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
           red_team_url: ${{ env "DECK_RED_TEAMING_URL" }}
           keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+          cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+          cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
         protocols:
         - http
         - https
@@ -2202,6 +2090,8 @@ data:
           next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
           vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
           keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+          cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+          cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
           guardrails_scheme: ${{ env "DECK_GUARDRAILS_SCHEME" }}
           guardrails_host: ${{ env "DECK_GUARDRAILS_HOST" }}
           guardrails_port: ${{ env "DECK_GUARDRAILS_PORT" }}
@@ -2573,6 +2463,8 @@ data:
           internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
           skill_scanner_url: ${{ env "DECK_SKILL_SCANNER_URL" }}
           keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+          cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+          cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
           skill_scanner_basic_auth: ${{ env "DECK_MCP_SCANNER_BASIC_AUTH" }}
           # Entitlement enforcement is OFF: any valid API key may call the
           # gated GETs. Flip to true (all four kong.yaml copies) to require the

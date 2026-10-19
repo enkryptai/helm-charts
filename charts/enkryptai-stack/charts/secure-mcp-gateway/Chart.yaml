@@ -1,0 +1,6 @@
+apiVersion: v2
+name: secure-mcp-gateway
+description: A Helm chart for EnkryptAI secure-mcp-gateway application
+type: application
+version: 1.0.0
+appVersion: "main"

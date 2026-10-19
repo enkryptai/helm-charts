@@ -12,9 +12,68 @@ versions it published, and every change is prefixed with the chart it affects.
 
 | Chart             | Path                     | Latest version |
 | ----------------- | ------------------------ | -------------- |
-| `enkryptai-stack` | `charts/enkryptai-stack` | 1.2.0          |
+| `enkryptai-stack` | `charts/enkryptai-stack` | 1.2.1          |
 | `platform-stack`  | `charts/platform`        | 1.2.0          |
 | `platform-core`   | `charts/platform-core`   | 1.3.0          |
+
+## 2026-10-19 — New scanner apps and gateway config sync (`enkryptai-stack`)
+
+| Chart             | Version          | Pull request |
+| ----------------- | ---------------- | ------------ |
+| `enkryptai-stack` | 1.2.0 → 1.2.1   | —            |
+
+### Added
+
+- **enkryptai-stack:** Six new application subcharts: `compliance-scan`,
+  `leaderboard-client`, `leaderboard-server`, `mcp-scanner`,
+  `secure-mcp-gateway` and `skill-scanner`. Each has a matching block in
+  `values.yaml` and every one is **disabled by default** (`enabled: false`).
+- **enkryptai-stack:** `compliance-scan` expects the compliance OpenSearch
+  alias (`compliance`), the `compliance_policy_configs` index, the
+  `compliance_retention_policy` ISM policy and Supabase migrations 049 to 057.
+  Install `platform-stack` 1.2.1 first, which creates them.
+- **enkryptai-stack:** The gateway-kong `fluent-bit` container now reads its
+  `envFrom` from `gateway-kong.image.fluentBit.envFrom`. The default is the
+  secret `elastic-env-secret`, so existing installs render the same. Set the list
+  to `[]` to add no environment sources.
+- **enkryptai-stack:** New gateway-kong values for cache encryption:
+  `configMap.gatewayEnv.ENKRYPT_CACHE_ENCRYPTION_ENABLED` (default `"false"`)
+  and `secrets.gateway.ENKRYPT_CACHE_ENCRYPTION_KEY` (empty placeholder). Kong
+  reads both through `{vault://env/enkrypt-cache-encryption-*}`. If you load
+  the gateway secret from an external secret, add `ENKRYPT_CACHE_ENCRYPTION_KEY`
+  there as well.
+
+### Changed
+
+- **enkryptai-stack:** `gateway-temp-config-map.yaml` was synced from the
+  apiaas `gateway-kong-temp-config.yaml`. It adds cache encryption on the
+  caching plugins, the `/compliance/*` and `/dashboard/compliance/*` routes, the
+  `/rt/redteam/jailbreak` and `/rt/leaderboard` routes, and more scrubbed log
+  fields (`model_config.apikeys`, `auth_data`, `compliance_api_key`). Red Team
+  run reads (`/rt/runs/{id}`, `/results`, `/records`) now go through the
+  db-proxy to Next.js.
+- **enkryptai-stack:** The `openfgaSyncJob` image tag changed from `v1.3.0` to
+  `v1.11.0`.
+- **enkryptai-stack:** The `compliance-scan` ingress is disabled by default and
+  its placeholder host is `compliance-scan.example.com`. It used to copy the
+  Supabase host, and two ingresses on the same host and path send all Supabase
+  traffic to `compliance-scan`.
+
+### Removed
+
+- **enkryptai-stack:** The legacy Red Team add-task, model-health and
+  cancel-task routes, the playground `/attack` service and the
+  `/public/rt/runs/...` routes are removed from the gateway config. The
+  `/public/rt/redteam` route now matches exactly.
+
+### Notes
+
+- `gateway-temp-config-map.yaml` is applied by the `gateway-cm-job` from the
+  `main` branch on GitHub, so the new gateway config only takes effect once this
+  change is merged.
+- `secure-mcp-gateway` reads AWS credentials from the secret `s3-credentials`
+  (not the shared `s3-cred`, which holds Supabase Storage keys). It needs an IAM
+  key that can `s3:GetObject` on `enkrypt_mcp_config.json` in its bucket.
 
 ## 2026-08-27 — Red Team v2
 

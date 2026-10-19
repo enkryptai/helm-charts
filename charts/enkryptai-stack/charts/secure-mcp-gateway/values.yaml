@@ -1,0 +1,144 @@
+enabled: false
+
+replicaCount: 1
+
+image:
+  repository: vpcdeployment.azurecr.io/enkryptai-prod/secure-mcp-gateway
+  pullPolicy: IfNotPresent
+  tag: "main"
+
+nameOverride: ""
+fullnameOverride: "secure-mcp-gateway"
+imagePullSecrets: []
+serviceAccountName: ""
+
+strategy: {}
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+
+podLabels:
+  app: secure-mcp-gateway
+
+podSecurityContext:
+  fsGroup: 10001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 10001
+
+command:
+  - /bin/sh
+  - -c
+  - |
+    echo "Listing /app/.enkrypt"
+    ls -a /app/.enkrypt
+    echo
+    echo "Listing /app/.enkrypt/docker"
+    ls /app/.enkrypt/docker
+    echo
+    echo "Starting Secure MCP Gateway..."
+    python src/secure_mcp_gateway/gateway.py
+
+env:
+  # Shared multi-tenant pod: a stdio server's command would run here, next to every tenant.
+  ENKRYPT_ALLOW_STDIO_SERVERS: "false"
+
+# Downloads enkrypt_mcp_config.json from S3 into the shared volume before the
+# gateway starts. Needs the s3-credentials secret (ACCOUNT_ID, AWS_ACCESS_KEY_ID,
+# AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME, S3_BUCKET_REGION).
+initContainers:
+  - name: config-downloader
+    image: amazon/aws-cli:latest
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 10001
+    command:
+      - /bin/sh
+      - -c
+      - |
+        echo "Downloading config file from S3 for ${S3_BUCKET_NAME} in region ${AWS_DEFAULT_REGION} in account ${ACCOUNT_ID}"
+        mkdir -p /app/.enkrypt/docker/
+        aws s3 cp s3://${S3_BUCKET_NAME}/enkrypt_mcp_config.json /app/.enkrypt/docker/enkrypt_mcp_config.json
+        if [ -f /app/.enkrypt/docker/enkrypt_mcp_config.json ]; then
+          echo
+          echo "Config file downloaded successfully. Listing /app/.enkrypt/docker/"
+          ls -la /app/.enkrypt/docker/
+          # Never print the config: it holds API keys and ends up in the log store.
+        else
+          echo
+          echo "Failed to download config file"
+          exit 1
+        fi
+    envFrom:
+      - secretRef:
+          name: s3-credentials
+    volumeMounts:
+      - name: shared-config
+        mountPath: /app/.enkrypt
+
+service:
+  # Other components reach the gateway through this name.
+  serviceName: secure-mcp-gateway-service
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+  name: http
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "200m"
+  hosts:
+    - host: mcp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mcp-tls
+      hosts:
+        - mcp.example.com
+
+resources: {}
+
+livenessProbe:
+  enabled: false
+
+readinessProbe:
+  enabled: false
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+volumeMounts:
+  - name: shared-config
+    mountPath: /app/.enkrypt
+
+volumes:
+  - name: shared-config
+    emptyDir: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+configMap: {}
+
+externalSecrets:
+  enabled: false
+  secrets: []
+
+# The gateway container reads no env secret; the init container uses s3-credentials.
+# Set name to "s3-credentials" with enabled: true to create it from these values.
+secrets:
+  name: ""
+  enabled: false

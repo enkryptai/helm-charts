@@ -1,0 +1,140 @@
+enabled: false
+
+# Keep a single replica: a second concurrent scanner corrupts per-file counts.
+replicaCount: 1
+
+image:
+  repository: vpcdeployment.azurecr.io/enkryptai-prod/compliance-scan
+  pullPolicy: IfNotPresent
+  tag: "main"
+
+nameOverride: ""
+fullnameOverride: "compliance-scan"
+imagePullSecrets: []
+serviceAccountName: ""
+
+# Recreate, not RollingUpdate: a second concurrent scanner corrupts per-file counts.
+strategy:
+  type: Recreate
+
+# 150s lets a 120s in-flight batch drain; killed sooner it is rescanned and billed twice.
+terminationGracePeriodSeconds: 150
+
+podAnnotations:
+  reloader.stakater.com/auto: "true"
+
+podLabels:
+  app: compliance-scan
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+
+env: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  name: http
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: compliance-scan.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: compliance-scan-tls
+      hosts:
+        - compliance-scan.example.com
+
+resources: {}
+
+livenessProbe:
+  enabled: true
+  tcpSocket:
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 20
+  timeoutSeconds: 5
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+
+# Scanner must stay single-instance, so autoscaling is off by default.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 80
+
+# The OpenSearch cluster is served from an internal CA, so OPENSEARCH_VERIFY_TLS
+# points at a CA bundle mounted from this secret.
+volumeMounts:
+  - name: opensearch-ca
+    mountPath: /etc/opensearch-ca
+    readOnly: true
+
+volumes:
+  - name: opensearch-ca
+    secret:
+      secretName: enkryptai-opensearch-ca
+      items:
+        - key: ca.crt
+          path: ca.crt
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+configMap:
+  GUARDRAILS_DETECT_URL: "http://guardrails:8000/guardrails-detect"
+  POLICY_CACHE_TTL_S: "600"
+  GUARDRAILS_MODE: "metered"
+  KONG_GATEWAY_URL: "http://gateway-kong"
+  NEXT_JS_URL: "http://frontend:3000"
+  VALKEY_HOST: "valkey"
+  VALKEY_PORT: "6379"
+  VALKEY_SSL: "false"
+  VALKEY_DB: "0"
+  STORE_BACKEND: "supabase"
+  SUPABASE_URL: "https://auth.example.com"
+  SUPABASE_SCANS_TABLE: "compliance_scans"
+  SUPABASE_LOG_FILES_TABLE: "log_files"
+  SUPABASE_SUBSCRIPTION_SELECT: "subscription:subscription!compliance_scans_id_fkey(email,consumer_id,plan_name,is_org,org_id)"
+  SINK_BACKEND: "opensearch"
+  OPENSEARCH_URL: "https://enkryptai-opensearch-cluster:9200"
+  OPENSEARCH_VERIFY_TLS: "/etc/opensearch-ca/ca.crt"
+  OPENSEARCH_INDEX: "compliance"
+  OPENSEARCH_POLICY_INDEX: "compliance_policy_configs"
+  QUEUE_BACKEND: "jetstream"
+  NATS_URL: "nats://nats.nats:4222"
+  KEY_RESOLVER: "http"
+  KEY_DECRYPT_URL: "http://frontend:3000/api/compliance/scans"
+  KEY_DECRYPT_AUTH_HEADER: "Authorization"
+
+externalSecrets:
+  enabled: false
+  secrets: []
+
+# Expected keys: KONG_SERVICE_BASIC_AUTH, NEXT_JS_BASIC_AUTH, SUPABASE_SERVICE_KEY,
+# OPENSEARCH_USERNAME, OPENSEARCH_PASSWORD, KEY_DECRYPT_AUTH_VALUE
+secrets:
+  name: compliance-scan-env-secret
+  enabled: false

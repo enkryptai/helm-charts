@@ -1,0 +1,6 @@
+apiVersion: v2
+name: compliance-scan
+description: A Helm chart for EnkryptAI compliance-scan application
+type: application
+version: 1.0.0
+appVersion: "main"

@@ -115,7 +115,7 @@ Before installing the EnkryptAI Helm charts, ensure the following components are
 
 | Component                                  | Description                                                                                                               | Installation Reference                                                                       |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| **Kubernetes Cluster**                             | EKS Version **≥ 1.31** (tested on **v1.33.0**)                                                                                | [Kubernetes Docs](https://kubernetes.io/docs/setup/)                                         |
+| **Kubernetes Cluster**                             | EKS Version **≥ 1.31, ≤ 1.34** (tested on **v1.34**)                                                                                | [Kubernetes Docs](https://kubernetes.io/docs/setup/)                                         |
 | **Cert Manager (AWS Certificate Manager)** | Used for managing TLS/SSL certificates for services.                                                                      | [AWS Cert Manager Setup](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) |
 | **Ingress Controller (NGINX)**             | Required for routing external traffic to services inside the cluster.                                                     | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/deploy/)               |
 | **Metrics Server**                         | Required for resource metrics (CPU/Memory) used by autoscalers and monitoring.                                            | [Metrics Server Installation](https://github.com/kubernetes-sigs/metrics-server)             |
@@ -125,7 +125,7 @@ Before installing the EnkryptAI Helm charts, ensure the following components are
 
 We have tested the setup with following versions:
 
-This Helm chart setup has been **tested on Kubernetes v1.33.0** with:
+This Helm chart setup has been **tested on Kubernetes v1.34** with:
 * **AWS EKS** as the underlying cluster provider
 * **Cert manager** for TLS management
 * **NGINX Ingress Controller 1.13.3**

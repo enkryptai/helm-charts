@@ -1,9 +1,9 @@
 dependencies:
 - name: platform-stack
   repository: https://enkryptai.github.io/helm-charts
-  version: 1.1.33
+  version: 1.2.1
 - name: enkryptai-stack
   repository: https://enkryptai.github.io/helm-charts
-  version: 1.1.24
-digest: sha256:b3dff24f7cc620b10bb7629d034166f646b32fc52b4edc22b53b77050d08b20a
-generated: "2026-06-19T19:39:42.675975491+05:30"
+  version: 1.2.1
+digest: sha256:b3848be1271d198c7917f16256fd549892425ba2905ae889173b10757862635a
+generated: "2026-10-21T15:07:51.635944731+05:30"

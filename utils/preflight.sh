@@ -113,10 +113,10 @@ semver_lt() {
 if [ -z "$SRV" ] || [ "$SRV" = "unknown" ]; then
   warn "Could not determine server version"
 else
-  if semver_gte "$SRV" "1.31.0" && semver_lt "$SRV" "1.34.0"; then
-    pass "Kubernetes v${SRV} is within supported range (>=1.31, <1.34) ✓"
+  if semver_gte "$SRV" "1.31.0" && semver_lt "$SRV" "1.35.0"; then
+    pass "Kubernetes v${SRV} is within supported range (>=1.31, <=1.34) ✓"
   else
-    fail "Kubernetes v${SRV} is NOT supported (requires >=1.31 and <1.34)"
+    fail "Kubernetes v${SRV} is NOT supported (requires >=1.31 and <=1.34)"
   fi
 fi
 # ── 2. Ingress Controller ────────────────────────────────────────────────────

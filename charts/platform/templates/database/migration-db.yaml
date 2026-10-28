@@ -3388,10 +3388,10 @@ data:
         NOTIFY pgrst, 'reload schema';
 
   006-create-kong.sql: |
-    CREATE DATABASE kong;
-    CREATE USER kong WITH PASSWORD 'VPt9atRVmGlX35JFeFXAHqmW32EOXWhXUZS6Ve3TLLkOek1STqJUGmx82LZjLuMH';
-    ALTER DATABASE kong OWNER TO kong;
-    GRANT ALL PRIVILEGES ON DATABASE kong TO kong;
+    -- Intentionally empty. The kong database is created by the CNPG bootstrap
+    -- (postInitApplicationSQL in supabase-database.yaml), and the kong user,
+    -- its password and grants by the db-check-and-grant Job (KONG_PG_PASSWORD).
+    -- Kept so the file name stays in supabase_migration_history.
   007-bulk-decrypt-keys.sql: |+
     CREATE OR REPLACE FUNCTION public.bulk_decrypt_keys(encrypted_data text[], encryption_key text)
      RETURNS text[]

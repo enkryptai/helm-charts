@@ -16,6 +16,9 @@ openfga:
 databasekong:
   repository: onprem/postgres
   tag: 18.3-alpine3.22
+  passwordSecret:
+    name: gateway-migration-env-secret
+    key: KONG_PG_PASSWORD
 migrationjob:
   repository: onprem/postgres
   tag: 18.3-alpine3.22
@@ -410,7 +413,6 @@ secrets:
     DB_PORT: 5432
     DB_USER: user
     grant-admin.sql: ""
-    kong.sql: ""
     password: password
     username: username
   postgres:

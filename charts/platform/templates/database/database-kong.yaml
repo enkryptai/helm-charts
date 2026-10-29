@@ -41,6 +41,9 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.databasekong.passwordSecret.name }}
                   key: {{ .Values.databasekong.passwordSecret.key }}
+                  # optional: a missing Secret or key reaches the empty-password check
+                  # below and fails fast, instead of hanging until the Helm timeout.
+                  optional: true
           command:
             - /bin/bash
             - -c

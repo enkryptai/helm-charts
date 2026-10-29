@@ -36,40 +36,62 @@ spec:
           args:
             - |
               export PGPASSWORD="$DB_PASSWORD"
-              
+
+              # ON_ERROR_STOP: without it psql exits 0 when a statement fails.
+              run_psql() {
+                psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 "$@"
+              }
+
               # Create migration tracking table if it doesn't exist
-              psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" <<-EOSQL
-                CREATE TABLE IF NOT EXISTS public.supabase_migration_history (
-                  migration_name VARCHAR(255) PRIMARY KEY,
-                  applied_at TIMESTAMPTZ DEFAULT NOW()
-                );
-              EOSQL
-              
+              if ! run_psql -c "CREATE TABLE IF NOT EXISTS public.supabase_migration_history (
+                    migration_name VARCHAR(255) PRIMARY KEY,
+                    applied_at TIMESTAMPTZ DEFAULT NOW()
+                  );"; then
+                echo "ERROR: Failed to create public.supabase_migration_history"
+                exit 1
+              fi
+
               # Process each SQL file in order
               for f in $(ls -1 /sql-scripts/*.sql | LC_ALL=C sort); do
                 migration_name=$(basename "$f")
                 echo "Checking migration: $migration_name"
-                
-                # Check if migration has already been applied
-                applied=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -t -c \
-                  "SELECT COUNT(*) FROM public.supabase_migration_history WHERE migration_name = '$migration_name';" | tr -d ' ')
-                
-                if [ "$applied" = "0" ]; then
-                  echo "Running new migration: $migration_name"
-                  # ON_ERROR_STOP: without it psql exits 0 when a statement fails, and the
-                  # file would be recorded as applied.
-                  if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -f "$f"; then
-                    # Record successful migration
-                    psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c \
-                      "INSERT INTO public.supabase_migration_history (migration_name) VALUES ('$migration_name') ON CONFLICT (migration_name) DO NOTHING;"
-                    echo "Successfully applied migration: $migration_name"
-                  else
-                    echo "ERROR: Failed to apply migration: $migration_name"
-                    exit 1
-                  fi
-                else
-                  echo "Skipping already applied migration: $migration_name"
+
+                # Check if migration has already been applied. Anything but 0 or 1
+                # (a failed query gives an empty string) must not count as applied.
+                if ! applied=$(run_psql -tA -c \
+                  "SELECT COUNT(*) FROM public.supabase_migration_history WHERE migration_name = '$migration_name';"); then
+                  echo "ERROR: Failed to check migration history for: $migration_name"
+                  exit 1
                 fi
+
+                case "$applied" in
+                  0)
+                    echo "Running new migration: $migration_name"
+                    record="INSERT INTO public.supabase_migration_history (migration_name) VALUES ('$migration_name') ON CONFLICT (migration_name) DO NOTHING;"
+                    if grep -qiE '^[[:space:]]*(BEGIN|START TRANSACTION)[[:space:]]*;' "$f"; then
+                      # The file manages its own transactions (054 commits ALTER TYPE ... ADD VALUE
+                      # before using the new values), so it cannot run inside -1.
+                      run_psql -f "$f" && run_psql -c "$record"
+                    else
+                      # -1: the file and its history row commit together or not at all, so a
+                      # failed file leaves nothing behind and the retry can run it again.
+                      run_psql -1 -f "$f" -c "$record"
+                    fi
+                    if [ $? -eq 0 ]; then
+                      echo "Successfully applied migration: $migration_name"
+                    else
+                      echo "ERROR: Failed to apply migration: $migration_name"
+                      exit 1
+                    fi
+                    ;;
+                  1)
+                    echo "Skipping already applied migration: $migration_name"
+                    ;;
+                  *)
+                    echo "ERROR: Unexpected migration history result for $migration_name: '$applied'"
+                    exit 1
+                    ;;
+                esac
               done
               
               echo "Migration check complete"

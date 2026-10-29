@@ -40,13 +40,15 @@ Do these before `helm upgrade` of an existing `platform-stack` release:
        meta.helm.sh/release-namespace=enkryptai-stack --overwrite
    done
    ```
-2. **Kong database password.** Add `KONG_PG_PASSWORD` to
-   `gateway-migration-env-secret`, run
-   `ALTER USER kong WITH PASSWORD '<same value>';` in the Supabase database,
-   then upgrade and restart Kong. Treat the old password as compromised: it was
+2. **Kong database password.** Put a new `KONG_PG_PASSWORD` in both
+   `gateway-migration-env-secret` and `gateway-env-secret`, run
+   `helm upgrade`, then restart `gateway-kong`. The `db-check-and-grant` Job
+   sets the database password from the Secret on upgrade, so no manual
+   `ALTER USER` is needed. Both Secrets must hold the same value, or Kong
+   fails on its next restart. Treat the old password as compromised: it was
    published in `006-create-kong.sql` in 1.2.0 and 1.2.1.
 3. **GPU operator.** Set `platform-core.gpu-operator.enabled: true` if the
-   cluster uses it.
+   cluster uses it. Upgrading without it removes the GPU operator.
 4. Replace `backup.*` values, if set, with `supabase.backup` /
    `openfga.backup` (see Added).
 
@@ -71,11 +73,18 @@ Do these before `helm upgrade` of an existing `platform-stack` release:
   the password is empty. It no longer runs `secrets.supabase.kong.sql`.
 - **platform-stack:** The migration Job runs each file with
   `ON_ERROR_STOP=1` (a failing file is no longer recorded as applied) and
-  sorts with `LC_ALL=C`.
+  sorts with `LC_ALL=C`. Files without their own `BEGIN` run with `psql -1`
+  together with their history row, so a failed file leaves nothing behind
+  and the retry can run it again. The Job fails if the tracking table or the
+  history check fails, instead of skipping every file.
+- **platform-stack:** `KONG_PG_PASSWORD` is read with `optional: true`, so a
+  missing Secret fails the Job fast instead of hanging until the Helm timeout.
 - **platform-stack:** Migrations: `002b` no longer creates
   `filter_invitations_by_project`; `006-create-kong.sql` is an empty
   placeholder; `023`/`024` skip the `recent_signups` view until GoTrue has
   added `auth.users.email_confirmed_at`; `048` and `054` synced from apiaas.
+  These edits reach fresh installs only: the Job never re-runs a file it has
+  recorded, so upgraded databases keep the old version.
 - **platform-stack:** Image tags: Supabase Postgres `16.0.3`, redteam-job
   `prod-v1.0.98`, busybox `uclibc`, k8s-driver-manager `v0.10.0`, vfio
   manager CUDA `12.6.2-base-ubi9`, valkey `9.1.2`, nats config reloader

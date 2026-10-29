@@ -87,7 +87,7 @@ Do these before `helm upgrade` of an existing `platform-stack` release:
   (`migration.yaml`), which ran without tracking.
 - **platform-stack:** Unused `backup.openfgsS3Bucket`,
   `backup.supabaseS3Bucket` and `secrets.supabase.kong.sql`.
-- `enkryptai-lite` from `index.yaml` and the README.
+- `enkryptai-lite` from the README and troubleshooting docs.
 
 ## 2026-10-19 — Compliance scan and OpenSearch sync (`platform-stack`)
 

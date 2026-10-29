@@ -220,7 +220,6 @@ Below are available Helm Charts. To install complete enkryptai-stack you need to
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
 | [`platform`](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
-| [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
 
 
 #### Installation of EnkryptAI Stack
@@ -297,7 +296,6 @@ Read the documentation of each chart to perform post-installation tasks. This is
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | [`enkryptai-stack Doc`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
 | [`platform Doc `](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
-| [`enkryptai-lite Doc`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
 
 ### NOTE: Provide SSL Certificates for Your Domains
 

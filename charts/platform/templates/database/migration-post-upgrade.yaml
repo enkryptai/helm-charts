@@ -46,7 +46,7 @@ spec:
               EOSQL
               
               # Process each SQL file in order
-              for f in $(ls -1 /sql-scripts/*.sql | sort); do
+              for f in $(ls -1 /sql-scripts/*.sql | LC_ALL=C sort); do
                 migration_name=$(basename "$f")
                 echo "Checking migration: $migration_name"
                 
@@ -56,7 +56,9 @@ spec:
                 
                 if [ "$applied" = "0" ]; then
                   echo "Running new migration: $migration_name"
-                  if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$f"; then
+                  # ON_ERROR_STOP: without it psql exits 0 when a statement fails, and the
+                  # file would be recorded as applied.
+                  if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -f "$f"; then
                     # Record successful migration
                     psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c \
                       "INSERT INTO public.supabase_migration_history (migration_name) VALUES ('$migration_name') ON CONFLICT (migration_name) DO NOTHING;"

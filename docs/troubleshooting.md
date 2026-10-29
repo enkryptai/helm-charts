@@ -67,7 +67,7 @@ kubectl get ns enkryptai-stack
 ```
 - Run Helm dry-run for debugging:
 ```bash
-helm install enkryptai-stack ./enkryptai-lite --debug --dry-run
+helm install enkryptai enkryptai/enkryptai-stack -n enkryptai-stack -f ./values/enkryptai-stack.yaml --debug --dry-run
 ```
 - Check for conflicting resources from previous installations.
 

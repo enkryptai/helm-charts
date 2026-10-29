@@ -4,8 +4,7 @@ kind: OpensearchRole
 metadata:
   name: alerting-read-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -21,8 +20,7 @@ kind: OpensearchRole
 metadata:
   name: alerting-ack-alerts
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -35,8 +33,7 @@ kind: OpensearchRole
 metadata:
   name: alerting-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -57,8 +54,7 @@ kind: OpensearchRole
 metadata:
   name: anomaly-read-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -77,8 +73,7 @@ kind: OpensearchRole
 metadata:
   name: anomaly-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -99,8 +94,7 @@ kind: OpensearchRole
 metadata:
   name: notebooks-read-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -114,8 +108,7 @@ kind: OpensearchRole
 metadata:
   name: notebooks-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -133,8 +126,7 @@ kind: OpensearchRole
 metadata:
   name: observability-read-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -147,8 +139,7 @@ kind: OpensearchRole
 metadata:
   name: observability-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -165,8 +156,7 @@ kind: OpensearchRole
 metadata:
   name: reports-read-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -183,8 +173,7 @@ kind: OpensearchRole
 metadata:
   name: reports-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -206,8 +195,7 @@ kind: OpensearchRole
 metadata:
   name: asynchronous-search-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -224,8 +212,7 @@ kind: OpensearchRole
 metadata:
   name: asynchronous-search-read-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -239,8 +226,7 @@ kind: OpensearchRole
 metadata:
   name: index-management-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -260,8 +246,7 @@ kind: OpensearchRole
 metadata:
   name: cross-cluster-replication-leader-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -279,8 +264,7 @@ kind: OpensearchRole
 metadata:
   name: cross-cluster-replication-follower-full-access
   annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "15") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -298,117 +282,3 @@ spec:
         - indices:admin/plugins/replication/index/stop
         - indices:admin/plugins/replication/index/update
         - indices:admin/plugins/replication/index/status_check
----
-# ------------------------------
-# Tenants (from tenants.yml)
-# ------------------------------
-apiVersion: opensearch.opster.io/v1
-kind: OpensearchTenant
-metadata:
-  name: global
-  annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
-spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
----
-apiVersion: opensearch.opster.io/v1
-kind: OpensearchTenant
-metadata:
-  name: admin
-  annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
-spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
----
-apiVersion: opensearch.opster.io/v1
-kind: OpensearchTenant
-metadata:
-  name: kibanaserver
-  annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
-spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
----
-# ------------------------------
-# Role Mappings (from roles_mapping.yml)
-# ------------------------------
-apiVersion: opensearch.opster.io/v1
-kind: OpensearchUserRoleBinding
-metadata:
-  name: all-access
-  annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
-spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
-  roles:
-    - all_access
-  backendRoles:
-    - admin
----
-apiVersion: opensearch.opster.io/v1
-kind: OpensearchUserRoleBinding
-metadata:
-  name: own-index
-  annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
-spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
-  roles:
-    - own_index
-  users:
-    - "*"
----
-apiVersion: opensearch.opster.io/v1
-kind: OpensearchUserRoleBinding
-metadata:
-  name: readall
-  annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
-spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
-  roles:
-    - readall
-  backendRoles:
-    - readall
----
-apiVersion: opensearch.opster.io/v1
-kind: OpensearchUserRoleBinding
-metadata:
-  name: manage-snapshots
-  annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
-spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
-  roles:
-    - manage_snapshots
-  backendRoles:
-    - snapshotrestore
----
-apiVersion: opensearch.opster.io/v1
-kind: OpensearchUserRoleBinding
-metadata:
-  name: dashboard-server
-  annotations:
-    "helm.sh/hook-weight": "15"
-    "helm.sh/hook": post-install
-spec:
-  opensearchCluster:
-    name: {{ .Values.clustername }}
-  roles:
-    - dashboard_server
-  users:
-    - dashboarduser

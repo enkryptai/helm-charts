@@ -79,6 +79,13 @@ opensearch:
     indexPattern: "otel-*"
     retentionDays: 15
 platform-core:
+  # false (default): platform-core is its own release, installed first
+  # (helm install platform-core enkryptai/platform-core), and the database,
+  # OpenSearch and Argo resources here are normal resources that helm upgrade
+  # updates. true: platform-core is bundled into this release and those
+  # resources stay post-install hooks, as in 1.2.x. Existing 1.2.x installs
+  # set true; switching an existing release to false is blocked by a guard.
+  enabled: false
   namespaces:
     - name: argo-events
       labels:

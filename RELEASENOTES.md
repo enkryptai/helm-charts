@@ -13,8 +13,82 @@ versions it published, and every change is prefixed with the chart it affects.
 | Chart             | Path                     | Latest version |
 | ----------------- | ------------------------ | -------------- |
 | `enkryptai-stack` | `charts/enkryptai-stack` | 1.2.1          |
-| `platform-stack`  | `charts/platform`        | 1.2.2          |
-| `platform-core`   | `charts/platform-core`   | 1.3.0          |
+| `platform-stack`  | `charts/platform`        | 1.3.0          |
+| `platform-core`   | `charts/platform-core`   | 1.3.1          |
+
+## Unreleased — platform-core as its own release (`platform-stack`, `platform-core`)
+
+| Chart            | Version         | Pull request |
+| ---------------- | --------------- | ------------ |
+| `platform-stack` | 1.2.2 → 1.3.0   | TBD |
+| `platform-core`  | 1.3.0 → 1.3.1   | TBD |
+
+### Upgrading from 1.2.x
+
+Existing installs keep one release. Before `helm upgrade` of an existing
+`platform-stack` release:
+
+1. **Set `platform-core.enabled: true`** in your platform values. The default
+   is now `false` (platform-core as its own release). Upgrading an existing
+   release with `false` fails with "release ... still owns platform-core",
+   because it would delete the operators, their CRDs and the OpenSearch
+   cluster.
+2. Coming from 1.2.1, also do the 1.2.2 steps below (Argo CRD adoption, Kong
+   password, GPU flag, backup values).
+
+With `platform-core.enabled: true` the release renders the same resources as
+1.2.2, apart from the changes listed here. Moving an existing install to
+separate releases is not supported yet; reinstall to change layout.
+
+### Added
+
+- **platform-stack:** `platform-core.enabled` (default `false`). With `false`,
+  platform-core is installed first as its own release
+  (`helm install platform-core enkryptai/platform-core`), and the CNPG
+  Clusters, the OpenSearch cluster, its roles, tenants, role bindings, index
+  templates and ISM policies, the Argo EventBus, EventSource and Sensor, the
+  NATS Streams and the `opensearch-cred` and `openfga-env-secret` Secrets are
+  normal resources: `helm upgrade` now updates them and no longer deletes and
+  recreates the post-upgrade ones. With `true` they stay hooks, as in 1.2.x.
+  The migration ConfigMap and the three Jobs stay hooks in both layouts.
+- **platform-stack:** upgrade guard (`templates/platform-core-guard.yaml`):
+  stops an upgrade with `platform-core.enabled: false` when this release
+  still owns the platform-core CRDs.
+- **platform-stack:** `helm.sh/resource-policy: keep` on `supabase-cluster`,
+  `cluster-openfga` and `enkryptai-opensearch`, so `helm uninstall` leaves
+  the data in place. `utils/uninstall.sh` deletes them explicitly.
+- **platform-core:** `helm.sh/resource-policy: keep` on the OpenSearch
+  operator CRDs, as the CNPG CRDs already have. Deleting these CRDs deleted
+  the OpenSearch cluster and its data. The CRDs are now rendered from
+  `files/opensearch-operator-crds/` (unchanged from opensearch-operator
+  2.8.0) with `opensearch-operator.installCRDs: false`.
+
+### Changed
+
+- **platform-core:** default values now match the `platform-core:` block of
+  platform-stack (image tags, `gpu-operator.enabled: false`,
+  `argo-workflows.crds.full: false`, `singleNamespace: false`, Argo
+  retention policy, `argo-events.namespaceOverride`), so a separate
+  platform-core release renders the same resources as the bundled one.
+- **utils/uninstall.sh:** uninstalls `enkryptai`, then `platform`, deletes the
+  data clusters while the operators still run, then uninstalls
+  `platform-core`. Label selectors include `platform-core`.
+- **README:** install order platform-core → platform → enkryptai, and how to
+  build the platform-core values file.
+
+### Removed
+
+- **platform-stack:** the second copy of the 3 OpenSearch tenants and 5 role
+  bindings at the end of `roles-all.yaml` (also in `tenant.yaml` and
+  `role-binding.yaml`). As normal resources the duplicates would fail the
+  install.
+
+### Notes
+
+- **Helm 4** applies server-side. The OpenSearch operator co-owns
+  `spec.nodePools` of the OpenSearch cluster, so the first `helm upgrade` of
+  `platform` after an install with separate releases needs
+  `--force-conflicts`.
 
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 

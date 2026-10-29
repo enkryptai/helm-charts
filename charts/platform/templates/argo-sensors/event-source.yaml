@@ -150,8 +150,7 @@ metadata:
   name: redteam-run
   namespace: argo-events
   annotations:
-    "helm.sh/hook-weight": "5"
-    "helm.sh/hook": post-install, post-upgrade
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install, post-upgrade" "weight" "5") | nindent 4 }}
 spec:
   insecure: true
   eventBusName: redteam-eventbus 

@@ -67,4 +67,12 @@ spec:
   instances: 3
   storage:
      size: 20Gi
+  {{- with .Values.supabase.backup }}
+  backup:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.supabase.plugins }}
+  plugins:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 ---

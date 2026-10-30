@@ -4,24 +4,33 @@ global:
   imagePullSecrets: []
 aws:
   region: "us-west-2"
-backup:
-  openfgsS3Bucket: "s3://vpc"
-  supabaseS3Bucket: "s3://vpc"
+# Backups are off by default and left to the customer. For each CNPG Cluster,
+# `backup` is rendered as-is into spec.backup and `plugins` into spec.plugins
+# (CNPG 1.29: prefer the Barman Cloud plugin over in-tree barmanObjectStore).
+# The Clusters are post-install hooks, so these only apply on a fresh install;
+# on an existing install patch the Cluster resource directly.
 supabase:
   repository: supabase
-  tag: 16.0.1
+  tag: 16.0.3
+  backup: {}
+  plugins: []
 openfga:
   repository: onprem/postgresql
   tag: 17.9-system-trixie
+  backup: {}
+  plugins: []
 databasekong:
   repository: onprem/postgres
   tag: 18.3-alpine3.22
+  passwordSecret:
+    name: gateway-migration-env-secret
+    key: KONG_PG_PASSWORD
 migrationjob:
   repository: onprem/postgres
   tag: 18.3-alpine3.22
 sensor:
   natsURL: "nats://nats.enkryptai-stack:4222"
-  jobversion: "prod-v1.0.34"
+  jobversion: "prod-v1.0.98"
   jobImage: vpcdeployment.azurecr.io/enkryptai-prod/redteam-job
   env:
     - name: WORKER_TYPE
@@ -52,7 +61,7 @@ opensearch:
   dashboards:
     image: "vpcdeployment.azurecr.io/onprem/opensearch-dashboards:3.2.0"
   initHelper:
-    image: "vpcdeployment.azurecr.io/onprem/busybox:latest"
+    image: "vpcdeployment.azurecr.io/onprem/busybox:uclibc"
   security:
   securityconfig: false
   users:
@@ -93,6 +102,9 @@ platform-core:
         repository: vpcdeployment.azurecr.io/onprem/kube-rbac-proxy
         tag: "v0.21.2"
   gpu-operator:
+    # Off by default; set true on clusters that need the NVIDIA GPU operator
+    # (it also installs the driver unless driver.enabled is false).
+    enabled: false
     daemonsets:
       tolerations:
         - key: dedicated
@@ -154,7 +166,7 @@ platform-core:
       manager:
         repository: vpcdeployment.azurecr.io
         image: onprem/k8s-driver-manager
-        version: "v0.7.0"
+        version: "v0.10.0"
       imagePullSecrets: []
         # - example-registry
     vgpuManager:
@@ -175,7 +187,7 @@ platform-core:
     vfioManager:
       repository: vpcdeployment.azurecr.io
       image: onprem/cuda
-      version: "v0.10.0"
+      version: "12.6.2-base-ubi9"
       imagePullSecrets: []
       # - example-registry
     vgpuDeviceManager:
@@ -229,7 +241,7 @@ platform-core:
     image:
       registry: "vpcdeployment.azurecr.io"
       repository: onprem/valkey
-      tag: "latest"
+      tag: "9.1.2"
   nats:
     natsBox:
       container:
@@ -243,7 +255,7 @@ platform-core:
     reloader:
       image:
         repository: onprem/nats-server-config-reloader
-        tag: 0.21.1
+        tag: 0.23.0
     container:
       image:
         repository: onprem/nats
@@ -336,7 +348,7 @@ platform-core:
           - version: 2.12.6
             natsImage: vpcdeployment.azurecr.io/onprem/nats:2.12.6
             metricsExporterImage: vpcdeployment.azurecr.io/onprem/prometheus-nats-exporter:0.19.2
-            configReloaderImage: vpcdeployment.azurecr.io/onprem/nats-server-config-reloader:0.21.1
+            configReloaderImage: vpcdeployment.azurecr.io/onprem/nats-server-config-reloader:0.23.0
             startCommand: /nats-server
     global:
       image:
@@ -346,6 +358,12 @@ platform-core:
       imagePullSecrets: []
       # - name: example-registry
   argo-workflows:
+    # Minimal CRDs rendered by Helm. full: true instead runs a pre-install Job that
+    # downloads the CRDs from GitHub with registry.k8s.io/kubectl (no air-gap).
+    # Upgrading from full: true needs the existing argoproj.io CRDs adopted by
+    # Helm first (see RELEASENOTES 1.2.2).
+    crds:
+      full: false
     images:
       tag: ""
       pullPolicy: Always
@@ -410,7 +428,6 @@ secrets:
     DB_PORT: 5432
     DB_USER: user
     grant-admin.sql: ""
-    kong.sql: ""
     password: password
     username: username
   postgres:

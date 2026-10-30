@@ -13,8 +13,115 @@ versions it published, and every change is prefixed with the chart it affects.
 | Chart             | Path                     | Latest version |
 | ----------------- | ------------------------ | -------------- |
 | `enkryptai-stack` | `charts/enkryptai-stack` | 1.2.1          |
-| `platform-stack`  | `charts/platform`        | 1.2.1          |
+| `platform-stack`  | `charts/platform`        | 1.2.2          |
 | `platform-core`   | `charts/platform-core`   | 1.3.0          |
+
+## 2026-10-29 — On-prem review fixes (`platform-stack`)
+
+| Chart            | Version         | Pull request |
+| ---------------- | --------------- | ------------ |
+| `platform-stack` | 1.2.1 → 1.2.2   | [#132](https://github.com/enkryptai/helm-charts/pull/132) |
+
+### Upgrading from 1.2.1
+
+Do these before `helm upgrade` of an existing `platform-stack` release:
+
+1. **Adopt the Argo Workflows CRDs.** The 1.2.1 CRD install Job applied them
+   outside Helm, and Helm now renders them, so the upgrade fails with
+   "invalid ownership metadata" until they are adopted (replace `platform`
+   with your release name):
+
+   ```bash
+   for c in clusterworkflowtemplates cronworkflows workflowartifactgctasks \
+            workfloweventbindings workflows workflowtaskresults workflowtasksets \
+            workflowtemplates; do
+     kubectl label crd $c.argoproj.io app.kubernetes.io/managed-by=Helm --overwrite
+     kubectl annotate crd $c.argoproj.io meta.helm.sh/release-name=platform \
+       meta.helm.sh/release-namespace=enkryptai-stack --overwrite
+   done
+   ```
+
+   **Releases installed with Helm 4 only.** Check the apply method first:
+
+   ```bash
+   helm get metadata platform -n enkryptai-stack -o json | jq -r .applyMethod
+   ```
+
+   If it prints `ssa`, also run the step below after the loop above. Helm 4
+   applies server-side, and the 1.2.1 Job's server-side apply left `kubectl`
+   owning the CRD fields, so without this step the upgrade fails with
+   `conflict with "kubectl": .spec.versions` on `clusterworkflowtemplates`,
+   `cronworkflows`, `workflows` and `workflowtemplates`. That failed upgrade is
+   a partial apply (it rolls the EventBus), so run this step first instead of
+   retrying. No `--force-conflicts` is needed. Releases installed with Helm 3
+   don't need it, even when upgraded with Helm 4.
+
+   ```bash
+   for c in clusterworkflowtemplates cronworkflows workflowartifactgctasks \
+            workfloweventbindings workflows workflowtaskresults workflowtasksets \
+            workflowtemplates; do
+     i=$(kubectl get crd $c.argoproj.io --show-managed-fields -o json | jq '[.metadata.managedFields[].manager] | index("kubectl")')
+     [ "$i" = null ] || kubectl patch crd $c.argoproj.io --type=json \
+       -p "[{\"op\":\"test\",\"path\":\"/metadata/managedFields/$i/manager\",\"value\":\"kubectl\"},{\"op\":\"remove\",\"path\":\"/metadata/managedFields/$i\"}]"
+   done
+   ```
+2. **Kong database password.** Put a new `KONG_PG_PASSWORD` in both
+   `gateway-migration-env-secret` and `gateway-env-secret`, run
+   `helm upgrade`, then restart `gateway-kong`. The `db-check-and-grant` Job
+   sets the database password from the Secret on upgrade, so no manual
+   `ALTER USER` is needed. Both Secrets must hold the same value, or Kong
+   fails on its next restart. Treat the old password as compromised: it was
+   published in `006-create-kong.sql` in 1.2.0 and 1.2.1.
+3. **GPU operator.** Set `platform-core.gpu-operator.enabled: true` if the
+   cluster uses it. Upgrading without it removes the GPU operator.
+4. Replace `backup.*` values, if set, with `supabase.backup` /
+   `openfga.backup` (see Added).
+
+### Added
+
+- **platform-stack:** `supabase.backup`, `supabase.plugins`, `openfga.backup`
+  and `openfga.plugins`, rendered as-is into each CNPG Cluster's
+  `spec.backup` / `spec.plugins` (CNPG 1.29: prefer the Barman Cloud plugin).
+  Off by default. The Clusters are post-install hooks, so the values apply to
+  fresh installs only; on an existing install patch the Cluster directly.
+- **platform-stack:** `databasekong.passwordSecret.{name,key}` (default
+  `gateway-migration-env-secret` / `KONG_PG_PASSWORD`).
+
+### Changed
+
+- **platform-stack:** `platform-core.argo-workflows.crds.full: false`. Helm
+  renders the minimal Argo Workflows CRDs; the CRD install Job, its GitHub
+  download and the `registry.k8s.io/kubectl` image are gone.
+- **platform-stack:** `platform-core.gpu-operator.enabled: false` by default.
+- **platform-stack:** The `db-check-and-grant` Job creates the `kong` role if
+  missing and sets its password from the Secret through `psql -v`; it fails if
+  the password is empty. It no longer runs `secrets.supabase.kong.sql`.
+- **platform-stack:** The migration Job runs each file with
+  `ON_ERROR_STOP=1` (a failing file is no longer recorded as applied) and
+  sorts with `LC_ALL=C`. Files without their own `BEGIN` run with `psql -1`
+  together with their history row, so a failed file leaves nothing behind
+  and the retry can run it again. The Job fails if the tracking table or the
+  history check fails, instead of skipping every file.
+- **platform-stack:** `KONG_PG_PASSWORD` is read with `optional: true`, so a
+  missing Secret fails the Job fast instead of hanging until the Helm timeout.
+- **platform-stack:** Migrations: `002b` no longer creates
+  `filter_invitations_by_project`; `006-create-kong.sql` is an empty
+  placeholder; `023`/`024` skip the `recent_signups` view until GoTrue has
+  added `auth.users.email_confirmed_at`; `048` and `054` synced from apiaas.
+  These edits reach fresh installs only: the Job never re-runs a file it has
+  recorded, so upgraded databases keep the old version.
+- **platform-stack:** Image tags: Supabase Postgres `16.0.3`, redteam-job
+  `prod-v1.0.98`, busybox `uclibc`, k8s-driver-manager `v0.10.0`, vfio
+  manager CUDA `12.6.2-base-ubi9`, valkey `9.1.2`, nats config reloader
+  `0.23.0`.
+
+### Removed
+
+- **platform-stack:** The second migration Job `db-migration-supabase`
+  (`migration.yaml`), which ran without tracking.
+- **platform-stack:** Unused `backup.openfgsS3Bucket`,
+  `backup.supabaseS3Bucket` and `secrets.supabase.kong.sql`.
+- `enkryptai-lite` from the README and troubleshooting docs.
 
 ## 2026-10-19 — Compliance scan and OpenSearch sync (`platform-stack`)
 

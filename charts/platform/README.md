@@ -16,8 +16,6 @@ Complete platform infrastructure stack
 |-----|------|---------|-------------|
 | adminpassword.secretName | string | `"opensearch-cred"` |  |
 | aws.region | string | `"us-west-2"` |  |
-| backup.openfgsS3Bucket | string | `"s3://vpc"` |  |
-| backup.supabaseS3Bucket | string | `"s3://vpc"` |  |
 | clustername | string | `"enkryptai-opensearch"` |  |
 | databasekong.repository | string | `"onprem/postgres"` |  |
 | databasekong.tag | int | `16` |  |
@@ -26,6 +24,8 @@ Complete platform infrastructure stack
 | global.registry | string | `"vpcdeployment.azurecr.io"` |  |
 | migrationjob.repository | string | `"onprem/postgres"` |  |
 | migrationjob.tag | int | `15` |  |
+| openfga.backup | object | `{}` | Rendered into the CNPG Cluster spec.backup (fresh install only) |
+| openfga.plugins | list | `[]` | Rendered into the CNPG Cluster spec.plugins, e.g. Barman Cloud (fresh install only) |
 | openfga.repository | string | `"onprem/postgresql"` |  |
 | openfga.tag | string | `"17.4-8"` |  |
 | opensearch.dashboards.image | string | `"vpcdeployment.azurecr.io/onprem/opensearch-dashboards:3.2.0"` |  |
@@ -152,9 +152,9 @@ Complete platform infrastructure stack
 | platform-core.gpu-operator.driver.image | string | `"onprem/nvidia-driver"` |  |
 | platform-core.gpu-operator.driver.manager.image | string | `"onprem/k8s-driver-manager"` |  |
 | platform-core.gpu-operator.driver.manager.repository | string | `"vpcdeployment.azurecr.io"` |  |
-| platform-core.gpu-operator.driver.manager.version | string | `"v0.7.0"` |  |
+| platform-core.gpu-operator.driver.manager.version | string | `"v0.10.0"` |  |
 | platform-core.gpu-operator.driver.repository | string | `"vpcdeployment.azurecr.io"` |  |
-| platform-core.gpu-operator.driver.version | string | `"525.85.12-ubi9"` |  |
+| platform-core.gpu-operator.driver.version | string | `"580.126.20"` |  |
 | platform-core.gpu-operator.gdrcopy.image | string | `"onprem/gdrdrv"` |  |
 | platform-core.gpu-operator.gdrcopy.repository | string | `"vpcdeployment.azurecr.io"` |  |
 | platform-core.gpu-operator.gdrcopy.version | string | `"v2.4.1-2"` |  |
@@ -171,13 +171,13 @@ Complete platform infrastructure stack
 | platform-core.gpu-operator.node-feature-discovery.image.tag | string | `"v0.16.6"` |  |
 | platform-core.gpu-operator.nodeStatusExporter.image | string | `"onprem/gpu-operator-validator"` |  |
 | platform-core.gpu-operator.nodeStatusExporter.repository | string | `"vpcdeployment.azurecr.io"` |  |
-| platform-core.gpu-operator.nodeStatusExporter.version | string | `"v24.9.0"` |  |
+| platform-core.gpu-operator.nodeStatusExporter.version | string | `"v26.3.0"` |  |
 | platform-core.gpu-operator.operator.image | string | `"onprem/gpu-operator"` |  |
 | platform-core.gpu-operator.operator.initContainer.image | string | `"onprem/gpu-operator-init"` |  |
 | platform-core.gpu-operator.operator.initContainer.repository | string | `"vpcdeployment.azurecr.io"` |  |
-| platform-core.gpu-operator.operator.initContainer.version | string | `"v24.9.0"` |  |
+| platform-core.gpu-operator.operator.initContainer.version | string | `"v26.3.0"` |  |
 | platform-core.gpu-operator.operator.repository | string | `"vpcdeployment.azurecr.io"` |  |
-| platform-core.gpu-operator.operator.version | string | `"v24.9.0"` |  |
+| platform-core.gpu-operator.operator.version | string | `"v26.3.0"` |  |
 | platform-core.gpu-operator.sandboxDevicePlugin.image | string | `"onprem/kubevirt-gpu-device-plugin"` |  |
 | platform-core.gpu-operator.sandboxDevicePlugin.repository | string | `"vpcdeployment.azurecr.io"` |  |
 | platform-core.gpu-operator.sandboxDevicePlugin.version | string | `"v1.2.10"` |  |
@@ -186,7 +186,7 @@ Complete platform infrastructure stack
 | platform-core.gpu-operator.toolkit.version | string | `"v1.13.1-ubi8"` |  |
 | platform-core.gpu-operator.validator.image | string | `"onprem/gpu-operator-validator"` |  |
 | platform-core.gpu-operator.validator.repository | string | `"vpcdeployment.azurecr.io"` |  |
-| platform-core.gpu-operator.validator.version | string | `"v24.9.0"` |  |
+| platform-core.gpu-operator.validator.version | string | `"v26.3.0"` |  |
 | platform-core.gpu-operator.vfioManager.image | string | `"onprem/cuda"` |  |
 | platform-core.gpu-operator.vfioManager.repository | string | `"vpcdeployment.azurecr.io"` |  |
 | platform-core.gpu-operator.vfioManager.version | string | `"12.6.2-base-ubi9"` |  |
@@ -195,7 +195,7 @@ Complete platform infrastructure stack
 | platform-core.gpu-operator.vgpuDeviceManager.version | string | `"v0.2.8"` |  |
 | platform-core.gpu-operator.vgpuManager.driverManager.image | string | `"onprem/k8s-driver-manager"` |  |
 | platform-core.gpu-operator.vgpuManager.driverManager.repository | string | `"vpcdeployment.azurecr.io"` |  |
-| platform-core.gpu-operator.vgpuManager.driverManager.version | string | `"v0.7.0"` |  |
+| platform-core.gpu-operator.vgpuManager.driverManager.version | string | `"v0.10.0"` |  |
 | platform-core.gpu-operator.vgpuManager.image | string | `"onprem/vgpu-manager"` |  |
 | platform-core.gpu-operator.vgpuManager.repository | string | `"vpcdeployment.azurecr.io"` |  |
 | platform-core.keydb.imageRepository | string | `"vpcdeployment.azurecr.io/onprem/keydb"` |  |
@@ -221,10 +221,12 @@ Complete platform infrastructure stack
 | platform-core.opensearch-operator.manager.image.repository | string | `"vpcdeployment.azurecr.io/onprem/opensearch-operator"` |  |
 | platform-core.opensearch-operator.manager.image.tag | string | `"2.8.0"` |  |
 | sensor.jobImage | string | `"vpcdeployment.azurecr.io/enkryptai-dev/redteam-job"` |  |
-| sensor.jobversion | string | `"dev-v1.1.76"` |  |
+| sensor.jobversion | string | `"prod-v1.0.98"` |  |
 | sensor.natsURL | string | `"nats://nats.enkryptai-stack:4222"` |  |
+| supabase.backup | object | `{}` | Rendered into the CNPG Cluster spec.backup (fresh install only) |
+| supabase.plugins | list | `[]` | Rendered into the CNPG Cluster spec.plugins, e.g. Barman Cloud (fresh install only) |
 | supabase.repository | string | `"supabase"` |  |
-| supabase.tag | string | `"16.0.1"` |  |
+| supabase.tag | string | `"16.0.3"` |  |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

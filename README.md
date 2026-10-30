@@ -79,6 +79,8 @@ kubectl create namespace redteam-jobs
 | enkryptai-stack | superuser-secret             |
 | redteam-jobs    | redteam-proxy-env-secret     |
 
+> **Note:** `platform-stack` reads `KONG_PG_PASSWORD` from `gateway-migration-env-secret` to create the `kong` database user, so create this Secret before installing `platform-stack`. `gateway-env-secret` must hold the same `KONG_PG_PASSWORD`.
+
 > **Note:**  
 > If the required secrets are **not provided by the EnkryptAI Team**, you may need to make certain configuration changes manually.  
 > Please refer to the [secrets documentation](./docs/secrets.md) for detailed instructions.
@@ -96,7 +98,7 @@ The following table summarizes which applications use each secret.
 | `elastic-env-secret`           | `gateway-kong`, `opensearch`                                         |
 | `frontend-env-secret`          | `frontend`                                                           |
 | `gateway-env-secret`           | `gateway-kong`                                                       |
-| `gateway-migration-env-secret` | `gateway-kong`                                                       |
+| `gateway-migration-env-secret` | `gateway-kong`, platform-stack `db-check-and-grant` Job (`KONG_PG_PASSWORD`) |
 | `guardrails-env-secret`        | `guardrails`                                                         |
 | `onprem`                       | Supabase (on-prem database and related services)                     |
 | `openfga-env-secret`           | `openfga`                                                            |
@@ -220,7 +222,6 @@ Below are available Helm Charts. To install complete enkryptai-stack you need to
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | [`enkryptai-stack`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
 | [`platform`](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
-| [`enkryptai-lite`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
 
 
 #### Installation of EnkryptAI Stack
@@ -297,7 +298,6 @@ Read the documentation of each chart to perform post-installation tasks. This is
 | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | [`enkryptai-stack Doc`](./charts/enkryptai-stack/README.md) | Full-stack deployment including all EnkryptAI services                       |
 | [`platform Doc `](./charts/enkryptai-stack/README.md)        | Core platform dependencies and shared infrastructure                         |
-| [`enkryptai-lite Doc`](./charts/enkryptai-lite/README.md)   | Lightweight deployment — includes Red Teaming and Guardrails components only |
 
 ### NOTE: Provide SSL Certificates for Your Domains
 

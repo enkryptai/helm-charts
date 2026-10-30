@@ -4,7 +4,8 @@ metadata:
   name: db-check-and-grant
   annotations:  
     "helm.sh/hook-weight": "21"
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
@@ -29,11 +30,20 @@ spec:
                 secretKeyRef:
                   name: superuser-secret
                   key: DB_PASSWORD
-            - name: GRANT_SQL
+            - name: KONG_PG_USER
               valueFrom:
                 secretKeyRef:
-                  name: superuser-secret
-                  key: kong.sql
+                  name: {{ .Values.databasekong.passwordSecret.name }}
+                  key: KONG_PG_USER
+                  optional: true
+            - name: KONG_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.databasekong.passwordSecret.name }}
+                  key: {{ .Values.databasekong.passwordSecret.key }}
+                  # optional: a missing Secret or key reaches the empty-password check
+                  # below and fails fast, instead of hanging until the Helm timeout.
+                  optional: true
           command:
             - /bin/bash
             - -c
@@ -53,9 +63,21 @@ spec:
                 exit 1
               fi
 
-              echo "✅ Database is up. Applying GRANT SQL..."
-              echo "$GRANT_SQL" | PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1
-              echo "🎯 Grant applied successfully."
+              if [ -z "$KONG_PG_PASSWORD" ]; then
+                echo "❌ KONG_PG_PASSWORD is empty; refusing to create the kong role without a password."
+                exit 1
+              fi
+
+              echo "✅ Database is up. Creating kong role and setting its password..."
+              PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 \
+                -v kong_user="${KONG_PG_USER:-kong}" -v kong_password="$KONG_PG_PASSWORD" <<'SQL'
+              SELECT format('CREATE ROLE %I LOGIN', :'kong_user')
+              WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'kong_user')\gexec
+              ALTER ROLE :"kong_user" WITH LOGIN PASSWORD :'kong_password';
+              ALTER DATABASE kong OWNER TO :"kong_user";
+              GRANT ALL PRIVILEGES ON DATABASE kong TO :"kong_user";
+              SQL
+              echo "🎯 kong role ready."
 
       {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:

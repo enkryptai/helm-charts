@@ -660,18 +660,9 @@ data:
     COMMENT ON COLUMN public.invitations.invitation_id_hash IS 'Hash of the ID';
     
     
-    --
-    -- Name: filter_invitations_by_project(text[]); Type: FUNCTION; Schema: public; Owner: -
-    --
-    
-    CREATE OR REPLACE FUNCTION public.filter_invitations_by_project(projects text[]) RETURNS SETOF public.invitations
-        LANGUAGE sql
-        AS $$select *
-      from invitations
-      where exists (
-        select 1 from jsonb_array_elements(latest_config->'roles') as elem
-        where elem->>'project' = any (projects)
-      );$$;
+    -- filter_invitations_by_project(text[]) is not created on-prem: its body
+    -- uses an unqualified table name, which fails with the empty search_path
+    -- above, and 025-harden-function-security.sql omits it for that reason.
     
     
     --
@@ -3388,10 +3379,10 @@ data:
         NOTIFY pgrst, 'reload schema';
 
   006-create-kong.sql: |
-    CREATE DATABASE kong;
-    CREATE USER kong WITH PASSWORD 'VPt9atRVmGlX35JFeFXAHqmW32EOXWhXUZS6Ve3TLLkOek1STqJUGmx82LZjLuMH';
-    ALTER DATABASE kong OWNER TO kong;
-    GRANT ALL PRIVILEGES ON DATABASE kong TO kong;
+    -- Intentionally empty. The kong database is created by the CNPG bootstrap
+    -- (postInitApplicationSQL in supabase-database.yaml), and the kong user,
+    -- its password and grants by the db-check-and-grant Job (KONG_PG_PASSWORD).
+    -- Kept so the file name stays in supabase_migration_history.
   007-bulk-decrypt-keys.sql: |+
     CREATE OR REPLACE FUNCTION public.bulk_decrypt_keys(encrypted_data text[], encryption_key text)
      RETURNS text[]
@@ -4323,20 +4314,35 @@ data:
     --              daily digest GitHub Action (.github/workflows/svc-daily-digest.yml).
     --              Granted to service_role only; the digest workflow uses the
     --              service-role key for authentication.
+    --
+    -- On a fresh on-prem install this runs before GoTrue has migrated auth.users
+    -- (no email_confirmed_at yet), so the view is created only when the column
+    -- exists. The view is used only by the SaaS daily digest.
     -- ============================================================================
 
-    CREATE OR REPLACE VIEW public.recent_signups AS
-    SELECT
-        u.id,
-        u.email,
-        u.created_at,
-        u.email_confirmed_at,
-        u.last_sign_in_at,
-        u.raw_user_meta_data->>'full_name'  AS full_name,
-        u.raw_user_meta_data->>'provider'   AS signup_provider
-    FROM auth.users u;
-
-    GRANT SELECT ON public.recent_signups TO service_role;
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'auth' AND table_name = 'users' AND column_name = 'email_confirmed_at'
+      ) THEN
+        EXECUTE $view$
+          CREATE OR REPLACE VIEW public.recent_signups AS
+          SELECT
+              u.id,
+              u.email,
+              u.created_at,
+              u.email_confirmed_at,
+              u.last_sign_in_at,
+              u.raw_user_meta_data->>'full_name'  AS full_name,
+              u.raw_user_meta_data->>'provider'   AS signup_provider
+          FROM auth.users u
+        $view$;
+        GRANT SELECT ON public.recent_signups TO service_role;
+      ELSE
+        RAISE NOTICE 'Skipping public.recent_signups: auth.users.email_confirmed_at does not exist yet';
+      END IF;
+    END $$;
 
     COMMIT;
   024-restrict-recent-signups-view.sql: |
@@ -4376,26 +4382,29 @@ data:
 
     -- ============================================================================
     -- Lock down public.recent_signups to service_role only.
-    -- ============================================================================
-
-    -- Remove the implicit anon/authenticated grants attached by Supabase default
-    -- privileges when 008 created the view. These two roles are exactly what the
-    -- 0002 / 0010 advisors check for. REVOKE is a no-op if the grant is absent.
-    REVOKE ALL ON public.recent_signups FROM anon, authenticated;
-
-    -- Defensive: ensure no PUBLIC grant lingers either.
-    REVOKE ALL ON public.recent_signups FROM PUBLIC;
-
-    -- Re-assert the single intended grant (idempotent; the daily-digest job reads
-    -- the view through PostgREST using the service-role key).
-    GRANT SELECT ON public.recent_signups TO service_role;
-
-    -- ============================================================================
-    -- Verify the resulting grants are exactly what we expect.
+    -- Skipped when 023 did not create the view (fresh on-prem install).
     -- ============================================================================
 
     DO $$
     BEGIN
+      IF to_regclass('public.recent_signups') IS NULL THEN
+        RAISE NOTICE 'Skipping: public.recent_signups does not exist';
+        RETURN;
+      END IF;
+
+      -- Remove the implicit anon/authenticated grants attached by Supabase default
+      -- privileges when 008 created the view. These two roles are exactly what the
+      -- 0002 / 0010 advisors check for. REVOKE is a no-op if the grant is absent.
+      REVOKE ALL ON public.recent_signups FROM anon, authenticated;
+
+      -- Defensive: ensure no PUBLIC grant lingers either.
+      REVOKE ALL ON public.recent_signups FROM PUBLIC;
+
+      -- Re-assert the single intended grant (idempotent; the daily-digest job reads
+      -- the view through PostgREST using the service-role key).
+      GRANT SELECT ON public.recent_signups TO service_role;
+
+      -- Verify the resulting grants are exactly what we expect.
       IF has_table_privilege('anon', 'public.recent_signups', 'SELECT') THEN
         RAISE EXCEPTION 'FAILED: anon still holds SELECT on public.recent_signups';
       END IF;
@@ -4407,7 +4416,6 @@ data:
       END IF;
       RAISE NOTICE 'SUCCESS: public.recent_signups is readable only by service_role';
     END $$;
-
     COMMIT;
 
     --
@@ -7738,6 +7746,17 @@ data:
         AS RESTRICTIVE FOR ALL TO anon, authenticated
         USING (false) WITH CHECK (false);
 
+    -- Explicit: Supabase Cloud stops default-granting new public tables on 2026-10-30; Next.js writes it as service_role.
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+            CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+        END IF;
+    END
+    $$;
+
+    GRANT SELECT, INSERT, UPDATE, DELETE ON public.skill_scanner_api_usage TO service_role;
+
     --
     -- Indexes for license aggregation (count per org over a billing period)
     --
@@ -7787,6 +7806,13 @@ data:
         RAISE EXCEPTION 'FAILED: deny-all RLS policy was not created';
       END IF;
 
+      IF EXISTS (
+        SELECT 1 FROM unnest(ARRAY['SELECT', 'INSERT', 'UPDATE', 'DELETE']) AS p
+        WHERE NOT has_table_privilege('service_role', 'public.skill_scanner_api_usage', p)
+      ) THEN
+        RAISE EXCEPTION 'FAILED: service_role lacks DML on skill_scanner_api_usage';
+      END IF;
+
       RAISE NOTICE 'SUCCESS: skill_scanner_api_usage table created and locked down';
     END $$;
 
@@ -7795,6 +7821,7 @@ data:
     --
     -- Migration Complete
     --
+
   049-add-compliance-scans-table.sql: |
     --
     -- Migration: 034_add_compliance_scans_table
@@ -8815,6 +8842,17 @@ data:
         AS RESTRICTIVE FOR ALL TO authenticated
         USING (false) WITH CHECK (false);
 
+    -- Explicit: Supabase Cloud stops default-granting new public tables on 2026-10-30; Next.js and the compliance pod use service_role.
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+            CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+        END IF;
+    END
+    $$;
+
+    GRANT SELECT, INSERT, UPDATE, DELETE ON public.anthropic_scan_windows TO service_role;
+
     --
     -- Verify the schema changes
     --
@@ -8873,6 +8911,13 @@ data:
           WHERE schemaname = 'public' AND tablename = 'anthropic_scan_windows'
             AND permissive = 'RESTRICTIVE') <> 2 THEN
         RAISE EXCEPTION 'FAILED: anthropic_scan_windows deny policies not in place';
+      END IF;
+
+      IF EXISTS (
+        SELECT 1 FROM unnest(ARRAY['SELECT', 'INSERT', 'UPDATE', 'DELETE']) AS p
+        WHERE NOT has_table_privilege('service_role', 'public.anthropic_scan_windows', p)
+      ) THEN
+        RAISE EXCEPTION 'FAILED: service_role lacks DML on anthropic_scan_windows';
       END IF;
 
       RAISE NOTICE 'SUCCESS: Anthropic compliance support in place';

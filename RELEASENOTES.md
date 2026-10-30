@@ -16,6 +16,54 @@ versions it published, and every change is prefixed with the chart it affects.
 | `platform-stack`  | `charts/platform`        | 1.2.2          |
 | `platform-core`   | `charts/platform-core`   | 1.3.0          |
 
+## Unreleased — On-prem review fixes (`enkryptai-stack`)
+
+Merged to `main`, not published yet. These changes ship together in
+`enkryptai-stack` 1.2.2; the release PR adds the version bump, the package and
+the `index.yaml` entry.
+
+| Change | Pull request |
+| ------ | ------------ |
+| In-cluster URLs from the release name and namespace; no SaaS endpoints by default | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
+
+### Upgrading from 1.2.1
+
+- **In-cluster URLs (#138).** The `litellm`, `guardrails` and `redteam-proxy`
+  defaults now build Service URLs from `{{ .Release.Name }}` and
+  `{{ .Release.Namespace }}`, and these ConfigMap values and the
+  `guardrails` / `redteam-proxy` `env` values go through `tpl`. If your values
+  file sets one of these URLs, it still wins, and it can use the same
+  template expressions. A value that contains a literal `{{` now has to be
+  escaped.
+- **Remote model fallback is off (#138).** `litellm.configMap.LOCAL_MODEL_FALLBACK_TO_REMOTE`
+  is now `'false'`. Set it to `'true'` if you want guardrails to fall back to a
+  hosted model when the local model is unavailable.
+- **Hosted endpoints (#138).** PostHog and the hosted leaderboard and MCP
+  scanner Supabase URLs are empty by default. Set them in your values file if
+  you use those features.
+
+### Fixed
+
+- **enkryptai-stack:** `litellm` `GR_MULTIMODAL_SERVICE_URL` pointed at
+  `enkryptai-guardrails-multimodal`, a Service that doesn't exist; it now
+  points at `<release>-guardrails-multi-modal`. Multimodal guardrails didn't
+  work with the default values.
+- **enkryptai-stack:** `redteam-proxy` `RELAY_ENDPOINT` and `RELAY_REDIS_URL`
+  pointed at `redteam-proxy.redteam-jobs` and `valkey.dev` (the hosted
+  layout); they now use the release namespace.
+- **enkryptai-stack:** the `litellm`, `guardrails` and `redteam-proxy`
+  Service URLs (`*-litellm`, `*-guardrails-model`, `supabase-storage`,
+  `valkey`) no longer assume the release is called `enkryptai` and runs in
+  `enkryptai-stack`.
+
+### Changed
+
+- **enkryptai-stack:** no data leaves the cluster by default:
+  `LOCAL_MODEL_FALLBACK_TO_REMOTE: 'false'` in `litellm`;
+  `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_LEADERBOARD_SUPABASE_URL` and
+  `NEXT_PUBLIC_MCP_SCANNER_SUPABASE_URL` empty in `frontend`;
+  `NEXT_PUBLIC_POSTHOG_HOST` empty in `leaderboard-client`.
+
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 
 | Chart            | Version         | Pull request |

@@ -16,6 +16,35 @@ versions it published, and every change is prefixed with the chart it affects.
 | `platform-stack`  | `charts/platform`        | 1.2.2          |
 | `platform-core`   | `charts/platform-core`   | 1.3.0          |
 
+## Unreleased — On-prem review fixes (`enkryptai-stack`)
+
+Merged to `main`, not published yet. These changes ship together in
+`enkryptai-stack` 1.2.2; the release PR adds the version bump, the package and
+the `index.yaml` entry.
+
+| Change | Pull request |
+| ------ | ------------ |
+| OpenFGA migrations run before the Deployment | [#135](https://github.com/enkryptai/helm-charts/pull/135) |
+
+### Upgrading from 1.2.1
+
+- **OpenFGA (#135).** If your values file sets `openfga.serviceAccount.create`,
+  `openfga.datastore.waitForMigrations` or `openfga.migrate.annotations`,
+  remove those keys (or set them to the new defaults). Otherwise the old
+  post-install hook stays and `helm install --wait` still hangs. The OpenFGA
+  pods restart once on upgrade.
+
+### Fixed
+
+- **enkryptai-stack:** `helm install --wait` no longer hangs on OpenFGA. The
+  `openfga-migrate` Job is now a `pre-install, pre-upgrade` hook (it was
+  `post-install, post-upgrade, post-rollback, post-delete`), so it runs before
+  the Deployment. `openfga.datastore.waitForMigrations` is `false` and
+  `openfga.serviceAccount.create` is `false`: the `wait-for-migration` init
+  container, the `openfga` ServiceAccount and the `openfga-job-status-reader`
+  Role and RoleBinding are no longer rendered, and the `k8s-wait-for` image is
+  no longer needed.
+
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 
 | Chart            | Version         | Pull request |

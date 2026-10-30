@@ -3,8 +3,7 @@ kind: OpensearchIndexTemplate
 metadata:
   name: compliance-policy-configs-index-template
   annotations:
-    "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install, post-upgrade
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install, post-upgrade" "weight" "18") | nindent 4 }}
 spec:
   name: compliance-policy-configs-index-template
   opensearchCluster:

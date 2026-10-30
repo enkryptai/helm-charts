@@ -4,8 +4,7 @@ metadata:
   name: redteam-run-sensor
   namespace: argo-events
   annotations:
-    "helm.sh/hook-weight": "10"
-    "helm.sh/hook": post-install, post-upgrade
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install, post-upgrade" "weight" "10") | nindent 4 }}
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:

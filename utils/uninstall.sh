@@ -32,7 +32,7 @@ cleanup_main_resources() {
   confirm "Proceed with deleting above resources?" || return
 
   kubectl delete sts -n $NAMESPACE -l opster.io/opensearch-cluster=enkryptai-opensearch --ignore-not-found
-  kubectl delete jobs -n $NAMESPACE -l 'app.kubernetes.io/instance in (enkryptai,platform)' --ignore-not-found
+  kubectl delete jobs -n $NAMESPACE -l 'app.kubernetes.io/instance in (enkryptai,platform,platform-core)' --ignore-not-found
   kubectl delete cluster cluster-openfga,supabase-cluster -n $NAMESPACE --ignore-not-found
   kubectl delete deployment -n $NAMESPACE -l opensearch.cluster.dashboards=enkryptai-opensearch  --ignore-not-found
   echo "Resources deleted."
@@ -146,7 +146,7 @@ delete_secrets() {
     confirm "Delete labeled secrets in $ns?" || continue
 
     kubectl delete secret -n "$ns" \
-      -l "app.kubernetes.io/instance in (enkryptai,platform)" \
+      -l "app.kubernetes.io/instance in (enkryptai,platform,platform-core)" \
       --ignore-not-found
 
     echo "Labeled secrets deleted in $ns."
@@ -169,7 +169,7 @@ handle_pvc_cleanup() {
   echo "WARNING: Deleting PVCs will permanently delete data."
   confirm "Do you want to delete these PVCs?" || return
 
-  kubectl delete pvc -n $NAMESPACE -l 'app.kubernetes.io/instance in (enkryptai,platform)' --ignore-not-found
+  kubectl delete pvc -n $NAMESPACE -l 'app.kubernetes.io/instance in (enkryptai,platform,platform-core)' --ignore-not-found
   kubectl delete pvc -n $NAMESPACE -l opster.io/opensearch-cluster --ignore-not-found
 
   echo "PVCs deleted."
@@ -178,10 +178,15 @@ handle_pvc_cleanup() {
 main() {
   echo "Starting EnkryptAI cleanup..."
   
-  helm uninstall platform -n $NAMESPACE --ignore-not-found
   helm uninstall enkryptai -n $NAMESPACE --ignore-not-found
+  helm uninstall platform -n $NAMESPACE --ignore-not-found
 
+  # Delete the data clusters (kept by helm uninstall) while the operators
+  # still run, so their finalizers clear. With platform-core as its own
+  # release (platform-stack 1.3.0+), uninstall it only after that.
   cleanup_main_resources
+  helm uninstall platform-core -n $NAMESPACE --ignore-not-found
+
   remove_argo_finalizers
   remove_opensearch_finalizers
   delete_secrets

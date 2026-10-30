@@ -16,6 +16,57 @@ versions it published, and every change is prefixed with the chart it affects.
 | `platform-stack`  | `charts/platform`        | 1.2.2          |
 | `platform-core`   | `charts/platform-core`   | 1.3.0          |
 
+## Unreleased — On-prem review fixes (`enkryptai-stack`)
+
+Merged to `main`, not published yet. These changes ship together in
+`enkryptai-stack` 1.2.2; the release PR adds the version bump, the package and
+the `index.yaml` entry.
+
+| Change | Pull request |
+| ------ | ------------ |
+| Default image tags match the 1.2.1 image lock | [#137](https://github.com/enkryptai/helm-charts/pull/137) |
+
+### Upgrading from 1.2.1
+
+- **Image tags (#137).** Mirror the new tags to your registry before
+  upgrading. Supabase moves to Kong `3.6.1` (from `2.8.1`) and GoTrue
+  `v2.174.0` (from `v2.169.0`); the Supabase helper Jobs use the
+  `postgres:18.3-alpine3.22` client (from `15-alpine`). Tags set in your values
+  file still win over these defaults.
+
+### Changed
+
+- **enkryptai-stack:** every default image tag now matches the 1.2.1 image
+  lock, in `values.yaml` and in each subchart's own defaults:
+
+  | Image | Before | After |
+  | ----- | ------ | ----- |
+  | `enkryptai-prod/frontend` | `7961f95` | `ffa3bdf` |
+  | `enkryptai-prod/gateway`, `gateway-sync` | `dev-1767798930`, `a8a9b2c` | `ffa3bdf` |
+  | `enkryptai-prod/guardrails` | `prodgr-v0.0.5` | `prodgr-v0.0.47-1792756790` |
+  | `enkryptai-prod/guardrail-model`, `guardrail-multimodal` | `main-1771906796`, `ddc789c` | `5b5d164` |
+  | `enkryptai-prod/litellm-gateway` | `main-1771906797` | `5b5d164` |
+  | `enkryptai-prod/redteam-proxy` | `prod-v1.0.68` | `prod-v1.0.98-1789540682` |
+  | `enkryptai-prod/compliance-scan` | `main` | `bd51716` |
+  | `enkryptai-prod/leaderboard-client`, `leaderboard-server` | `main` | `ffa3bdf` |
+  | `enkryptai-prod/mcp-scanner` | `main` | `main-1792760481` |
+  | `enkryptai-prod/secure-mcp-gateway` | `main` | `b5b270d` |
+  | `enkryptai-prod/openfga-sync` | `v1.11.0` | `v1.13.0` |
+  | `onprem/busybox` | `latest` | `uclibc` |
+  | `onprem/minio` | `latest` | `RELEASE.2025-09-07T16-13-09Z-cpuv1` |
+  | `onprem/gotrue` | `v2.169.0` | `v2.174.0` |
+  | `onprem/kong` (Supabase) | `2.8.1` | `3.6.1` |
+  | `onprem/curljq` | `latest` | `ubuntu` |
+  | `onprem/postgres` (Supabase Jobs) | `15-alpine` | `18.3-alpine3.22` |
+
+- **enkryptai-stack:** the `redteam-proxy` subchart default pointed at
+  `enkryptai-dev/redteam-proxy:dev`; it now uses `enkryptai-prod`.
+
+### Fixed
+
+- **enkryptai-stack:** Supabase storage `mc` image typo `onprem/mc:lastest` →
+  `onprem/mc:latest`.
+
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 
 | Chart            | Version         | Pull request |

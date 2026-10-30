@@ -1,9 +1,9 @@
 replicaCount: 2
 
 image:
-  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy
+  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-proxy
   pullPolicy: IfNotPresent
-  tag: "dev"
+  tag: "prod-v1.0.98-1789540682"
 
 nameOverride: ""
 fullnameOverride: "redteam-proxy"

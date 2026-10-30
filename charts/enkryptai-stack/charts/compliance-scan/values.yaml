@@ -6,7 +6,7 @@ replicaCount: 1
 image:
   repository: vpcdeployment.azurecr.io/enkryptai-prod/compliance-scan
   pullPolicy: IfNotPresent
-  tag: "main"
+  tag: "bd51716"
 
 nameOverride: ""
 fullnameOverride: "compliance-scan"

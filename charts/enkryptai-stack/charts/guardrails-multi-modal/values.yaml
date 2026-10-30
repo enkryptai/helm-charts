@@ -6,7 +6,7 @@ labels:
 image:
   repository: enkryptai-prod/guardrail-multimodal
   pullPolicy: IfNotPresent
-  tag: "ddc789c"
+  tag: "5b5d164"
 strategy:
   type: Recreate
 imagePullSecrets: []

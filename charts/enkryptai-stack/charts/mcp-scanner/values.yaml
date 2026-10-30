@@ -5,7 +5,7 @@ replicaCount: 1
 image:
   repository: vpcdeployment.azurecr.io/enkryptai-prod/mcp-scanner
   pullPolicy: IfNotPresent
-  tag: "main"
+  tag: "main-1792760481"
 
 nameOverride: ""
 fullnameOverride: "mcp-scanner"

@@ -16,6 +16,24 @@ versions it published, and every change is prefixed with the chart it affects.
 | `platform-stack`  | `charts/platform`        | 1.2.2          |
 | `platform-core`   | `charts/platform-core`   | 1.3.0          |
 
+## Unreleased: F-33 red team Workflow identity (`platform-stack`)
+
+Merged to `main`, not published yet. The release PR adds the version bump, the
+package and the `index.yaml` entry.
+
+### Security
+
+- **platform-stack:** red team Workflow pods ran as `redteam-jobs:default`,
+  which two ClusterRoleBindings gave the cluster-wide `argo-events-role`
+  (Secrets in every namespace, `pods/exec`, pod create), and its token was
+  mounted in the job container, which never uses it (F-33). Workflows now run
+  as a new `redteam-workflow` ServiceAccount with `automountServiceAccountToken:
+  false`, bound only in `redteam-jobs` to `argo-events-role-workflow`; the
+  executor reads its token from the `redteam-workflow.service-account-token`
+  Secret, so only the `init` and `wait` containers get it. The
+  `redteam-jobs-binding-events` and `redteam-jobs-binding-workflow`
+  ClusterRoleBindings are removed.
+
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 
 | Chart            | Version         | Pull request |

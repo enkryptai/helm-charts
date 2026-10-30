@@ -42,6 +42,10 @@ spec:
                         operator: In
                         values:
                         - redteaming
+              serviceAccountName: redteam-workflow
+              automountServiceAccountToken: false
+              executor:
+                serviceAccountName: redteam-workflow
               arguments:
                 parameters:
                 - name: event-data

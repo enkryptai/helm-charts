@@ -32,6 +32,37 @@ service:
       containerPort: 8006
     - name: router
       containerPort: 8080
+# Probes: each is rendered as-is when enabled (any probe type and field).
+# startupProbe holds off liveness/readiness until the app is up.
+# The router on 8080 starts listening only after the models are loaded, which
+# can take many minutes on a fresh GPU node (image pull + model load).
+startupProbe:
+  enabled: false
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 120
+
+livenessProbe:
+  enabled: false
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 20
+  timeoutSeconds: 10
+  failureThreshold: 6
+
+readinessProbe:
+  enabled: false
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
 resources:
   requests:
     cpu: "1"

@@ -81,6 +81,28 @@ resources:
       cpu: "0.1"
       memory: "64Mi"
 
+# Probes: each is rendered as-is when enabled (any probe type and field).
+# startupProbe holds off liveness/readiness until the app is up.
+startupProbe:
+  enabled: false
+  exec:
+    command:
+      - kong
+      - health
+  periodSeconds: 5
+  timeoutSeconds: 10
+  failureThreshold: 60
+
+readinessProbe:
+  enabled: false
+  exec:
+    command:
+      - kong
+      - health
+  periodSeconds: 10
+  timeoutSeconds: 10
+  failureThreshold: 3
+
 livenessProbe:
   enabled: true
   exec:
@@ -130,7 +152,37 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+# gateway-deck-sync sidecar: no port to check, so probes are off by default.
+sync:
+  startupProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
+
 fluentBit:
+  # Fluent Bit health endpoint (http_server and Health_Check are on in its config).
+  # No readiness probe by default: a log backend outage shouldn't take Kong out
+  # of the Service.
+  startupProbe:
+    enabled: false
+    httpGet:
+      path: /api/v1/health
+      port: 2020
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 24
+  livenessProbe:
+    enabled: false
+    httpGet:
+      path: /api/v1/health
+      port: 2020
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    enabled: false
   env:
     - name: ELASTIC_PORT
       value: "9200"

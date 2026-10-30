@@ -64,6 +64,17 @@ resources:
     cpu: 200m
     memory: 512Mi
 
+# Probes: each is rendered as-is when enabled (any probe type and field).
+# startupProbe holds off liveness/readiness until the app is up.
+startupProbe:
+  enabled: false
+  httpGet:
+    path: /
+    port: 8000
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+
 livenessProbe:
   enabled: false
   httpGet:

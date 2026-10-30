@@ -1,0 +1,2600 @@
+_format_version: "3.0"
+plugins:
+- name: opentelemetry
+
+  # instance_name: opentelemetry
+  config:
+    traces_endpoint: http://tempo.monitoring:4318/v1/traces
+- name: prometheus
+
+  # instance_name: prometheus
+  enabled: true
+  config:
+    per_consumer: false
+- name: correlation-id
+
+  # instance_name: correlation_id
+  enabled: true
+  config:
+    echo_downstream: false
+    generator: tracker
+    header_name: x-enkrypt-correlation-id
+  protocols:
+  - http
+  - https
+services:
+- name: enkrypt_db_proxy
+
+  enabled: true
+  host: ${{ env "DECK_APP_DASHBOARD_DOMAIN" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_APP_DASHBOARD_PORT" }}
+  protocol: ${{ env "DECK_APP_DASHBOARD_SCHEME" }}
+  # read_timeout: 60000
+  # Assuming a worst case scenario of 0.1 MB/s download speed
+  # 10 MB / 0.1 MB/s = 100 s = 1 min 40 s
+  read_timeout: 180000 # 3 min
+  retries: 5
+  write_timeout: 60000
+  plugins:
+  # - name: cors
+  #   # instance_name: enkrypt_guardrails_cors
+  #   enabled: true
+  #   config:
+  #     credentials: false
+  #     exposed_headers: []
+  #     headers: []
+  #     max_age: 86400
+  #     methods:
+  #     - GET
+  #     - POST
+  #     - OPTIONS
+  #     origins:
+  #     # # NOTE: This allows only one origin
+  #     - https://enkryptai.com
+  #     preflight_continue: false
+  #     private_network: false
+  #   protocols:
+  #   - https
+  - name: enkrypt-db-proxy
+    # instance_name: enkrypt_db_proxy
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
+      mcp_scanner_url: ${{ env "DECK_MCP_SCANNER_URL" }}
+      mcp_scanner_basic_auth: ${{ env "DECK_MCP_SCANNER_BASIC_AUTH" }}
+      red_team_url: ${{ env "DECK_RED_TEAMING_URL" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+      cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
+      initial_sample_model_password: '${{ env "DECK_INITIAL_SAMPLE_MODEL_PASSWORD" }}'
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_db_proxy_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        # Plaintext compliance key: dynamic:false still stores it in _source.
+        request.body.compliance_api_key: return nil
+        # Saved-model secrets: add/modify-model bodies and get-model responses carry
+        # real provider keys; the other services already scrub the request side.
+        request.body.model_config.apikeys: return nil
+        request.body.model_config.auth_data: return nil
+        request.body.model_config.model_jwt_config: return nil
+        request.body.endpoint_configuration.model_config.apikeys: return nil
+        request.body.endpoint_configuration.model_config.auth_data: return nil
+        request.body.endpoint_configuration.model_config.model_jwt_config: return nil
+        response.body.model_config.apikeys: return nil
+        response.body.model_config.auth_data: return nil
+        response.body.model_config.model_jwt_config: return nil
+        request.body.password: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-enkrypt-initial-sample-model-password: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.body.access_token: return nil
+        response.body.id_token: return nil
+        response.body.refresh_token: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5043
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 25000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  routes:
+  - name: enkrypt_dashboard_db_proxy
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/guardrails/add-policy
+    - /dashboard/guardrails/modify-policy
+    - /dashboard/guardrails/get-policy
+    - /dashboard/guardrails/delete-policy
+    - /dashboard/guardrails/list-policies
+    - /dashboard/guardrails/add-guardrail
+    - /dashboard/guardrails/modify-guardrail
+    - /dashboard/guardrails/get-guardrail
+    - /dashboard/guardrails/delete-guardrail
+    - /dashboard/guardrails/list-guardrails
+    - /dashboard/code-of-conduct/add-policy
+    - /dashboard/code-of-conduct/modify-policy
+    - /dashboard/code-of-conduct/get-policy
+    - /dashboard/code-of-conduct/delete-policy
+    - /dashboard/code-of-conduct/list-policies
+    - /dashboard/models/add-model
+    - /dashboard/models/modify-model
+    - /dashboard/models/get-model
+    - /dashboard/models/delete-model
+    - /dashboard/models/list-models
+    - /dashboard/models/get-defaults
+    - /dashboard/deployments/add-deployment
+    - /dashboard/deployments/modify-deployment
+    - /dashboard/deployments/get-deployment
+    - /dashboard/deployments/delete-deployment
+    - /dashboard/deployments/list-deployments
+    - /dashboard/deployments/get-allowed-config
+    - /dashboard/consumer-info
+    # rtv2 run READS, dashboard channel. get_common_path() strips the
+    # /dashboard/ prefix, so these hit the SAME whitelist entries, the same
+    # enkrypt-db-proxy branch and the same Next.js route as the direct /rt/
+    # ones -- only the route registration differs.
+    - "~/dashboard/rt/runs/[^/]+$"
+    - "~/dashboard/rt/runs/[^/]+/results$"
+    - "~/dashboard/rt/runs/[^/]+/records$"
+    - /dashboard/mcp-hub/servers-list
+    - /dashboard/mcp-hub/servers/job-status
+    - /dashboard/mcp-hub/servers/summary
+    - /dashboard/mcp-registry/add-server
+    - /dashboard/mcp-registry/modify-server
+    - /dashboard/mcp-registry/get-server
+    - /dashboard/mcp-registry/delete-server
+    - /dashboard/mcp-registry/list-servers
+    - /dashboard/mcp-registry/list-gateways-by-server
+    - /dashboard/mcp-gateway/add-gateway
+    - /dashboard/mcp-gateway/modify-gateway
+    - /dashboard/mcp-gateway/get-gateway
+    - /dashboard/mcp-gateway/get-gateway-config
+    - /dashboard/mcp-gateway/delete-gateway
+    - /dashboard/mcp-gateway/list-gateways
+    - /dashboard/mcp-registry/add-registry
+    - /dashboard/mcp-registry/modify-registry
+    - /dashboard/mcp-registry/get-registry
+    - /dashboard/mcp-registry/delete-registry
+    - /dashboard/mcp-registry/list-registries
+    - /dashboard/mcp-registry/bulk-add-servers
+    # Compliance -> Next.js only; the pod (no tenancy) and internal /api/compliance/scans stay unexposed.
+    - /dashboard/compliance/add-scan
+    - /dashboard/compliance/get-scan
+    - /dashboard/compliance/modify-scan
+    - /dashboard/compliance/delete-scan
+    - /dashboard/compliance/list-scans
+    - /dashboard/compliance/start-scan
+    - /dashboard/compliance/pause-scan
+    - /dashboard/compliance/list-log-files
+    - /dashboard/compliance/test-connection
+    - /dashboard/compliance/get-message
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: basic-auth
+      # instance_name: enkrypt_dashboard_db_proxy_basic_auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https
+  - name: enkrypt_db_proxy
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /guardrails/add-policy
+    - /guardrails/modify-policy
+    - /guardrails/get-policy
+    - /guardrails/delete-policy
+    - /guardrails/list-policies
+    - /guardrails/add-guardrail
+    - /guardrails/modify-guardrail
+    - /guardrails/get-guardrail
+    - /guardrails/delete-guardrail
+    - /guardrails/list-guardrails
+    - /code-of-conduct/add-policy
+    - /code-of-conduct/modify-policy
+    - /code-of-conduct/get-policy
+    - /code-of-conduct/delete-policy
+    - /code-of-conduct/list-policies
+    - /models/add-model
+    - /models/modify-model
+    - /models/get-model
+    - /models/delete-model
+    - /models/list-models
+    - /models/get-defaults
+    - /deployments/add-deployment
+    - /deployments/modify-deployment
+    - /deployments/get-deployment
+    - /deployments/delete-deployment
+    - /deployments/list-deployments
+    - /deployments/get-allowed-config
+    - /consumer-info
+    # rtv2 run READS, served by Next.js rather than the RT proxy: they are
+    # pure DB reads with no runtime component. Launches, /resume, /signal/*,
+    # /compliance/* (framework projector) and the /stream SSE socket stay on
+    # enkrypt_sentry_redteam. Rewritten to /api/users/<id>/rt/runs/... by the
+    # enkrypt-db-proxy handler (is_upstream_path_same).
+    - "~/rt/runs/[^/]+$"
+    - "~/rt/runs/[^/]+/results$"
+    - "~/rt/runs/[^/]+/records$"
+    - /redteam/get-task
+    - /redteam/task-status
+    - /redteam/delete-task
+    - /redteam/list-tasks
+    - /redteam/download-link
+    - /redteam/results/summary
+    - /redteam/v2/results/summary
+    - /redteam/v3/results/summary
+    - /redteam/results/details
+    - /redteam/v2/results/details
+    - /redteam/v3/results/details
+    - /datasets/get-task
+    - /datasets/task-status
+    - /datasets/delete-task
+    - /datasets/list-tasks
+    - /datasets/get-datacard
+    - /datasets/get-dataset
+    - /datasets/get-summary
+    - /mcp-hub/servers-list
+    - /mcp-hub/servers/job-status
+    - /mcp-hub/servers/summary
+    - /mcp-registry/add-server
+    - /mcp-registry/modify-server
+    - /mcp-registry/get-server
+    - /mcp-registry/delete-server
+    - /mcp-registry/list-servers
+    - /mcp-registry/list-gateways-by-server
+    - /mcp-gateway/add-gateway
+    - /mcp-gateway/modify-gateway
+    - /mcp-gateway/get-gateway
+    - /mcp-gateway/get-gateway-config
+    - /mcp-gateway/delete-gateway
+    - /mcp-gateway/list-gateways
+    - /mcp-registry/add-registry
+    - /mcp-registry/modify-registry
+    - /mcp-registry/get-registry
+    - /mcp-registry/delete-registry
+    - /mcp-registry/list-registries
+    - /mcp-registry/bulk-add-servers
+    # Compliance -> Next.js only; the pod (no tenancy) and internal /api/compliance/scans stay unexposed.
+    - /compliance/add-scan
+    - /compliance/get-scan
+    - /compliance/modify-scan
+    - /compliance/delete-scan
+    - /compliance/list-scans
+    - /compliance/start-scan
+    - /compliance/pause-scan
+    - /compliance/list-log-files
+    - /compliance/test-connection
+    - /compliance/get-message
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: key-auth
+      # instance_name: enkrypt_db_proxy_key_auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: true
+        key_in_query: false
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+    - name: cors
+      # instance_name: enkrypt_db_proxy_cors
+      enabled: true
+      config:
+        credentials: false
+        exposed_headers: []
+        headers: []
+        max_age: 86400
+        methods:
+        - GET
+        # - POST
+        - OPTIONS
+        origins:
+        # # NOTE: This allows only one origin
+        - '*'
+        preflight_continue: false
+        private_network: false
+      protocols:
+      - https
+  - name: enkrypt_mcp_hub_usage
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /mcp-hub/usage
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: key-auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: true
+        key_in_query: false
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+    - name: rate-limiting
+      # Per-API-key limit on the self-service usage endpoint (KeyDB-backed so
+      # it holds across Kong replicas). Combined with the 15-min cache in
+      # Next.js, this keeps the endpoint from ever loading the DB.
+      enabled: true
+      config:
+        limit_by: consumer
+        second: 2
+        minute: 20
+        hour: 120
+        day: 500
+        policy: redis
+        fault_tolerant: false
+        redis_database: 0
+        redis_host: ${{ env "DECK_KEYDB_HOST" }}
+        redis_port: 6379
+        redis_username: null
+        redis_password: null
+        redis_server_name: ${{ env "DECK_KEYDB_HOST" }}
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+      protocols:
+      - http
+      - https
+    - name: cors
+      enabled: true
+      config:
+        credentials: false
+        exposed_headers: []
+        headers: []
+        max_age: 86400
+        methods:
+        - GET
+        - OPTIONS
+        origins:
+        - '*'
+        preflight_continue: false
+        private_network: false
+      protocols:
+      - https
+- name: enkrypt_admin_credits
+
+  # rev-5: cross-org credit administration. Proxies the dashboard-admin
+  # channel to the Next.js route (GET|PATCH /api/admin/credits) which owns
+  # the Postgres subscription authority AND reseeds the KeyDB usage hash via
+  # the guardrails-limit / rt-credits admin routes. Channel auth = basic-auth;
+  # the post-function re-sets Authorization to the existing internal credential
+  # (DECK_NEXT_JS_BASIC_AUTH) that Next.js already validates (DESIGN §5.4).
+  enabled: true
+  host: ${{ env "DECK_APP_DASHBOARD_DOMAIN" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_APP_DASHBOARD_PORT" }}
+  protocol: ${{ env "DECK_APP_DASHBOARD_SCHEME" }}
+  read_timeout: 60000
+  retries: 5
+  write_timeout: 60000
+  routes:
+  - name: enkrypt_admin_credits
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/admin/credits
+    methods:
+    - GET
+    - PATCH
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    plugins:
+    - name: basic-auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https
+    - name: post-function
+      # No enkrypt-db-proxy plugin here (it self-scopes to /api/users/{caller});
+      # this admin route is cross-org, so we rewrite straight to /api/admin/credits.
+      enabled: true
+      protocols:
+      - http
+      - https
+      config:
+        access:
+        - |
+          -- Reuse the existing Kong->Next.js internal basic-auth: the channel basic-auth
+          -- above validated + stripped the client's Authorization, so re-set it to the
+          -- internal credential Next.js validates (APIAAS_KONG_BASIC_AUTH). No new var/header.
+          kong.service.request.set_header('Authorization', '${{ env "DECK_NEXT_JS_BASIC_AUTH" }}')
+          kong.service.request.set_path('/api/admin/credits')
+- name: enkrypt_guardrails
+
+  enabled: true
+  host: ${{ env "DECK_GUARDRAILS_HOST" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_GUARDRAILS_PORT" }}
+  protocol: ${{ env "DECK_GUARDRAILS_SCHEME" }}
+  read_timeout: 300000 # 5 min as we deal with PDF, images, audio, etc.
+  retries: 5
+  write_timeout: 300000 # 5 min as we deal with PDF, images, audio, etc.
+  plugins:
+  # - name: cors
+  #   # instance_name: enkrypt_guardrails_cors
+  #   enabled: true
+  #   config:
+  #     credentials: false
+  #     exposed_headers: []
+  #     headers: []
+  #     max_age: 86400
+  #     methods:
+  #     - GET
+  #     - POST
+  #     - OPTIONS
+  #     origins:
+  #     # # NOTE: This allows only one origin
+  #     - https://enkryptai.com
+  #     preflight_continue: false
+  #     private_network: false
+  #   protocols:
+  #   - https
+  - name: key-auth
+    # instance_name: enkrypt_guardrails_key_auth
+    enabled: true
+    config:
+      anonymous: null
+      hide_credentials: true
+      key_in_body: false
+      key_in_header: true
+      key_in_query: false
+      key_names:
+      - apikey
+      - api_key
+      run_on_preflight: true
+    protocols:
+    - http
+    - https
+  - name: enkrypt-guardrails
+    # instance_name: enkrypt_guardrails
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+      cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_guardrails_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        request.body.password: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.body.access_token: return nil
+        response.body.id_token: return nil
+        response.body.refresh_token: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5044
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 25000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  - name: cors
+    # instance_name: enkrypt_guardrails_cors
+    enabled: true
+    config:
+      credentials: false
+      exposed_headers: []
+      headers: []
+      max_age: 86400
+      methods:
+      - GET
+      - POST
+      - OPTIONS
+      origins:
+      # # NOTE: This allows only one origin
+      - '*'
+      preflight_continue: false
+      private_network: false
+    protocols:
+    - https
+  routes:
+  - name: enkrypt_guardrails
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /guardrails/health
+    - /guardrails/status
+    - /guardrails/models
+    - /guardrails/detect
+    - /guardrails/batch/detect
+    # For backward compatibility
+    - /guardrails/batch/policy/detect
+    - /guardrails/policy/batch/detect
+    - /guardrails/policy/detect
+    # Need guardrails-policy for backward compatibility
+    - /guardrails-policy/detect
+    - /guardrails/pii
+    - /guardrails/hallucination
+    - /guardrails/adherence
+    - /guardrails/relevancy
+    - /guardrails/policy-atomizer
+    # Policy Wizard (replaces policy-atomizer)
+    - /guardrails/policy-wizard/infer-document
+    - /guardrails/policy-wizard/generate-rules
+    - /guardrails/detect-image
+    - /guardrails/detect-audio
+    - /guardrails/policy/detect-image
+    - /guardrails/policy/detect-audio
+    - /guardrails/guardrail/detect-image
+    - /guardrails/guardrail/detect-audio
+    - /guardrails/scan-url
+    - /guardrails/policy/scan-url
+    - /guardrails/scan-pdf
+    - /guardrails/policy/scan-pdf
+    - /guardrails/guardrail/detect
+    - /guardrails/guardrail/batch/detect
+    - /guardrails/guardrail/scan-url
+    - /guardrails/guardrail/scan-pdf
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+- name: enkrypt_red_teaming
+  # The legacy task-based WRITES (add-task, add-custom-task, cancel-task,
+  # model-health, the playground /attack pair and the /public add-custom-task
+  # route) were REMOVED on 2026-09-23: the plugin rewrites them to /v2/*, /v3/*,
+  # /add-task and /attack, and the RT host serves none of those -- it answers
+  # FastAPI's {"detail": "Not Found"}. Do not re-add them without a backend
+  # that implements those paths. What is left below is still live: /redteam/health
+  # (-> /health), and risk-mitigation/findings/datasets, which the dashboard calls.
+
+  enabled: true
+  host: ${{ env "DECK_RED_TEAMING_HOST" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_RED_TEAMING_PORT" }}
+  protocol: ${{ env "DECK_RED_TEAMING_SCHEME" }}
+  read_timeout: 300000 # 5 min
+  retries: 5
+  write_timeout: 60000
+  plugins:
+  - name: enkrypt-red-teaming
+    # instance_name: enkrypt_red_teaming
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
+      red_team_url: ${{ env "DECK_RED_TEAMING_URL" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+      cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
+      sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_red_teaming_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        request.body.target_model_configuration.model_api_key: return nil
+        request.body.target_model_configuration.model_jwt_config: return nil
+        request.body.model_config.apikeys: return nil
+        request.body.model_config.model_jwt_config: return nil
+        request.body.endpoint_configuration.model_config.apikeys: return nil
+        request.body.endpoint_configuration.model_config.model_jwt_config: return nil
+        request.body.target_model_configuration.auth_data: return nil
+        request.body.target_model_configuration.metadata.relay.target_headers: return nil
+        request.body.model_config.auth_data: return nil
+        request.body.endpoint_configuration.model_config.auth_data: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5045
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 25000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  routes:
+  - name: enkrypt_dashboard_red_teaming
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/datasets/add-task
+    - /dashboard/datasets/model/add-task
+    - /dashboard/redteam/risk-mitigation/system-prompt
+    - /dashboard/redteam/risk-mitigation/guardrails-policy
+    - /dashboard/redteam/findings
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: basic-auth
+      # instance_name: enkrypt_dashboard_red_teaming_basic_auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https
+  - name: enkrypt_red_teaming
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /redteam/health
+    - /datasets/add-task
+    - /datasets/model/add-task
+    - /redteam/risk-mitigation/system-prompt
+    - /redteam/risk-mitigation/guardrails-policy
+    - /redteam/findings
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: key-auth
+      # instance_name: enkrypt_red_teaming_key_auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: true
+        key_in_query: false
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+- name: enkrypt_wss_red_team_logs
+
+  enabled: true
+  host: ${{ env "DECK_RED_TEAMING_HOST" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_RED_TEAMING_PORT" }}
+  protocol: ${{ env "DECK_RED_TEAMING_SCHEME" }}
+  path: /ws
+  read_timeout: 3600000 # 1 hour
+  retries: 5
+  write_timeout: 60000
+  routes:
+  - name: enkrypt_dashboard_wss_red_team_logs
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/wss/redteam/logs/tasks
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: basic-auth
+      # instance_name: enkrypt_dashboard_wss_red_team_logs_basic_auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https
+  - name: enkrypt_wss_red_team_logs
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /wss/redteam/logs/tasks
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    # NOTE: key_in_query and not key_in_header because of websockets limitation in browsers
+    # https://stackoverflow.com/questions/4361173/http-headers-in-websockets-client-api
+    - name: key-auth
+      # instance_name: enkrypt_wss_red_team_logs_basic_auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: false
+        key_in_query: true
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+    - name: rate-limiting
+      # TODO: Create custom plugin to rate limit based on consumer subscription plan
+      # instance_name: enkrypt_wss_red_team_logs_rate_limiting
+      enabled: true
+      config:
+        limit_by: ip
+        second: 5
+        minute: 25
+        hour: 150
+        policy: local
+        fault_tolerant: true
+        # Below default config is to avoid changes in deck output for each deployment
+        # As Kong adds these but Deck removes them in each deployment and shows as an update
+        redis_database: 0
+        redis_host: null
+        redis_password: null
+        redis_port: 6379
+        redis_server_name: null
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+        redis_username: null
+      protocols:
+      - http
+      - https
+    - name: post-function
+      enabled: true
+      protocols:
+      - http
+      - https
+      config:
+        access:
+        - |
+          -- Validate path user_id with custom_id user_id
+          kong.log.debug("Log request path: ", kong.request.get_path())
+          local uuid_pattern = "%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x"
+          local path_user_id = string.match(kong.request.get_path(), "tasks/(" .. uuid_pattern .. ")")
+          local custom_id = kong.client.get_consumer().custom_id or ""
+          local is_project_user = custom_id:find("@")
+          local user_id_or_org_id
+          if is_project_user then
+            kong.log.debug("Project user for logs: ", custom_id)
+            _, user_id_or_org_id = custom_id:match("^([^|]*)|([^|]*)|([^|]*)|([^|]*)|([^|]*)$")
+          else
+            kong.log.debug("Regular user for logs: ", custom_id)
+            user_id_or_org_id = custom_id:match("^(.-)|")
+          end
+          kong.log.debug("wss path_user_id for logs: ", path_user_id, " and wss user_id_or_org_id: ", user_id_or_org_id)
+          if user_id_or_org_id ~= path_user_id then
+            kong.log.debug("User ID mismatch for logs")
+            return kong.response.exit(403, { message = "Forbidden" })
+          end
+          kong.log.debug("User ID matched for logs. Allowing request for user_id_or_org_id: ", user_id_or_org_id)
+- name: enkrypt_wss_red_team_relay
+
+  # Sentry redteam relay bridge (customer WSS bridge -> POST /relay/v1/chat/completions
+  # on the redteam backend). Separate service because the enkrypt-red-teaming plugin
+  # force-buffers and breaks long-lived sockets, same reason enkrypt_sentry_redteam_stream
+  # is split out for SSE. path /relay + strip_path on /redteam/relay lines the paths up:
+  # /redteam/relay/v1/relay/bridge/{user_id} -> /relay/v1/relay/bridge/{user_id}
+  enabled: true
+  host: ${{ env "DECK_RED_TEAMING_HOST" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_RED_TEAMING_PORT" }}
+  protocol: ${{ env "DECK_RED_TEAMING_SCHEME" }}
+  path: /relay
+  read_timeout: 3600000 # 1 hour; the bridge heartbeats every 30s
+  retries: 5
+  write_timeout: 60000
+  routes:
+  - name: enkrypt_wss_red_team_relay
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /redteam/relay
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: false
+    response_buffering: false
+    strip_path: true
+    plugins:
+    - name: key-auth
+      # instance_name: enkrypt_wss_red_team_relay_key_auth
+      enabled: true
+      config:
+        anonymous: null
+        # false (not true, unlike other rtv2 key-auth instances): sentry's
+        # relay router wants the caller's real apikey to keep riding through
+        # for future consumer-detail lookups, not be stripped here. See the
+        # request-transformer plugin below for the actual auth Kong hands
+        # sentry.
+        hide_credentials: false
+        key_in_body: false
+        key_in_header: true
+        key_in_query: false
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+    - name: request-transformer
+      # instance_name: enkrypt_wss_red_team_relay_gateway_token
+      # Stamps proof-of-Kong onto the request: sentry's relay router
+      # (api/relay/router.py _check_apikey) checks this header instead of
+      # `apikey` once it's present, so the customer's real apikey (left
+      # alone by hide_credentials: false above) can ride through unchanged
+      # for sentry's own use instead of being consumed as the auth secret.
+      # add+replace together force our value regardless of whether the
+      # caller already sent this header themselves.
+      #
+      # "demo-token" mirrors sentry's RELAY_BRIDGE_TOKEN code default
+      # (currently unset in every deployment - see router.py SHARED_TOKEN).
+      # This is not a new secret, just wiring to the existing one. Before
+      # relying on this past dev, provision a real value as a proper
+      # env-var-backed secret on both sides instead of the compiled-in
+      # default.
+      enabled: true
+      config:
+        add:
+          headers:
+          - "x-enkrypt-relay-gateway-token:demo-token"
+        replace:
+          headers:
+          - "x-enkrypt-relay-gateway-token:demo-token"
+      protocols:
+      - http
+      - https
+    - name: enkrypt-relay-identity
+      # instance_name: enkrypt_wss_red_team_relay_identity
+      # Stamps the authenticated caller's identity onto the websocket upgrade:
+      # X-Enkrypt-User-Id (+ Org-Id / Project-Name where they apply). sentry
+      # keys its bridge registry by (user_id, bridge_id) -- see
+      # api/relay/broker.py bridge_key -- because bridge_id is customer-chosen
+      # free text and is not unique on its own.
+      #
+      # The stamped user id MUST equal the user_metadata.user_id that
+      # enkrypt-red-teaming stamps on a /rt/redteam submission (rtv2_owner_id),
+      # since that is what the worker sends when it looks the bridge up. The
+      # plugin copies that resolution step for step; a divergence would leave a
+      # healthy bridge unreachable, for org and project accounts only.
+      #
+      # This route cannot host enkrypt-red-teaming (it buffers the body and
+      # would break the long-lived socket), which is why this is a separate,
+      # header-only plugin rather than a flag on that one.
+      enabled: true
+      config: {}
+      protocols:
+      - http
+      - https
+    - name: rate-limiting
+      # instance_name: enkrypt_wss_red_team_relay_rate_limiting
+      enabled: true
+      config:
+        limit_by: ip
+        second: 5
+        minute: 25
+        hour: 150
+        policy: local
+        fault_tolerant: true
+        # Below default config is to avoid changes in deck output for each deployment
+        # As Kong adds these but Deck removes them in each deployment and shows as an update
+        redis_database: 0
+        redis_host: null
+        redis_password: null
+        redis_port: 6379
+        redis_server_name: null
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+        redis_username: null
+      protocols:
+      - http
+      - https
+- name: enkrypt_wss_red_team_v2_logs
+
+  enabled: true
+  host: ${{ env "DECK_RED_TEAMING_HOST" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_RED_TEAMING_PORT" }}
+  protocol: ${{ env "DECK_RED_TEAMING_SCHEME" }}
+  # sentry mounts logs_ws at /v1/ws; the v2 in the client path is rtv2, not an
+  # upstream version. A wrong path here is a Starlette 403, seen as a close 1006.
+  path: /v1/ws
+  read_timeout: 3600000 # 1 hour
+  retries: 5
+  write_timeout: 60000
+  routes:
+  - name: enkrypt_dashboard_wss_red_team_v2_logs
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    # v1 and v2 are the same endpoint; both kept so cached bundles on either work.
+    - /dashboard/wss/redteam/v1/logs/tasks
+    - /dashboard/wss/redteam/v2/logs/tasks
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: basic-auth
+      # instance_name: enkrypt_dashboard_wss_red_team_v2_logs_basic_auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https
+  - name: enkrypt_wss_red_team_v2_logs
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /wss/redteam/v1/logs/tasks
+    - /wss/redteam/v2/logs/tasks
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    # NOTE: key_in_query and not key_in_header because of websockets limitation in browsers
+    # https://stackoverflow.com/questions/4361173/http-headers-in-websockets-client-api
+    - name: key-auth
+      # instance_name: enkrypt_wss_red_team_v2_logs_basic_auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: false
+        key_in_query: true
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+    - name: rate-limiting
+      # TODO: Create custom plugin to rate limit based on consumer subscription plan
+      # instance_name: enkrypt_wss_red_team_logs_rate_limiting
+      enabled: true
+      config:
+        limit_by: ip
+        second: 5
+        minute: 25
+        hour: 150
+        policy: local
+        fault_tolerant: true
+        # Below default config is to avoid changes in deck output for each deployment
+        # As Kong adds these but Deck removes them in each deployment and shows as an update
+        redis_database: 0
+        redis_host: null
+        redis_password: null
+        redis_port: 6379
+        redis_server_name: null
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+        redis_username: null
+      protocols:
+      - http
+      - https
+    - name: post-function
+      enabled: true
+      protocols:
+      - http
+      - https
+      config:
+        access:
+        - |
+          -- Validate path user_id with custom_id user_id
+          kong.log.debug("Log request path: ", kong.request.get_path())
+          local uuid_pattern = "%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x"
+          local path_user_id = string.match(kong.request.get_path(), "tasks/(" .. uuid_pattern .. ")")
+          local custom_id = kong.client.get_consumer().custom_id or ""
+          local is_project_user = custom_id:find("@")
+          local user_id_or_org_id
+          if is_project_user then
+            kong.log.debug("Project user for logs: ", custom_id)
+            _, user_id_or_org_id = custom_id:match("^([^|]*)|([^|]*)|([^|]*)|([^|]*)|([^|]*)$")
+          else
+            kong.log.debug("Regular user for logs: ", custom_id)
+            user_id_or_org_id = custom_id:match("^(.-)|")
+          end
+          kong.log.debug("wss path_user_id for logs: ", path_user_id, " and wss user_id_or_org_id: ", user_id_or_org_id)
+          if user_id_or_org_id ~= path_user_id then
+            kong.log.debug("User ID mismatch for logs")
+            return kong.response.exit(403, { message = "Forbidden" })
+          end
+          kong.log.debug("User ID matched for logs. Allowing request for user_id_or_org_id: ", user_id_or_org_id)
+- name: enkrypt_sentry_redteam
+
+  # rev-4 rtv2 (rev-5: client prefix /rt/): forward run API (POST /rt/redteam|eval|threat-modeling|playground,
+  # /rt/runs/{id}/resume|signal; GET /rt/runs/{id}/compliance/{framework}). Upstream = /v1/*.
+  # The run READS (GET /rt/runs/{id}, /results, /records) are NOT on this
+  # service: they are pure DB reads on enkrypt_db_proxy -> Next.js, and sentry
+  # no longer implements them at all. A route here would 404 upstream.
+  # Upstream reuses DECK_RED_TEAMING_* (the sentry/redteam-proxy backend that
+  # feat/relay-rtv2 extends with /v1/*). Plugin rewrites client /rt/* -> canonical /v1/* (rtv2_canonical).
+  # SSE GET /rt/runs/{id}/stream rides the SEPARATE plugin-free service below
+  # (the enkrypt-red-teaming plugin force-buffers the response, which breaks SSE).
+  enabled: true
+  host: ${{ env "DECK_RED_TEAMING_HOST" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_RED_TEAMING_PORT" }}
+  protocol: ${{ env "DECK_RED_TEAMING_SCHEME" }}
+  read_timeout: 300000 # 5 min
+  retries: 5
+  write_timeout: 60000
+  plugins:
+  - name: enkrypt-red-teaming
+    # instance_name: enkrypt_sentry_redteam
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
+      red_team_url: ${{ env "DECK_RED_TEAMING_URL" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+      cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
+      sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_sentry_redteam_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        request.body.target_model_configuration.model_api_key: return nil
+        request.body.target_model_configuration.model_jwt_config: return nil
+        request.body.model_config.apikeys: return nil
+        request.body.model_config.model_jwt_config: return nil
+        request.body.endpoint_configuration.model_config.apikeys: return nil
+        request.body.endpoint_configuration.model_config.model_jwt_config: return nil
+        request.body.target_model_configuration.auth_data: return nil
+        request.body.target_model_configuration.metadata.relay.target_headers: return nil
+        request.body.model_config.auth_data: return nil
+        request.body.endpoint_configuration.model_config.auth_data: return nil
+        # rtv2 (/rt/* -> /v1/*): the target provider credential lives at
+        # body.target.api_key, which none of the legacy
+        # target_model_configuration/model_config/endpoint_configuration scrubs above
+        # cover. Kong ships rtv2 request bodies to the log store, so null it here.
+        request.body.target.api_key: return nil
+        # auth_data / jwt_config ride the rtv2 target too; their legacy twins are
+        # scrubbed above. Any new target field needs the same check.
+        request.body.target.auth_data: return nil
+        request.body.target.jwt_config: return nil
+        # A relay target's target_headers carry the customer's own LLM credential;
+        # get_cleaned_body copies every key given rather than whitelisting, so
+        # both spellings (metadata.relay, bare relay) must be scrubbed.
+        request.body.target.metadata.relay.target_headers: return nil
+        request.body.target.relay.target_headers: return nil
+        # /v1/eval accepts up to 10000 samples (query+response each). Logging them
+        # would produce multi-MB documents and huge fluent-bit batches, and the rows
+        # are already retrievable via GET /rt/runs/{run_id}/records. Drop for SIZE,
+        # not secrecy - delete this line to capture eval inputs in the log store.
+        request.body.samples: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5045
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 25000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  routes:
+  # --- Direct channel (api-key) -------------------------------------------------
+  - name: enkrypt_sentry_redteam
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /rt/redteam
+    - /rt/redteam/jailbreak
+    - /rt/eval
+    - /rt/threat-modeling
+    - /rt/threat-modeling/categories
+    - /rt/threat-modeling/data
+    - /rt/playground
+    - /rt/leaderboard
+    # Saved-model variants: the caller names a stored model in X-Enkrypt-Model /
+    # X-Enkrypt-Model-Version instead of inlining the target, exactly like the
+    # legacy /redteam/model/... routes. The plugin resolves the model, projects it
+    # into the rtv2 ModelConfig (or the legacy target_model_configuration for
+    # model-health) and rewrites /rt/model/<x> to the SAME canonical /v1/<x>.
+    - /rt/model/redteam
+    - /rt/model/redteam/jailbreak
+    - /rt/model/playground
+    - /rt/model/leaderboard
+    - /rt/model/model-health
+    # v4.0.0 non-run endpoints. sentry mounts health.router at both / and /v1 and
+    # findings/mitigation at /v1, so these canonicalise like everything else here.
+    # Deliberately NOT metered — their legacy /redteam twins are free, and the same
+    # operation must not cost credits just because the caller used the /rt prefix.
+    - /rt/model-health
+    - /rt/findings
+    - /rt/risk-mitigation/system-prompt
+    - /rt/risk-mitigation/guardrails-policy
+    - /rt/health
+    - /rt/status-check
+    - "~/rt/datasets/[^/]+$"
+    - "~/rt/runs/[^/]+/compliance/[^/]+$"
+    - "~/rt/runs/[^/]+/resume$"
+    - "~/rt/runs/[^/]+/signal/[^/]+$"
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    plugins:
+    - name: key-auth
+      # instance_name: enkrypt_sentry_redteam_key_auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: true
+        key_in_query: false
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+  # --- Dashboard channel (basic-auth; internal Next.js proxy) --------------------
+  # Full mirror of direct. The plugin rewrites the /dashboard prefix to the
+  # canonical /v1/... upstream path (rtv2_canonical) and reconstructs the real
+  # user via proxy_consumer, exactly like the legacy /dashboard/redteam routes.
+  - name: enkrypt_sentry_redteam_dashboard
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/rt/redteam
+    - /dashboard/rt/redteam/jailbreak
+    - /dashboard/rt/eval
+    - /dashboard/rt/threat-modeling
+    - /dashboard/rt/threat-modeling/categories
+    - /dashboard/rt/threat-modeling/data
+    - /dashboard/rt/playground
+    - /dashboard/rt/leaderboard
+    # Saved-model variants + v4.0.0 non-run endpoints — full mirror of direct.
+    - /dashboard/rt/model/redteam
+    - /dashboard/rt/model/redteam/jailbreak
+    - /dashboard/rt/model/playground
+    - /dashboard/rt/model/leaderboard
+    - /dashboard/rt/model/model-health
+    - /dashboard/rt/model-health
+    - /dashboard/rt/findings
+    - /dashboard/rt/risk-mitigation/system-prompt
+    - /dashboard/rt/risk-mitigation/guardrails-policy
+    - /dashboard/rt/health
+    - /dashboard/rt/status-check
+    - "~/dashboard/rt/datasets/[^/]+$"
+    - "~/dashboard/rt/runs/[^/]+/compliance/[^/]+$"
+    - "~/dashboard/rt/runs/[^/]+/resume$"
+    - "~/dashboard/rt/runs/[^/]+/signal/[^/]+$"
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    plugins:
+    - name: basic-auth
+      # instance_name: enkrypt_sentry_redteam_dashboard_basic_auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https
+  # --- Public channel (IP rate-limit; create-user-first) ------------------------
+  # Submission + run reads only (no eval/threat-modeling/playground/resume/signal,
+  # no SSE stream). The plugin's /public/ block create-users first (free tier);
+  # rtv2_canonical rewrites the /public prefix to /v1/... upstream.
+  - name: enkrypt_sentry_redteam_public
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    # Exact match: as a prefix this also routed /public/rt/redteam/jailbreak (not public).
+    - "~/public/rt/redteam$"
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: false
+    plugins:
+    - name: rate-limiting
+      # instance_name: enkrypt_sentry_redteam_public_rate_limiting
+      enabled: true
+      config:
+        limit_by: ip
+        second: 1
+        minute: 3
+        hour: 5
+        day: 5
+        policy: redis
+        fault_tolerant: false # To prevent abuse when redis is down
+        redis_database: 0
+        redis_host: ${{ env "DECK_KEYDB_HOST" }}
+        redis_port: 6379
+        redis_username: null
+        redis_password: null
+        redis_server_name: ${{ env "DECK_KEYDB_HOST" }}
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+      protocols:
+      - http
+      - https
+- name: enkrypt_sentry_redteam_stream
+
+  # rev-4 rtv2 SSE: GET /rt/runs/{id}/stream (direct + dashboard). Long read_timeout
+  # (1h) like the WSS log service, and NO enkrypt-red-teaming plugin (it force-
+  # buffers the response, which would break SSE streaming). response_buffering:false
+  # streams upstream events through. key-auth allows key_in_query for browser
+  # EventSource (which cannot set request headers), same as the WSS log routes.
+  # Public gets NO stream (poll instead). The dashboard route strips its /dashboard
+  # prefix via a post-function (no plugin here to do it, unlike the main service).
+  enabled: true
+  host: ${{ env "DECK_RED_TEAMING_HOST" }}
+  connect_timeout: 60000
+  port: ${{ env "DECK_RED_TEAMING_PORT" }}
+  protocol: ${{ env "DECK_RED_TEAMING_SCHEME" }}
+  read_timeout: 3600000 # 1 hour
+  retries: 5
+  write_timeout: 60000
+  routes:
+  # --- Direct channel (api-key) -------------------------------------------------
+  - name: enkrypt_sentry_redteam_stream
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - "~/rt/runs/[^/]+/stream$"
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: false
+    strip_path: false
+    plugins:
+    # NOTE: key_in_query allowed because browser EventSource cannot set headers
+    # (same limitation the WSS routes cite for websockets).
+    - name: key-auth
+      # instance_name: enkrypt_sentry_redteam_stream_key_auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: true
+        key_in_query: true
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+    - name: rate-limiting
+      # instance_name: enkrypt_sentry_redteam_stream_rate_limiting
+      enabled: true
+      config:
+        limit_by: ip
+        second: 5
+        minute: 25
+        hour: 150
+        policy: local
+        fault_tolerant: true
+        # Defaults kept to avoid deck diff churn each deployment
+        redis_database: 0
+        redis_host: null
+        redis_password: null
+        redis_port: 6379
+        redis_server_name: null
+        redis_ssl: false
+        redis_ssl_verify: false
+        redis_timeout: 2000
+        redis_username: null
+      protocols:
+      - http
+      - https
+    # rev-4: no enkrypt-red-teaming plugin on this stream service (it buffers, which
+    # would break SSE), so a post-function does the security strip the plugin does.
+    - name: post-function
+      # SECURITY (rev-4 invariant #1): strip any client-supplied
+      # X-Enkrypt-RT-Metering-Mode AND X-Enkrypt-RT-Account-Id; both are Kong-resolved
+      # and never client-trusted (plugin-carried routes strip them at the top of
+      # _M:access; this plugin-free SSE route does the same here). The account header
+      # is inert on GETs, but the strip is the security gate, not a nicety.
+      enabled: true
+      protocols:
+      - http
+      - https
+      config:
+        access:
+        - |
+          kong.service.request.clear_header("X-Enkrypt-RT-Metering-Mode")
+          kong.service.request.clear_header("X-Enkrypt-RT-Account-Id")
+          -- rev-5: /rt/ is the client-facing prefix; rewrite to the canonical
+          -- /v1/... path sentry serves (the plugin does this for the non-SSE routes).
+          local p = kong.request.get_path()
+          local c = p:gsub("^/rt/", "/v1/")
+          if c ~= p then
+            kong.service.request.set_path(c)
+          end
+  # --- Dashboard channel (basic-auth; internal Next.js proxy) --------------------
+  - name: enkrypt_sentry_redteam_stream_dashboard
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - "~/dashboard/rt/runs/[^/]+/stream$"
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: false
+    strip_path: false
+    plugins:
+    - name: basic-auth
+      # instance_name: enkrypt_sentry_redteam_stream_dashboard_basic_auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https
+    - name: post-function
+      # Strip the /dashboard channel prefix to the canonical /v1/... upstream path
+      # (this service carries no enkrypt-red-teaming plugin to do the rewrite).
+      enabled: true
+      protocols:
+      - http
+      - https
+      config:
+        access:
+        - |
+          -- SECURITY (rev-4 invariant #1): strip BOTH client-supplied RT headers
+          -- (metering-mode + account-id); no enkrypt-red-teaming plugin here to do it,
+          -- and both are Kong-resolved (never client-trusted).
+          kong.service.request.clear_header("X-Enkrypt-RT-Metering-Mode")
+          kong.service.request.clear_header("X-Enkrypt-RT-Account-Id")
+          local p = kong.request.get_path()
+          local c = p
+          c = c:gsub("^/dashboard/rt/", "/v1/")
+          if c ~= p then
+            kong.service.request.set_path(c)
+          end
+- name: enkrypt_leaderboard
+
+  enabled: true
+  host: ${{ env "DECK_LEADERBOARD_HOST" }}
+  connect_timeout: 60000
+  port: 443
+  protocol: ${{ env "DECK_LEADERBOARD_SCHEME" }}
+  path: /api
+  read_timeout: 60000
+  retries: 5
+  write_timeout: 60000
+  plugins:
+  - name: enkrypt-leaderboard
+    # instance_name: enkrypt_leaderboard
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      leaderboard_auth: ${{ env "DECK_LEADERBOARD_AUTH" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      leaderboard_details_password: '${{ env "DECK_LEADERBOARD_DETAILS_PASSWORD" }}'
+      leaderboard_public_consumer_email: ${{ env "DECK_LEADERBOARD_PUBLIC_CONSUMER_EMAIL" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+      cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_leaderboard_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        request.body.target_model_configuration.model_api_key: return nil
+        request.body.target_model_configuration.model_jwt_config: return nil
+        request.body.target_model_configuration.auth_data: return nil
+        request.body.target_model_configuration.metadata.relay.target_headers: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-enkrypt-extra-authorization: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5046
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 25000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  routes:
+  - name: enkrypt_leaderboard
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /leaderboard
+    - /leaderboard/v2
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+      - name: cors
+        # instance_name: enkrypt_leaderboard_cors
+        enabled: true
+        config:
+          credentials: false
+          exposed_headers: []
+          headers: []
+          max_age: 86400
+          methods:
+          - GET
+          - OPTIONS
+          origins:
+          # # NOTE: This allows only one origin
+          - '${{ env "DECK_LEADERBOARD_CORS_ORIGIN" }}'
+          preflight_continue: false
+          private_network: false
+        protocols:
+        - https
+      - name: key-auth
+        # instance_name: enkrypt_leaderboard_key_auth
+        enabled: true
+        config:
+          anonymous: null
+          hide_credentials: true
+          key_in_body: false
+          key_in_header: true
+          key_in_query: false
+          key_names:
+          - apikey
+          - api_key
+          run_on_preflight: true
+        protocols:
+        - http
+        - https
+- name: enkrypt_admin
+
+  enabled: true
+  host: localhost
+  connect_timeout: 60000
+  port: 8001
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  write_timeout: 60000
+  plugins:
+  - name: rate-limiting
+    # instance_name: enkrypt_admin_rate_limiting
+    # TODO: Enable rate-limiting for admin
+    enabled: false
+    config:
+      limit_by: ip
+      second: 3 # Next.js makes 3 calls during signup
+      minute: 10 # Allowing creation of multiple API keys
+      hour: 50 # Allowing multiple refreshes on dashboard
+      policy: local
+      fault_tolerant: true
+      # Below default config is to avoid changes in deck output for each deployment
+      # As Kong adds these but Deck removes them in each deployment and shows as an update
+      redis_database: 0
+      redis_host: null
+      redis_password: null
+      redis_port: 6379
+      redis_server_name: null
+      redis_ssl: false
+      redis_ssl_verify: false
+      redis_timeout: 2000
+      redis_username: null
+    protocols:
+    - http
+    - https  
+  - name: basic-auth
+    # instance_name: enkrypt_admin_basic_auth
+    enabled: true
+    config:
+      hide_credentials: true
+    protocols:
+    - http
+    - https
+  - name: enkrypt-admin
+    # instance_name: enkrypt_admin
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      kong_admin_url: http://localhost:8001
+      internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+      red_team_url: ${{ env "DECK_RED_TEAMING_URL" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+      cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_admin_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        request.body.attributes.apikeys: return nil
+        request.body.model_config.auth_data: return nil
+        request.body.endpoint_configuration.model_config.auth_data: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.body.data.key: return nil
+        response.body.key: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5043
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 10000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  routes:
+  - name: enkrypt_admin_dashboard
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/admin
+    - /admin/manage/cache
+- name: enkrypt_logs
+
+  enabled: true
+  host: ${{ env "DECK_ELASTIC_HOST" }}
+  connect_timeout: 60000
+  port: 9200
+  protocol: https
+  read_timeout: 120000
+  retries: 5
+  write_timeout: 120000
+  plugins:
+  - name: rate-limiting
+    # instance_name: enkrypt_logs_rate_limiting
+    # TODO: Enable rate-limiting for logs
+    enabled: false
+    config:
+      limit_by: ip
+      second: 10  # Assuming 10 calls to display all dashboards
+      minute: 30  # And letting user refresh the page
+                  # And add more filters to some dashboards
+      hour: 150   # Allowing multiple refreshes like every 5 minutes               
+      policy: local
+      fault_tolerant: true
+      # Below default config is to avoid changes in deck output for each deployment
+      # As Kong adds these but Deck removes them in each deployment and shows as an update
+      redis_database: 0
+      redis_host: null
+      redis_password: null
+      redis_port: 6379
+      redis_server_name: null
+      redis_ssl: false
+      redis_ssl_verify: false
+      redis_timeout: 2000
+      redis_username: null
+    protocols:
+    - http
+    - https 
+  - name: basic-auth
+    # instance_name: enkrypt_logs_basic_auth
+    enabled: true
+    config:
+      hide_credentials: true
+    protocols:
+    - http
+    - https
+  - name: enkrypt-logs
+    # instance_name: enkrypt_logs
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      elastic_basic_auth: ${{ env "DECK_KONG_LOGS_PLUGIN_ELASTIC_BASIC_AUTH" }}
+      internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+    protocols:
+    - http
+    - https
+  routes:
+  - name: enkrypt_logs_dashboard
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/logs
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+- name: enkrypt_ai_proxy
+
+  enabled: true
+  # Dummy host as we set this in the ai-proxy plugin
+  host: example.com
+  connect_timeout: 60000
+  port: 443
+  protocol: https
+  read_timeout: 180000 # 3 min - allow for slow target-model responses (was 60s, causing 504s on model-latency spikes)
+  retries: 5
+  write_timeout: 60000
+  plugins:
+  # - name: cors
+  #   # instance_name: enkrypt_ai_proxy_cors
+  #   enabled: true
+  #   config:
+  #     credentials: false
+  #     exposed_headers: []
+  #     headers: []
+  #     max_age: 86400
+  #     methods:
+  #     - GET
+  #     - POST
+  #     - OPTIONS
+  #     origins:
+  #     # # NOTE: This allows only one origin
+  #     - https://enkryptai.com
+  #     preflight_continue: false
+  #     private_network: false
+  #   protocols:
+  #   - https
+  - name: enkrypt-ai-proxy
+    # instance_name: enkrypt_ai_proxy
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+      cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
+      guardrails_scheme: ${{ env "DECK_GUARDRAILS_SCHEME" }}
+      guardrails_host: ${{ env "DECK_GUARDRAILS_HOST" }}
+      guardrails_port: ${{ env "DECK_GUARDRAILS_PORT" }}
+      max_request_body_size: 8192
+      response_streaming: allow
+      model_name_header: true
+      log_statistics: true
+      log_payloads: true
+      sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_ai_proxy_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        request.body.password: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.body.access_token: return nil
+        response.body.id_token: return nil
+        response.body.refresh_token: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5047
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 25000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  routes:
+  - name: enkrypt_ai_proxy
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /ai-proxy
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: key-auth
+      # instance_name: enkrypt_ai_proxy_key_auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: true
+        key_in_query: true
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+  - name: enkrypt_ai_proxy_v1
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /v1
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: pre-function
+      enabled: true
+      config:
+        access:
+        - |
+          local path = kong.request.get_path()
+          if path:sub(1, 3) == "/v1" then
+            local rest = path:sub(4)
+            if rest == "" then rest = "/" end
+            kong.service.request.set_path("/ai-proxy" .. rest)
+          end
+    - name: key-auth
+      enabled: true
+      config:
+        anonymous: null
+        hide_credentials: true
+        key_in_body: false
+        key_in_header: true
+        key_in_query: true
+        key_names:
+        - apikey
+        - api_key
+        run_on_preflight: true
+      protocols:
+      - http
+      - https
+- name: enkrypt_mcp_scanner
+
+  enabled: true
+  host: mcp-scanner
+  connect_timeout: 60000
+  port: 8000
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  write_timeout: 60000
+  plugins:
+  - name: rate-limiting
+    # instance_name: enkrypt_logs_rate_limiting
+    enabled: false
+    config:
+      limit_by: ip
+      second: 10
+      minute: 30
+      hour: 150
+      policy: local
+      fault_tolerant: true
+      # Below default config is to avoid changes in deck output for each deployment
+      # As Kong adds these but Deck removes them in each deployment and shows as an update
+      redis_database: 0
+      redis_host: null
+      redis_password: null
+      redis_port: 6379
+      redis_server_name: null
+      redis_ssl: false
+      redis_ssl_verify: false
+      redis_timeout: 2000
+      redis_username: null
+    protocols:
+    - http
+    - https 
+  - name: enkrypt-mcp-scanner
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
+      mcp_scanner_url: ${{ env "DECK_MCP_SCANNER_URL" }}
+      mcp_scanner_basic_auth: ${{ env "DECK_MCP_SCANNER_BASIC_AUTH" }}
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_mcp_scanner_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        request.body.user_email: return nil
+        request.body.auth_config.api_key: return nil
+        request.body.auth_config.bearer_token: return nil
+        request.body.auth_config.oauth_config.client_secret: return nil
+        request.body.auth_config.mtls_key_path: return nil
+        request.body.auth_config.custom_headers.authorization: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        request.body.target_model_configuration.model_api_key: return nil
+        request.body.target_model_configuration.model_jwt_config: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-enkrypt-extra-authorization: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5048
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 25000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  routes:
+  - name: enkrypt_mcp_scanner
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /mcp-hub
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+      - name: key-auth
+        # instance_name: enkrypt_mcp_scanner_key_auth
+        enabled: true
+        config:
+          anonymous: null
+          hide_credentials: true
+          key_in_body: false
+          key_in_header: true
+          key_in_query: false
+          key_names:
+          - apikey
+          - api_key
+          run_on_preflight: true
+        protocols:
+        - http
+        - https
+  - name: enkrypt_mcp_scanner_dashboard
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/mcp-hub
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: basic-auth
+      # instance_name: enkrypt_mcp_scanner_dashboard_basic_auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https
+
+- name: enkrypt_skill_scanner
+
+  enabled: true
+  host: skill-scanner
+  connect_timeout: 60000
+  port: 8000
+  protocol: http
+  read_timeout: 60000
+  retries: 5
+  write_timeout: 60000
+  plugins:
+  - name: rate-limiting
+    # instance_name: enkrypt_logs_rate_limiting
+    enabled: false
+    config:
+      limit_by: ip
+      second: 10
+      minute: 30
+      hour: 150
+      policy: local
+      fault_tolerant: true
+      # Below default config is to avoid changes in deck output for each deployment
+      # As Kong adds these but Deck removes them in each deployment and shows as an update
+      redis_database: 0
+      redis_host: null
+      redis_password: null
+      redis_port: 6379
+      redis_server_name: null
+      redis_ssl: false
+      redis_ssl_verify: false
+      redis_timeout: 2000
+      redis_username: null
+    protocols:
+    - http
+    - https 
+  - name: enkrypt-skill-scanner
+    enabled: true
+    config:
+      enkrypt_environment: ${{ env "DECK_ENKRYPT_ENVIRONMENT" }}
+      internal_kong_admin_email: ${{ env "DECK_INTERNAL_KONG_ADMIN_EMAIL" }}
+      skill_scanner_url: ${{ env "DECK_SKILL_SCANNER_URL" }}
+      keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
+      cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
+      skill_scanner_basic_auth: ${{ env "DECK_MCP_SCANNER_BASIC_AUTH" }}
+      # Entitlement enforcement is OFF: any valid API key may call the
+      # gated GETs. Flip to true (all four kong.yaml copies) to require the
+      # feature:skill_scanner_apis grant. Usage is metered either way.
+      enforce_entitlement: false
+      openfga_url: ${{ env "DECK_OPENFGA_URL" }}
+      fga_store_id: ${{ env "DECK_OPENFGA_STORE_ID" }}
+      fga_authorization_model_id: ${{ env "DECK_OPENFGA_AUTHORIZATION_MODEL_ID" }}
+      next_js_app_url: ${{ env "DECK_APP_DASHBOARD_DOMAIN_URL" }}
+      next_js_basic_auth: ${{ env "DECK_NEXT_JS_BASIC_AUTH" }}
+      vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
+    protocols:
+    - http
+    - https
+  - name: http-log
+    # instance_name: elastic_enkrypt_skill_scanner_log
+    enabled: true
+    config:
+      content_type: application/json
+      custom_fields_by_lua:
+        consumer.type: return nil
+        request.body.user_email: return nil
+        request.body.auth_config.api_key: return nil
+        request.body.auth_config.bearer_token: return nil
+        request.body.auth_config.oauth_config.client_secret: return nil
+        request.body.auth_config.mtls_key_path: return nil
+        request.body.auth_config.custom_headers.authorization: return nil
+        consumer.username_lower: return nil
+        debug_info: return nil
+        http_log: return nil
+        plugin_info: return nil
+        request.body.target_model_configuration.model_api_key: return nil
+        request.body.target_model_configuration.model_jwt_config: return nil
+        request.headers.api-key: return nil
+        request.headers.api_key: return nil
+        request.headers.apikey: return nil
+        request.headers.authorization: return nil
+        request.headers.x-enkrypt-extra-authorization: return nil
+        request.headers.x-consumer-custom-id: return nil
+        request.headers.x-consumer-id: return nil
+        request.headers.x-consumer-username: return nil
+        request.headers.x-credential-identifier: return nil
+        request.headers.x-enkrypt-correlation-id: return nil
+        request.ngx_req_id: return ngx.var.request_id
+        request.tls: return nil
+        response.headers.x-kong-proxy-latency: return nil
+        response.headers.x-kong-response-latency: return nil
+        response.headers.x-kong-upstream-latency: return nil
+        route.created_at: return nil
+        route.https_redirect_status_code: return nil
+        route.id: return nil
+        route.path_handling: return nil
+        route.preserve_host: return nil
+        route.protocols: return nil
+        route.regex_priority: return nil
+        route.request_buffering: return nil
+        route.response_buffering: return nil
+        route.service: return nil
+        route.strip_path: return nil
+        route.tags: return nil
+        route.updated_at: return nil
+        route.ws_id: return nil
+        service: return nil
+        tls: return nil
+        tries: return nil
+        upstream_status: return nil
+        workspace: return nil
+        workspace_name: return nil
+      flush_timeout: null
+      headers: {}
+      http_endpoint: http://${{ env "DECK_FLUENT_BIT_HOST" }}:5048
+      keepalive: 60000
+      method: POST
+      queue:
+        initial_retry_delay: 0.01
+        max_batch_size: 250
+        max_bytes: null
+        max_coalescing_delay: 5
+        max_entries: 25000
+        max_retry_delay: 60
+        max_retry_time: 60
+      queue_size: null
+      retry_count: null
+      timeout: 10000
+    protocols:
+    - http
+    - https
+  routes:
+  - name: enkrypt_skill_scanner
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /skill-hub
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+      - name: key-auth
+        # instance_name: enkrypt_skill_scanner_key_auth
+        enabled: true
+        config:
+          anonymous: null
+          hide_credentials: true
+          key_in_body: false
+          key_in_header: true
+          key_in_query: false
+          key_names:
+          - apikey
+          - api_key
+          run_on_preflight: true
+        protocols:
+        - http
+        - https
+  - name: enkrypt_skill_scanner_dashboard
+    https_redirect_status_code: 426
+    path_handling: v0
+    paths:
+    - /dashboard/skill-hub
+    preserve_host: false
+    protocols:
+    - http
+    - https
+    regex_priority: 0
+    request_buffering: true
+    response_buffering: true
+    strip_path: true
+    plugins:
+    - name: basic-auth
+      # instance_name: enkrypt_skill_scanner_dashboard_basic_auth
+      enabled: true
+      config:
+        hide_credentials: true
+      protocols:
+      - http
+      - https

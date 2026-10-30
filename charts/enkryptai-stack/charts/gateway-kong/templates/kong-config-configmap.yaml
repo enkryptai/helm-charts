@@ -1,0 +1,12 @@
+{{- /* decK config shipped unrendered: its {{ env "DECK_..." }} references are for decK, not Helm. */ -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMaps.kongConfig.name }}
+  labels:
+    {{- include "gateway-kong.labels" . | nindent 4 }}
+data:
+  kong.yaml: |
+{{ .Files.Get "files/kong.yaml" | indent 4 }}
+  kong-deck.sh: |
+{{ .Files.Get "files/kong-deck.sh" | indent 4 }}

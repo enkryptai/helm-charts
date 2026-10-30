@@ -40,6 +40,31 @@ Do these before `helm upgrade` of an existing `platform-stack` release:
        meta.helm.sh/release-namespace=enkryptai-stack --overwrite
    done
    ```
+
+   **Releases installed with Helm 4 only.** Check the apply method first:
+
+   ```bash
+   helm get metadata platform -n enkryptai-stack -o json | jq -r .applyMethod
+   ```
+
+   If it prints `ssa`, also run the step below after the loop above. Helm 4
+   applies server-side, and the 1.2.1 Job's server-side apply left `kubectl`
+   owning the CRD fields, so without this step the upgrade fails with
+   `conflict with "kubectl": .spec.versions` on `clusterworkflowtemplates`,
+   `cronworkflows`, `workflows` and `workflowtemplates`. That failed upgrade is
+   a partial apply (it rolls the EventBus), so run this step first instead of
+   retrying. No `--force-conflicts` is needed. Releases installed with Helm 3
+   don't need it, even when upgraded with Helm 4.
+
+   ```bash
+   for c in clusterworkflowtemplates cronworkflows workflowartifactgctasks \
+            workfloweventbindings workflows workflowtaskresults workflowtasksets \
+            workflowtemplates; do
+     i=$(kubectl get crd $c.argoproj.io --show-managed-fields -o json | jq '[.metadata.managedFields[].manager] | index("kubectl")')
+     [ "$i" = null ] || kubectl patch crd $c.argoproj.io --type=json \
+       -p "[{\"op\":\"test\",\"path\":\"/metadata/managedFields/$i/manager\",\"value\":\"kubectl\"},{\"op\":\"remove\",\"path\":\"/metadata/managedFields/$i\"}]"
+   done
+   ```
 2. **Kong database password.** Put a new `KONG_PG_PASSWORD` in both
    `gateway-migration-env-secret` and `gateway-env-secret`, run
    `helm upgrade`, then restart `gateway-kong`. The `db-check-and-grant` Job

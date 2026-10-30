@@ -277,6 +277,17 @@ REVISION: 1
 
 ```
 
+c. Optional: CRDs as a separate step. The operator CRDs (CloudNativePG, OpenSearch, Argo Workflows, Argo Events, NATS, NFD, GPU operator) can be applied before `platform-core` instead of by it. Then no chart depends on the order of a CRD and its operator inside one release, and a newer CRD is never replaced by an older bundle.
+
+```bash
+./utils/crds.sh build ./crds          # one file per CRD, rendered from charts/platform-core
+./utils/crds.sh apply ./crds          # kubectl apply --server-side; refuses a bundle older than the cluster
+helm upgrade --install platform-core enkryptai/platform-core -n enkryptai-stack -f ./values/platform-core.yaml \
+  -f charts/platform-core/values-external-crds.yaml --skip-crds --timeout 15m
+```
+
+An existing install moves to this step once: `./utils/crds.sh adopt` (puts `helm.sh/resource-policy: keep` on the live CRDs, so the upgrade does not delete them and their resources), then `apply`, then the upgrade above. With `platform-core.enabled: true` the values in `values-external-crds.yaml` go under `platform-core:` in `./values/platform.yaml`.
+
 4. Install Enkryptai-stack Helm Chart
 
 a. Install Gateway-Kong configmap 

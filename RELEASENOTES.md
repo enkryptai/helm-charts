@@ -42,6 +42,15 @@ separate releases is not supported yet; reinstall to change layout.
 
 ### Added
 
+- **platform-core:** CRDs as an optional separate step. `utils/crds.sh`
+  builds the operator CRDs from the chart (`build`), applies them with
+  `kubectl apply --server-side` and refuses a bundle older than the live CRDs
+  (`apply`), and annotates existing CRDs with `helm.sh/resource-policy: keep`
+  before the first upgrade (`adopt`). `values-external-crds.yaml` turns off
+  every operator chart's CRD install; use it with `--skip-crds`. New value
+  `opensearchOperatorCrds.install` (default `true`). Default installs do not
+  change.
+
 - **platform-stack:** `platform-core.enabled` (default `false`). With `false`,
   platform-core is installed first as its own release
   (`helm install platform-core enkryptai/platform-core`), and the CNPG

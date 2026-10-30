@@ -1,0 +1,17 @@
+# Every operator CRD switch off, for CRDs applied with utils/crds.sh; use with helm --skip-crds.
+opensearchOperatorCrds:
+  install: false
+opensearch-operator:
+  installCRDs: false
+cloudnative-pg:
+  crds:
+    create: false
+argo-events:
+  crds:
+    install: false
+argo-workflows:
+  crds:
+    install: false
+gpu-operator:
+  operator:
+    upgradeCRD: false

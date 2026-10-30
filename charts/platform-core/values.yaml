@@ -23,6 +23,9 @@ cloudnative-pg:
     clusterWide: false
 
   imagePullSecrets: []
+# false when the CRDs are applied outside Helm (utils/crds.sh, values-external-crds.yaml).
+opensearchOperatorCrds:
+  install: true
 opensearch-operator:
   enabled: true
   # The CRDs come from templates/opensearch-operator-crds.yaml, with keep.

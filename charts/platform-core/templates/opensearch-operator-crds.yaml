@@ -7,9 +7,11 @@ The subchart's own copy is off (opensearch-operator.installCRDs: false).
 When upgrading the operator, replace files/opensearch-operator-crds/ with the
 new chart's files/.
 */ -}}
+{{- if .Values.opensearchOperatorCrds.install }}
 {{- range $path, $_ := .Files.Glob "files/opensearch-operator-crds/*.yaml" }}
 {{- $crd := $.Files.Get $path | fromYaml }}
 {{- $_ := set $crd.metadata "annotations" (merge (dict "helm.sh/resource-policy" "keep") (default dict $crd.metadata.annotations)) }}
 ---
 {{ toYaml $crd }}
+{{- end }}
 {{- end }}

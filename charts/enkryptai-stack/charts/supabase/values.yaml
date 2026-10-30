@@ -49,8 +49,12 @@ db:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
   serviceAccount:
     create: true
     annotations: {}
@@ -97,12 +101,28 @@ studio:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
+  startupProbe:
+    enabled: false
+    httpGet:
+      path: /api/profile
+      port: 3000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
   livenessProbe:
+    enabled: true
     httpGet:
       path: /api/profile
       port: 3000
     initialDelaySeconds: 3
-  readinessProbe: {}
+  readinessProbe:
+    enabled: false
+    httpGet:
+      path: /api/profile
+      port: 3000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   serviceAccount:
     create: true
     annotations: {}
@@ -138,8 +158,30 @@ auth:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+    httpGet:
+      path: /health
+      port: 9999
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  livenessProbe:
+    enabled: false
+    httpGet:
+      path: /health
+      port: 9999
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    enabled: false
+    httpGet:
+      path: /health
+      port: 9999
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   serviceAccount:
     create: true
     annotations: {}
@@ -174,8 +216,28 @@ rest:
   imagePullSecrets: []
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+    tcpSocket:
+      port: 3000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  livenessProbe:
+    enabled: false
+    tcpSocket:
+      port: 3000
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    enabled: false
+    httpGet:
+      path: /
+      port: 3000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   serviceAccount:
     create: true
     annotations: {}
@@ -210,8 +272,12 @@ realtime:
   imagePullSecrets: []
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
   serviceAccount:
     create: true
     annotations: {}
@@ -258,8 +324,30 @@ meta:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+    httpGet:
+      path: /health
+      port: 8080
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  livenessProbe:
+    enabled: false
+    httpGet:
+      path: /health
+      port: 8080
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    enabled: false
+    httpGet:
+      path: /health
+      port: 8080
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   serviceAccount:
     create: true
     annotations: {}
@@ -297,8 +385,30 @@ storage:
   replicaCount: 1
   nameOverride: "supabase-storage"
   fullnameOverride: "supabase-storage"
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+    httpGet:
+      path: /status
+      port: 5000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  livenessProbe:
+    enabled: false
+    httpGet:
+      path: /status
+      port: 5000
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    enabled: false
+    httpGet:
+      path: /status
+      port: 5000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   serviceAccount:
     create: true
     annotations: {}
@@ -350,8 +460,12 @@ imgproxy:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
   serviceAccount:
     create: true
     annotations: {}
@@ -396,8 +510,27 @@ kong:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+    tcpSocket:
+      port: 8000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  livenessProbe:
+    enabled: false
+    tcpSocket:
+      port: 8000
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    enabled: false
+    tcpSocket:
+      port: 8000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   serviceAccount:
     create: true
     annotations: {}
@@ -449,8 +582,12 @@ analytics:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
   serviceAccount:
     create: true
     annotations: {}
@@ -497,8 +634,12 @@ vector:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
   serviceAccount:
     create: true
     annotations: {}
@@ -529,8 +670,12 @@ functions:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: ""
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
   serviceAccount:
     create: true
     annotations: {}
@@ -570,8 +715,30 @@ minio:
   replicaCount: 1
   nameOverride: ""
   fullnameOverride: "minio"
-  livenessProbe: {}
-  readinessProbe: {}
+  startupProbe:
+    enabled: false
+    httpGet:
+      path: /minio/health/live
+      port: 9000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+  livenessProbe:
+    enabled: false
+    httpGet:
+      path: /minio/health/live
+      port: 9000
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    enabled: false
+    httpGet:
+      path: /minio/health/ready
+      port: 9000
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   serviceAccount:
     create: true
     annotations: {}

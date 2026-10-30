@@ -58,6 +58,17 @@ ingress:
 
 resources: {}
 
+# Probes: each is rendered as-is when enabled (any probe type and field).
+# startupProbe holds off liveness/readiness until the app is up.
+startupProbe:
+  enabled: false
+  httpGet:
+    path: /healthz
+    port: http
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+
 livenessProbe:
   enabled: true
   tcpSocket:

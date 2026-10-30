@@ -16,6 +16,29 @@ versions it published, and every change is prefixed with the chart it affects.
 | `platform-stack`  | `charts/platform`        | 1.2.2          |
 | `platform-core`   | `charts/platform-core`   | 1.3.0          |
 
+## Unreleased — On-prem review fixes (`enkryptai-stack`)
+
+Merged to `main`, not published yet. These changes ship together in
+`enkryptai-stack` 1.2.2; the release PR adds the version bump, the package and
+the `index.yaml` entry.
+
+| Change | Pull request |
+| ------ | ------------ |
+| Fluent Bit memory limit `256Gi` → `256Mi` | [#136](https://github.com/enkryptai/helm-charts/pull/136) |
+
+### Upgrading from 1.2.1
+
+- **Fluent Bit (#136).** If your values file copies
+  `gateway-kong.resources.fluentBit.limits.memory: "256Gi"`, change it to
+  `256Mi` or remove it.
+
+### Fixed
+
+- **enkryptai-stack:** the gateway-kong `fluent-bit` sidecar memory limit was
+  `256Gi` (effectively no limit); it is now `256Mi`, next to its `64Mi`
+  request. Fixed in both `values.yaml` and the `gateway-kong` subchart
+  defaults.
+
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 
 | Chart            | Version         | Pull request |

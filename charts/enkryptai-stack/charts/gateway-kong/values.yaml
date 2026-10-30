@@ -76,7 +76,7 @@ resources:
   fluentBit:
     limits:
       cpu: "0.5"
-      memory: "256Gi"
+      memory: "256Mi"
     requests:
       cpu: "0.1"
       memory: "64Mi"

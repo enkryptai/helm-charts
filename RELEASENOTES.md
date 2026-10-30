@@ -24,7 +24,7 @@ the `index.yaml` entry.
 
 | Change | Pull request |
 | ------ | ------------ |
-| In-cluster URLs from the release name and namespace; no SaaS endpoints by default | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
+| In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 
 ### Upgrading from 1.2.1
 
@@ -41,6 +41,13 @@ the `index.yaml` entry.
 - **Hosted endpoints (#138).** PostHog and the hosted leaderboard and MCP
   scanner Supabase URLs are empty by default. Set them in your values file if
   you use those features.
+- **OpenFGA store and model IDs (#138).** The chart no longer sets them in the
+  `frontend` and `gateway-kong` ConfigMaps. Before upgrading, make sure
+  `frontend-env-secret` has `FGA_STORE_ID` and `FGA_MODEL_ID`, and
+  `gateway-env-secret` has `DECK_OPENFGA_STORE_ID` and
+  `DECK_OPENFGA_AUTHORIZATION_MODEL_ID` (`utils/post-installation.sh` writes
+  them; with External Secrets, put them in the secret store). If your values
+  file sets these keys in a ConfigMap, remove them.
 
 ### Fixed
 
@@ -51,6 +58,12 @@ the `index.yaml` entry.
 - **enkryptai-stack:** `redteam-proxy` `RELAY_ENDPOINT` and `RELAY_REDIS_URL`
   pointed at `redteam-proxy.redteam-jobs` and `valkey.dev` (the hosted
   layout); they now use the release namespace.
+- **enkryptai-stack:** the `frontend` and `gateway-kong` ConfigMaps
+  hardcoded OpenFGA store and model IDs from another environment (and the two
+  didn't even match). The ConfigMap is listed after the Secret in `envFrom`,
+  so these IDs overrode the correct ones in `frontend-env-secret` and
+  `gateway-env-secret`. They are removed; the IDs now come only from the
+  Secrets.
 - **enkryptai-stack:** the `litellm`, `guardrails` and `redteam-proxy`
   Service URLs (`*-litellm`, `*-guardrails-model`, `supabase-storage`,
   `valkey`) no longer assume the release is called `enkryptai` and runs in

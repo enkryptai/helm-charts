@@ -5,7 +5,7 @@ replicaCount: 1
 image:
   repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-client
   pullPolicy: IfNotPresent
-  tag: "main"
+  tag: "ffa3bdf"
 
 nameOverride: ""
 fullnameOverride: "leaderboard-client"

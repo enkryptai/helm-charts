@@ -3,11 +3,11 @@ replicaCount: 2
 image:
   gateway:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
-    tag: "ec1a9d9"
+    tag: "ffa3bdf"
     pullPolicy: IfNotPresent
   sync:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
-    tag: "ec1a9d9"
+    tag: "ffa3bdf"
     pullPolicy: IfNotPresent
   fluentBit:
     repository: fluent/fluent-bit

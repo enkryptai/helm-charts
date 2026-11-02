@@ -58,7 +58,7 @@ spec:
               echo "Waiting for database to start..."
               sleep 2
               done
-            - echo "Database is ready"
+              echo "Database is ready"
       containers:
         - name: {{ include "supabase.analytics.name" $ }}
           securityContext:

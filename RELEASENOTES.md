@@ -85,7 +85,9 @@ the `index.yaml` entry.
   `init-db` container read `.Values.supabaseinitdb`, which only exists in the
   parent chart's values and isn't visible to the Supabase subchart. It now
   uses `supabase.postgresalpine`, the same `pg_isready` image as the `auth`
-  and `storage` init containers.
+  and `storage` init containers. Its `echo "Database is ready"` was a second
+  `sh -c` argument (so it became `$0` and never ran); it is now part of the
+  script.
 
 ### Changed
 

@@ -24,12 +24,16 @@ the `index.yaml` entry.
 
 | Change | Pull request |
 | ------ | ------------ |
-| Startup, readiness and liveness probes for every workload, set from values (new ones off by default) | [#139](https://github.com/enkryptai/helm-charts/pull/139) |
+| Startup, readiness and liveness probes for every workload, set from values (new ones off by default, except `guardrails-model` startup/readiness and `gateway-kong` readiness) | [#139](https://github.com/enkryptai/helm-charts/pull/139) |
 
 ### Upgrading from 1.2.1
 
-- **Probes (#139).** Nothing changes with the default values: the probes that
-  are on today stay on, and every new probe ships with `enabled: false`. To
+- **Probes (#139).** The probes that are on today stay on. Three new probes
+  are on by default: `guardrails-model` startup and readiness (the pod, the
+  Service and `helm --wait` now wait until the model is serving, up to
+  20 minutes on a cold start), and `gateway-kong` readiness (`kong health`).
+  These roll the guardrails-model and gateway-kong pods once on upgrade. Every
+  other new probe ships with `enabled: false`. To
   turn one on, set `<component>.<startup|liveness|readiness>Probe.enabled: true`
   (Supabase: `supabase.<component>.<type>Probe`, nginx-html:
   `supabase.customtemplate.<type>Probe`, gateway-kong sidecars:
@@ -46,13 +50,13 @@ the `index.yaml` entry.
 ### Added
 
 - **enkryptai-stack:** a `startupProbe` for every workload, and the missing
-  readiness and liveness probes, all off by default:
+  readiness and liveness probes. Off by default, except the three marked *on*:
 
   | Workload | Probe |
   | -------- | ----- |
-  | `guardrails-model` | router `GET /health` on 8080 (startup budget 20 min, for the model load) |
+  | `guardrails-model` | router `GET /health` on 8080 (startup budget 20 min, for the model load); startup and readiness *on* |
   | `secure-mcp-gateway` | `tcpSocket` 8000 (the gateway has no health route) |
-  | `gateway-kong` (gateway) | `kong health` (startup, readiness) |
+  | `gateway-kong` (gateway) | `kong health` (startup, readiness); readiness *on* |
   | `gateway-kong` (`fluent-bit`) | `GET /api/v1/health` on 2020 (startup, liveness; no readiness, so a log backend outage doesn't take Kong out of the Service) |
   | `gateway-kong` (`gateway-deck-sync`) | none by default (no port); values hooks only |
   | Supabase `auth`, `meta` | `GET /health` |

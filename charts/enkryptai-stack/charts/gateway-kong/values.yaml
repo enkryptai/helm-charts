@@ -83,6 +83,7 @@ resources:
 
 # Probes: each is rendered as-is when enabled (any probe type and field).
 # startupProbe holds off liveness/readiness until the app is up.
+# readinessProbe is on by default: it keeps traffic off a gateway that is not up yet.
 startupProbe:
   enabled: false
   exec:
@@ -94,7 +95,7 @@ startupProbe:
   failureThreshold: 60
 
 readinessProbe:
-  enabled: false
+  enabled: true
   exec:
     command:
       - kong

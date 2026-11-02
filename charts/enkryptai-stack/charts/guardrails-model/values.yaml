@@ -36,8 +36,10 @@ service:
 # startupProbe holds off liveness/readiness until the app is up.
 # The router on 8080 starts listening only after the models are loaded, which
 # can take many minutes on a fresh GPU node (image pull + model load).
+# startupProbe and readinessProbe are on by default so the pod (and helm --wait)
+# only turns Ready once the models are serving.
 startupProbe:
-  enabled: false
+  enabled: true
   httpGet:
     path: /health
     port: 8080
@@ -55,7 +57,7 @@ livenessProbe:
   failureThreshold: 6
 
 readinessProbe:
-  enabled: false
+  enabled: true
   httpGet:
     path: /health
     port: 8080

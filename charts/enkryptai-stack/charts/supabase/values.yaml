@@ -42,7 +42,8 @@ secret:
 db:
   enabled: false
   image:
-    repository: supabase/postgres
+    # Docker Hub, not from global.registry (component is off by default)
+    repository: docker.io/supabase/postgres
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []
@@ -266,7 +267,8 @@ rest:
 realtime:
   enabled: false
   image:
-    repository: supabase/realtime
+    # Docker Hub, not from global.registry (component is off by default)
+    repository: docker.io/supabase/realtime
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []
@@ -453,7 +455,8 @@ storage:
 imgproxy:
   enabled: false
   image:
-    repository: darthsim/imgproxy
+    # Docker Hub, not from global.registry (component is off by default)
+    repository: docker.io/darthsim/imgproxy
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []
@@ -627,7 +630,8 @@ analytics:
 vector:
   enabled: false
   image:
-    repository: timberio/vector
+    # Docker Hub, not from global.registry (component is off by default)
+    repository: docker.io/timberio/vector
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []
@@ -663,7 +667,8 @@ vector:
 functions:
   enabled: false
   image:
-    repository: supabase/edge-runtime
+    # Docker Hub, not from global.registry (component is off by default)
+    repository: docker.io/supabase/edge-runtime
     pullPolicy: IfNotPresent
     tag: "latest"
   imagePullSecrets: []

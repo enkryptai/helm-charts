@@ -11,20 +11,15 @@ spec:
   backoffLimit: 5
   template:
     spec:
-      {{- with .Values.global.imagePullSecrets }}
-      imagePullSecrets:
-      {{- range . }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global) | nindent 6 }}
       restartPolicy: Never
       initContainers:
         - name: wait-for-openfga
-          image: {{.Values.global.registry}}/{{.Values.busybox.repository}}:{{.Values.busybox.tag}}
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.busybox "global" $.Values.global "default" "") | quote }}
           command: ["sh", "-c", "until wget -q --spider http://openfga:8080/healthz; do echo 'Waiting for OpenFGA...'; sleep 2; done"]
       containers:
         - name: openfga-sync
-          image: {{.Values.global.registry}}/{{.Values.openfgaSyncJob.repository}}:{{.Values.openfgaSyncJob.tag}}
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.openfgaSyncJob "global" $.Values.global "default" "") | quote }}
           env:
             - name: FGA_API_URL
               value: "http://openfga:8080"

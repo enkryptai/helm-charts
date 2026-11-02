@@ -652,7 +652,9 @@ configMap:
   SERVER_KEEP_ALIVE_TIMEOUT: '75'
   STUDIO_DEFAULT_ORGANIZATION: Enkryptai
   STUDIO_DEFAULT_PROJECT: enkryptai
+  STUDIO_PG_META_URL: http://{{ .Release.Name }}-supabase-meta:8080
   STUDIO_PORT: '3000'
+  SUPABASE_URL: http://{{ .Release.Name }}-supabase-kong:8000
   DB_DRIVER: postgres
   API_EXTERNAL_URL: https://app.example.com
   GOTRUE_EXTERNAL_REDIRECT_URLS: http://localhost:3000/api/auth/callback,https://auth.example.com/api/auth/callback

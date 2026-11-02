@@ -25,6 +25,7 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
+| `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
 
 ### Upgrading from 1.2.1
 
@@ -51,7 +52,7 @@ the `index.yaml` entry.
 
 ### Added
 
-- **enkryptai-stack:** `litellm.serviceAccount` (`create`, `annotations`,
+- **enkryptai-stack (#147):** `litellm.serviceAccount` (`create`, `annotations`,
   `name`) for workload identity, for example an IRSA
   `eks.amazonaws.com/role-arn` annotation. `create: true` makes a
   ServiceAccount (named `<release>-litellm` unless `name` is set); `name` alone

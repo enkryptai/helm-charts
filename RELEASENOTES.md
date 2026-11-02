@@ -25,7 +25,7 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
-| Supabase: dead `onprem` ConfigMap keys removed; `analytics.enabled: true` renders again | TBD |
+| Supabase: dead `onprem` ConfigMap keys removed; `analytics.enabled: true` renders again | [#143](https://github.com/enkryptai/helm-charts/pull/143) |
 
 ### Upgrading from 1.2.1
 

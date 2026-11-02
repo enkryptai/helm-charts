@@ -25,6 +25,7 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
+| browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
 
 ### Upgrading from 1.2.1
 
@@ -48,7 +49,7 @@ the `index.yaml` entry.
   `DECK_OPENFGA_AUTHORIZATION_MODEL_ID` (`utils/post-installation.sh` writes
   them; with External Secrets, put them in the secret store). If your values
   file sets these keys in a ConfigMap, remove them.
-- **Telemetry and metering off.** `ENKRYPT_GATEWAY_URL` is only used when
+- **Telemetry and metering off (#146).** `ENKRYPT_GATEWAY_URL` is only used when
   `GR_MODELS_MODE` or `RT_MODELS_MODE` is `enkrypt_hosted`; if you use that
   mode, set it (and `ENKRYPT_METERING_ENABLED`, if you meter) in your values
   file. The chart doesn't restart pods when a ConfigMap changes, so after the

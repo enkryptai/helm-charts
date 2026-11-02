@@ -25,7 +25,7 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
-| One image helper and one pull-Secret helper for every image and pod in the chart (`global.imageRegistry`, `global.imagePullSecrets`) | TBD |
+| One image helper and one pull-Secret helper for every image and pod in the chart (`global.imageRegistry`, `global.imagePullSecrets`) | [#145](https://github.com/enkryptai/helm-charts/pull/145) |
 
 ### Upgrading from 1.2.1
 

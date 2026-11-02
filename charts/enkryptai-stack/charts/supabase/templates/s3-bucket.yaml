@@ -11,15 +11,10 @@ metadata:
 spec:
   template:
     spec:
-      {{- with .Values.global.imagePullSecrets }}
-      imagePullSecrets:
-      {{- range . }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global) | nindent 6 }}
       containers:
       - name: create-buckets
-        image: {{.Values.global.registry}}/{{.Values.aws.repository}}:{{.Values.aws.tag}}
+        image: {{ include "enkryptai-stack.image" (dict "image" $.Values.aws "global" $.Values.global "default" "") | quote }}
         command:
         - /bin/sh
         - -c

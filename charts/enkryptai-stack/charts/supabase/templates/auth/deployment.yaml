@@ -25,16 +25,13 @@ spec:
       labels:
         {{- include "supabase.auth.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.auth.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global "local" $.Values.auth.imagePullSecrets) | nindent 6 }}
       serviceAccountName: {{ include "supabase.auth.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.auth.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: {{.Values.global.registry}}/{{.Values.postgresalpine.repository}}:{{.Values.postgresalpine.tag}}
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.postgresalpine "global" $.Values.global "default" "") | quote }}
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
@@ -53,7 +50,7 @@ spec:
         - name: {{ include "supabase.auth.name" $ }}
           securityContext:
             {{- toYaml .Values.auth.securityContext | nindent 12 }}
-          image: "{{ .Values.global.registry }}/{{ .Values.auth.image.repository }}:{{ .Values.auth.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.auth.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.auth.image.pullPolicy }}
           envFrom:
             - secretRef:

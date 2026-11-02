@@ -23,10 +23,7 @@ spec:
       labels:
         {{- include "supabase.vector.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.vector.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global "local" $.Values.vector.imagePullSecrets) | nindent 6 }}
       serviceAccountName: {{ include "supabase.vector.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.vector.podSecurityContext | nindent 8 }}
@@ -37,7 +34,7 @@ spec:
           name: {{ include "supabase.vector.name" $ }}
           securityContext:
             {{- toYaml .Values.vector.securityContext | nindent 12 }}
-          image: "{{ .Values.vector.image.repository }}:{{ .Values.vector.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.vector.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.vector.image.pullPolicy }}
           env:
             {{- range $key, $value := .Values.vector.environment }}

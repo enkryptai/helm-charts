@@ -21,16 +21,13 @@ spec:
       labels:
         {{- include "supabase.realtime.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.realtime.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global "local" $.Values.realtime.imagePullSecrets) | nindent 6 }}
       serviceAccountName: {{ include "supabase.realtime.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.realtime.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: postgres:15-alpine
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.postgresalpine "global" $.Values.global "default" "") | quote }}
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_HOST
@@ -63,7 +60,7 @@ spec:
         - name: {{ include "supabase.realtime.name" $ }}
           securityContext:
             {{- toYaml .Values.realtime.securityContext | nindent 12 }}
-          image: "{{ .Values.realtime.image.repository }}:{{ .Values.realtime.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.realtime.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.realtime.image.pullPolicy }}
           command: ["/bin/sh"]
           args: ["-c", "/app/bin/migrate && /app/bin/realtime eval 'Realtime.Release.seeds(Realtime.Repo)' && /app/bin/server"]

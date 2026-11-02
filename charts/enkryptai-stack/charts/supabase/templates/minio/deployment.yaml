@@ -22,10 +22,7 @@ spec:
       labels:
         {{- include "supabase.minio.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.minio.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global "local" $.Values.minio.imagePullSecrets) | nindent 6 }}
       serviceAccountName: {{ include "supabase.minio.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.minio.podSecurityContext | nindent 8 }}
@@ -33,7 +30,7 @@ spec:
         - name: {{ include "supabase.minio.name" $ }}
           securityContext:
             {{- toYaml .Values.minio.securityContext | nindent 12 }}
-          image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.minio.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.minio.image.pullPolicy }}
           envFrom:
             - secretRef:

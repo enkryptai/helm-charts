@@ -21,16 +21,13 @@ spec:
       labels:
         {{- include "supabase.db.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.db.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global "local" $.Values.db.imagePullSecrets) | nindent 6 }}
       serviceAccountName: {{ include "supabase.db.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.db.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.db.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: IfNotPresent
           command: ["/bin/sh", "-c"]
           args:
@@ -56,7 +53,7 @@ spec:
         - name: {{ include "supabase.db.name" $ }}
           securityContext:
             {{- toYaml .Values.db.securityContext | nindent 12 }}
-          image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.db.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.db.image.pullPolicy }}
           env:
             {{- range $key, $value := .Values.db.environment }}

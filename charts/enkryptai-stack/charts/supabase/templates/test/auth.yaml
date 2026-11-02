@@ -11,9 +11,10 @@ spec:
   ttlSecondsAfterFinished: 100
   template:
     spec:
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global) | nindent 6 }}
       containers:
         - name: test-auth
-          image: {{.Values.global.registry}}/{{.Values.testimage.repository}}:{{.Values.testimage.tag}}
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.testimage "global" $.Values.global "default" "") | quote }}
           imagePullPolicy: IfNotPresent
           command:
             - /bin/bash

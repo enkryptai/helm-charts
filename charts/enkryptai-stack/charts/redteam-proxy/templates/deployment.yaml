@@ -47,7 +47,7 @@ spec:
                 name: redteam-proxy-env-cm
           {{- if .Values.env }}
           env:
-            {{- toYaml .Values.env | nindent 12 }}
+            {{- tpl (toYaml .Values.env) . | nindent 12 }}
           {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:

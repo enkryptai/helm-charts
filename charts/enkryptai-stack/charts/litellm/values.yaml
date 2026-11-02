@@ -70,9 +70,9 @@ configMap:
     GR_EMBEDDINGS_MODEL: openai/text-embedding-ada-002
     GR_HALLUCINATION_GENERATOR_MODEL: openai/gpt-4.1
     GR_LOCAL_MODEL: /app/models/Qwen2.5-7B-Instruct
-    GR_LOCAL_SERVICE_URL: http://enkryptai-guardrails-model:8080
+    GR_LOCAL_SERVICE_URL: http://{{ .Release.Name }}-guardrails-model:8080
     GR_MODELS_MODE: remote
-    GR_MULTIMODAL_SERVICE_URL: http://enkryptai-guardrails-multimodal:8000
+    GR_MULTIMODAL_SERVICE_URL: http://{{ .Release.Name }}-guardrails-multi-modal:8000
     GR_POLICY_PARSER_FALLBACK: gemini/gemini-2.0-flash-lite
     GR_POLICY_PARSER_MODEL: openai/gpt-4.1-mini
     GR_POLICY_VIOLATION_DETECTOR_MODEL: openai/gpt-4.1-mini
@@ -85,8 +85,8 @@ configMap:
     LITELLM_PROXY_CONFIG_PATH: ./config/litellm_proxy.yaml
     LITELLM_ROUTING_STRATEGY: simple-shuffle
     LITELLM_TIMEOUT: '240'
-    LOCAL_MODEL_FALLBACK_TO_REMOTE: 'true'
-    LOCAL_VLLM_URL: http://enkryptai-guardrails-model:8005/v1
+    LOCAL_MODEL_FALLBACK_TO_REMOTE: 'false'
+    LOCAL_VLLM_URL: http://{{ .Release.Name }}-guardrails-model:8005/v1
     LOG_LEVEL: INFO
     RT_API_GENERATOR_MODEL: together_ai/MiniMaxAI/MiniMax-M3
     RT_ATTACKER_FALLBACK: together_ai/MiniMaxAI/MiniMax-M3
@@ -113,4 +113,4 @@ configMap:
     TOXICITY_PRELOAD: 'false'
     TOXICITY_TOKENIZER_PATH: enkryptai/toxic-bert-onnx
     TOXICITY_USE_ONNX: 'false'
-    VLLM_BASE_URL: http://enkryptai-guardrails-model:8005/v1
+    VLLM_BASE_URL: http://{{ .Release.Name }}-guardrails-model:8005/v1

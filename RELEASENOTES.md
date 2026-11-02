@@ -49,6 +49,16 @@ the `index.yaml` entry.
   them; with External Secrets, put them in the secret store). If your values
   file sets these keys in a ConfigMap, remove them.
 
+### Added
+
+- **enkryptai-stack:** `litellm.serviceAccount` (`create`, `annotations`,
+  `name`) for workload identity, for example an IRSA
+  `eks.amazonaws.com/role-arn` annotation. `create: true` makes a
+  ServiceAccount (named `<release>-litellm` unless `name` is set); `name` alone
+  uses an existing one. `name` and `annotations` go through `tpl`. With the
+  defaults the Deployment is unchanged and uses the namespace's default
+  ServiceAccount.
+
 ### Fixed
 
 - **enkryptai-stack:** `litellm` `GR_MULTIMODAL_SERVICE_URL` pointed at

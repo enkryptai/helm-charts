@@ -51,13 +51,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-ServiceAccount name: the given name, else the full name if the chart creates
-one, else empty (the pods use the namespace's default ServiceAccount)
+ServiceAccount name (through tpl): the given name, else the full name if the
+chart creates one, else empty (the pods use the namespace's default
+ServiceAccount)
 */}}
 {{- define "litellm.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "litellm.fullname" .) .Values.serviceAccount.name }}
+{{- $sa := .Values.serviceAccount | default dict }}
+{{- $name := tpl (toString ($sa.name | default "")) . }}
+{{- if $sa.create }}
+{{- default (include "litellm.fullname" .) $name }}
 {{- else }}
-{{- .Values.serviceAccount.name }}
+{{- $name }}
 {{- end }}
 {{- end }}

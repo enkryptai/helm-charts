@@ -53,7 +53,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- with (include "litellm.serviceAccountName" .) }}
-      serviceAccountName: {{ . }}
+      serviceAccountName: {{ . | quote }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

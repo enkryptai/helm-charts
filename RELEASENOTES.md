@@ -25,11 +25,11 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
-| `*-env-cm` and `onprem` ConfigMaps are normal release resources, not `pre-install`/`pre-upgrade` hooks | TBD |
+| `*-env-cm` and `onprem` ConfigMaps are normal release resources, not `pre-install`/`pre-upgrade` hooks | [#144](https://github.com/enkryptai/helm-charts/pull/144) |
 
 ### Upgrading from 1.2.1
 
-- **ConfigMaps are no longer hooks.** The app ConfigMaps (`*-env-cm` and
+- **ConfigMaps are no longer hooks (#144).** The app ConfigMaps (`*-env-cm` and
   supabase `onprem`) were created by Helm hooks, so the release didn't own
   them. Helm refuses to take them over on upgrade (`exists and cannot be
   imported into the current release: invalid ownership metadata`). Before the

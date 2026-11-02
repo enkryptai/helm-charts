@@ -48,6 +48,13 @@ the `index.yaml` entry.
   `DECK_OPENFGA_AUTHORIZATION_MODEL_ID` (`utils/post-installation.sh` writes
   them; with External Secrets, put them in the secret store). If your values
   file sets these keys in a ConfigMap, remove them.
+- **Telemetry and metering off.** `ENKRYPT_GATEWAY_URL` is only used when
+  `GR_MODELS_MODE` or `RT_MODELS_MODE` is `enkrypt_hosted`; if you use that
+  mode, set it (and `ENKRYPT_METERING_ENABLED`, if you meter) in your values
+  file. The chart doesn't restart pods when a ConfigMap changes, so after the
+  upgrade run
+  `kubectl rollout restart deployment/redteam-proxy deployment/<release>-litellm -n <namespace>`.
+  Red team job pods pick up the change on their next run.
 
 ### Fixed
 
@@ -76,6 +83,11 @@ the `index.yaml` entry.
   `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_LEADERBOARD_SUPABASE_URL` and
   `NEXT_PUBLIC_MCP_SCANNER_SUPABASE_URL` empty in `frontend`;
   `NEXT_PUBLIC_POSTHOG_HOST` empty in `leaderboard-client`.
+- **enkryptai-stack:** `redteam-proxy` sets `ANONYMIZED_TELEMETRY: "false"`, so
+  browser-use in the proxy and red-team job pods no longer sends the task
+  (target URL, attack prompt) to PostHog. In `litellm`,
+  `ENKRYPT_METERING_ENABLED` is `'false'` and `ENKRYPT_GATEWAY_URL` is empty
+  by default.
 
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 

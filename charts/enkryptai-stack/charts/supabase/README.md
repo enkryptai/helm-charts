@@ -29,7 +29,7 @@ The open source Firebase alternative.
 | analytics.fullnameOverride | string | `""` |  |
 | analytics.image.pullPolicy | string | `"IfNotPresent"` |  |
 | analytics.image.repository | string | `"onprem/logflare"` |  |
-| analytics.image.tag | string | `"1.50.15"` |  |
+| analytics.image.tag | string | `"1.14.2"` |  |
 | analytics.imagePullSecrets | list | `[]` |  |
 | analytics.livenessProbe | object | `{}` |  |
 | analytics.nameOverride | string | `""` |  |
@@ -91,7 +91,7 @@ The open source Firebase alternative.
 | db.fullnameOverride | string | `""` |  |
 | db.image.pullPolicy | string | `"IfNotPresent"` |  |
 | db.image.repository | string | `"onprem/supabase-postgres"` |  |
-| db.image.tag | string | `"17.6.1.136"` |  |
+| db.image.tag | string | `"15.8.1.060"` |  |
 | db.imagePullSecrets | list | `[]` |  |
 | db.livenessProbe | object | `{}` |  |
 | db.nameOverride | string | `""` |  |
@@ -131,7 +131,7 @@ The open source Firebase alternative.
 | functions.fullnameOverride | string | `""` |  |
 | functions.image.pullPolicy | string | `"IfNotPresent"` |  |
 | functions.image.repository | string | `"onprem/edge-runtime"` |  |
-| functions.image.tag | string | `"v1.77.4"` |  |
+| functions.image.tag | string | `"v1.67.4"` |  |
 | functions.imagePullSecrets | list | `[]` |  |
 | functions.livenessProbe | object | `{}` |  |
 | functions.nameOverride | string | `""` |  |
@@ -162,7 +162,7 @@ The open source Firebase alternative.
 | imgproxy.fullnameOverride | string | `""` |  |
 | imgproxy.image.pullPolicy | string | `"IfNotPresent"` |  |
 | imgproxy.image.repository | string | `"onprem/imgproxy"` |  |
-| imgproxy.image.tag | string | `"v3.31.4"` |  |
+| imgproxy.image.tag | string | `"v3.8.0"` |  |
 | imgproxy.imagePullSecrets | list | `[]` |  |
 | imgproxy.livenessProbe | object | `{}` |  |
 | imgproxy.nameOverride | string | `""` |  |
@@ -309,7 +309,7 @@ The open source Firebase alternative.
 | realtime.fullnameOverride | string | `""` |  |
 | realtime.image.pullPolicy | string | `"IfNotPresent"` |  |
 | realtime.image.repository | string | `"onprem/realtime"` |  |
-| realtime.image.tag | string | `"v2.143.3"` |  |
+| realtime.image.tag | string | `"v2.34.47"` |  |
 | realtime.imagePullSecrets | list | `[]` |  |
 | realtime.livenessProbe | object | `{}` |  |
 | realtime.nameOverride | string | `""` |  |
@@ -459,7 +459,7 @@ The open source Firebase alternative.
 | vector.fullnameOverride | string | `""` |  |
 | vector.image.pullPolicy | string | `"IfNotPresent"` |  |
 | vector.image.repository | string | `"onprem/vector"` |  |
-| vector.image.tag | string | `"0.53.0-alpine"` |  |
+| vector.image.tag | string | `"0.28.1-alpine"` |  |
 | vector.imagePullSecrets | list | `[]` |  |
 | vector.livenessProbe | object | `{}` |  |
 | vector.nameOverride | string | `""` |  |

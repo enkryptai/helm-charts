@@ -143,12 +143,12 @@ If applicable, update IAM roles to allow image pulls from the required sources.
 | Postgres Meta | `supabase/postgres-meta` | `v0.86.0` |
 | Storage API | `supabase/storage-api` | `v1.19.1` |
 | Studio | `supabase/studio` | `20240326-5e5586d` |
-| Postgres (optional, `supabase.db`) | `supabase/postgres` → `onprem/supabase-postgres` | `17.6.1.136` |
-| Realtime (optional) | `supabase/realtime` → `onprem/realtime` | `v2.143.3` |
-| imgproxy (optional) | `darthsim/imgproxy` → `onprem/imgproxy` | `v3.31.4` |
-| Logflare (optional, `supabase.analytics`) | `supabase/logflare` → `onprem/logflare` | `1.50.15` |
-| Vector (optional) | `timberio/vector` → `onprem/vector` | `0.53.0-alpine` |
-| Edge Runtime (optional, `supabase.functions`) | `supabase/edge-runtime` → `onprem/edge-runtime` | `v1.77.4` |
+| Postgres (optional, `supabase.db`) | `supabase/postgres` → `onprem/supabase-postgres` | `15.8.1.060` |
+| Realtime (optional) | `supabase/realtime` → `onprem/realtime` | `v2.34.47` |
+| imgproxy (optional) | `darthsim/imgproxy` → `onprem/imgproxy` | `v3.8.0` |
+| Logflare (optional, `supabase.analytics`) | `supabase/logflare` → `onprem/logflare` | `1.14.2` |
+| Vector (optional) | `timberio/vector` → `onprem/vector` | `0.28.1-alpine` |
+| Edge Runtime (optional, `supabase.functions`) | `supabase/edge-runtime` → `onprem/edge-runtime` | `v1.67.4` |
 
 The optional images are off by default. The chart pulls them from your
 registry as `onprem/<name>` (see section 14). They are mirrored in the

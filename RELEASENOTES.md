@@ -24,20 +24,6 @@ the `index.yaml` entry.
 
 | Change | Pull request |
 | ------ | ------------ |
-| Fluent Bit memory limit `256Gi` → `256Mi` | [#136](https://github.com/enkryptai/helm-charts/pull/136) |
-
-### Upgrading from 1.2.1
-
-- **Fluent Bit (#136).** If your values file copies
-  `gateway-kong.resources.fluentBit.limits.memory: "256Gi"`, change it to
-  `256Mi` or remove it.
-
-### Fixed
-
-- **enkryptai-stack:** the gateway-kong `fluent-bit` sidecar memory limit was
-  `256Gi` (effectively no limit); it is now `256Mi`, next to its `64Mi`
-  request. Fixed in both `values.yaml` and the `gateway-kong` subchart
-  defaults.
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 
 ### Upgrading from 1.2.1

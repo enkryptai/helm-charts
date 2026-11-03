@@ -312,6 +312,18 @@ redteam-proxy:
     name: http
 
   env:
+    - name: SUPABASE_KEY
+      valueFrom:
+        secretKeyRef:
+          name: onprem
+          key: serviceKey
+          optional: true
+    - name: NEXTJS_AUTH_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: gateway-env-secret
+          key: DECK_NEXT_JS_BASIC_AUTH
+          optional: true
     - name: NATS_URL
       value: "nats://nats:4222"
     - name: IS_PROXY_MODE

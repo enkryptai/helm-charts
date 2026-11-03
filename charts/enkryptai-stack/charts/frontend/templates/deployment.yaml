@@ -35,6 +35,31 @@ spec:
           env:
             - name: NODE_TLS_REJECT_UNAUTHORIZED
               value: {{ .Values.env.NODE_TLS_REJECT_UNAUTHORIZED | quote }}
+            # Read from the owners: onprem holds the Supabase JWTs, decK loads the Kong credentials from gateway-env-secret.
+            - name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: onprem
+                  key: anonKey
+                  optional: true
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: onprem
+                  key: serviceKey
+                  optional: true
+            - name: APIAAS_KONG_BASIC_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-env-secret
+                  key: DECK_NEXT_JS_BASIC_AUTH
+                  optional: true
+            - name: SAMPLE_MODEL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-env-secret
+                  key: DECK_INITIAL_SAMPLE_MODEL_PASSWORD
+                  optional: true
           envFrom:
             - secretRef:
                 {{- if .Values.useEnvFrom }}

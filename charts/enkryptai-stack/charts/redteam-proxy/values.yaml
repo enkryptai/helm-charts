@@ -39,6 +39,18 @@ env:
     value: "300"
   - name: SENTRY_LITELLM_GATEWAY_URL
     value: "http://{{ .Release.Name }}-litellm:4000"
+  - name: SUPABASE_KEY
+    valueFrom:
+      secretKeyRef:
+        name: onprem
+        key: serviceKey
+        optional: true
+  - name: NEXTJS_AUTH_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: gateway-env-secret
+        key: DECK_NEXT_JS_BASIC_AUTH
+        optional: true
 
 resources:
   requests:

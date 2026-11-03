@@ -24,65 +24,6 @@ the `index.yaml` entry.
 
 | Change | Pull request |
 | ------ | ------------ |
-| Startup, readiness and liveness probes for every workload, set from values (new ones off by default, except `guardrails-model` startup/readiness and `gateway-kong` readiness) | [#139](https://github.com/enkryptai/helm-charts/pull/139) |
-
-### Upgrading from 1.2.1
-
-- **Probes (#139).** The probes that are on today stay on. Three new probes
-  are on by default: `guardrails-model` startup and readiness (the pod, the
-  Service and `helm --wait` now wait until the model is serving, up to
-  20 minutes on a cold start), and `gateway-kong` readiness (`kong health`).
-  These roll the guardrails-model and gateway-kong pods once on upgrade. Every
-  other new probe ships with `enabled: false`. To
-  turn one on, set `<component>.<startup|liveness|readiness>Probe.enabled: true`
-  (Supabase: `supabase.<component>.<type>Probe`, nginx-html:
-  `supabase.customtemplate.<type>Probe`, gateway-kong sidecars:
-  `gateway-kong.sync.<type>Probe` and `gateway-kong.fluentBit.<type>Probe`).
-  Turning probes on rolls the pods once.
-- **Probe values shape (#139).** Every probe block is rendered as-is when
-  `enabled: true`, so any probe type (`httpGet`, `tcpSocket`, `exec`, `grpc`)
-  and any field can be set. Probe blocks for the Supabase components now need
-  `enabled: true`; values files that set a Supabase probe without it still
-  work for the components where the chart default is set, but should add it.
-  To switch a probe to another type in a values file, set the old handler to
-  `null` (for example `httpGet: null`).
-
-### Added
-
-- **enkryptai-stack:** a `startupProbe` for every workload, and the missing
-  readiness and liveness probes. Off by default, except the three marked *on*:
-
-  | Workload | Probe |
-  | -------- | ----- |
-  | `guardrails-model` | router `GET /health` on 8080 (startup budget 20 min, for the model load); startup and readiness *on* |
-  | `secure-mcp-gateway` | `tcpSocket` 8000 (the gateway has no health route) |
-  | `gateway-kong` (gateway) | `kong health` (startup, readiness); readiness *on* |
-  | `gateway-kong` (`fluent-bit`) | `GET /api/v1/health` on 2020 (startup, liveness; no readiness, so a log backend outage doesn't take Kong out of the Service) |
-  | `gateway-kong` (`gateway-deck-sync`) | none by default (no port); values hooks only |
-  | Supabase `auth`, `meta` | `GET /health` |
-  | Supabase `rest` | `GET /` (readiness), `tcpSocket` 3000 (startup, liveness) |
-  | Supabase `storage` | `GET /status` |
-  | Supabase `kong` | `tcpSocket` 8000 |
-  | Supabase `minio` | `GET /minio/health/live`, `/minio/health/ready` |
-  | Supabase `studio` | `GET /api/profile` (startup, readiness) |
-  | `nginx-html` | `tcpSocket` 80 |
-  | `openfga` | the upstream chart's startup and liveness probes |
-  | other subcharts | `startupProbe` on the existing health path |
-
-### Changed
-
-- **enkryptai-stack:** every probe template uses the same block
-  (`with` + `enabled` + `toYaml (omit . "enabled")`), in our subcharts, the
-  Supabase subchart and `nginx-html`. Before, several templates rendered only
-  `httpGet` or `exec` and a fixed list of fields, and dropped the rest.
-
-### Fixed
-
-- **enkryptai-stack:** the `guardrails` subchart's default probes pointed at
-  port 80; the container listens on 8000. (The stack's values set 8000, so
-  installs with the stack defaults weren't affected.)
-- **enkryptai-stack:** `litellm` and `guardrails-multi-modal` probe defaults had
-  no `enabled` key; they now have `enabled: true`.
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 
 ### Upgrading from 1.2.1

@@ -138,6 +138,8 @@ A Helm chart for Kubernetes
 | global.domain | string | `"example.com"` | Base domain; Ingress hosts and public URLs derive from it |
 | global.externalSecret | bool | `false` |  |
 | global.imagePullPolicy | string | `"IfNotPresent"` |  |
+| global.imagePullSecrets | list | `[]` | Pull Secrets added to every pod in the chart (names, or `{name: ...}` maps). This is the normal way to set them. A component's own list (`<app>.image.pullSecrets`, `supabase.<component>.imagePullSecrets`) is only for exceptions and is merged in front of this one. The upstream `openfga` chart doesn't read it: set `openfga.imagePullSecrets` too. |
+| global.imageRegistry | string | `""` | Registry put in front of every image repository that has no registry host (for example `onprem/busybox`). Overrides `global.registry`; empty falls back to it. A repository that starts with a host (`vpcdeployment.azurecr.io/...`, `docker.io/...`) is used as written. A component's own `image.registry` wins over both, for exceptions. |
 | global.registry | string | `"vpcdeployment.azurecr.io"` |  |
 | global.storageClass | string | `""` |  |
 | guardrails.affinity | object | `{}` |  |

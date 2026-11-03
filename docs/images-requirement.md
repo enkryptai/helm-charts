@@ -143,6 +143,17 @@ If applicable, update IAM roles to allow image pulls from the required sources.
 | Postgres Meta | `supabase/postgres-meta` | `v0.86.0` |
 | Storage API | `supabase/storage-api` | `v1.19.1` |
 | Studio | `supabase/studio` | `20240326-5e5586d` |
+| Postgres (optional, `supabase.db`) | `supabase/postgres` → `onprem/supabase-postgres` | `17.6.1.136` |
+| Realtime (optional) | `supabase/realtime` → `onprem/realtime` | `v2.143.3` |
+| imgproxy (optional) | `darthsim/imgproxy` → `onprem/imgproxy` | `v3.31.4` |
+| Logflare (optional, `supabase.analytics`) | `supabase/logflare` → `onprem/logflare` | `1.50.15` |
+| Vector (optional) | `timberio/vector` → `onprem/vector` | `0.53.0-alpine` |
+| Edge Runtime (optional, `supabase.functions`) | `supabase/edge-runtime` → `onprem/edge-runtime` | `v1.77.4` |
+
+The optional images are off by default. The chart pulls them from your
+registry as `onprem/<name>` (see section 14). They are mirrored in the
+EnkryptAI ECR (`188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/<name>`);
+for another registry, mirror them under the same paths before turning one on.
 
 ---
 
@@ -153,3 +164,29 @@ If applicable, update IAM roles to allow image pulls from the required sources.
 | Kubernetes Wait Utility | `groundnuty/k8s-wait-for` | `v2.0` |
 
 
+
+## 14. Pulling from Your Own Registry (`enkryptai-stack`)
+
+To pull every image from one registry with one pull Secret, set the two
+global values. This is the normal setup for on-prem:
+
+```yaml
+global:
+  imageRegistry: registry.example.com
+  imagePullSecrets:
+    - regcred
+openfga:
+  imagePullSecrets:      # the upstream openfga chart doesn't read the global list
+    - name: regcred
+```
+
+- `global.imageRegistry` goes in front of every image repository that has no
+  registry host (for example `onprem/busybox` becomes
+  `registry.example.com/onprem/busybox`). A repository that starts with a host
+  (`vpcdeployment.azurecr.io/...`, `docker.io/...`) is used as written. Mirror
+  the images under the same paths in your registry.
+- `global.imagePullSecrets` is added to every pod in the chart.
+- Per-component keys are for exceptions only, for example one image from a
+  different registry: `<app>.image.registry` wins over `global.imageRegistry`,
+  and `<app>.image.pullSecrets` / `supabase.<component>.imagePullSecrets` are
+  merged in front of the global list.

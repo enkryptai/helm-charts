@@ -28,8 +28,8 @@ The open source Firebase alternative.
 | analytics.environment.LOGFLARE_SUPABASE_MODE | string | `"true"` |  |
 | analytics.fullnameOverride | string | `""` |  |
 | analytics.image.pullPolicy | string | `"IfNotPresent"` |  |
-| analytics.image.repository | string | `"supabase/logflare"` |  |
-| analytics.image.tag | string | `"latest"` |  |
+| analytics.image.repository | string | `"onprem/logflare"` |  |
+| analytics.image.tag | string | `"1.50.15"` |  |
 | analytics.imagePullSecrets | list | `[]` |  |
 | analytics.livenessProbe | object | `{}` |  |
 | analytics.nameOverride | string | `""` |  |
@@ -90,8 +90,8 @@ The open source Firebase alternative.
 | db.environment.POSTGRES_PORT | string | `"5432"` |  |
 | db.fullnameOverride | string | `""` |  |
 | db.image.pullPolicy | string | `"IfNotPresent"` |  |
-| db.image.repository | string | `"supabase/postgres"` |  |
-| db.image.tag | string | `"latest"` |  |
+| db.image.repository | string | `"onprem/supabase-postgres"` |  |
+| db.image.tag | string | `"17.6.1.136"` |  |
 | db.imagePullSecrets | list | `[]` |  |
 | db.livenessProbe | object | `{}` |  |
 | db.nameOverride | string | `""` |  |
@@ -130,8 +130,8 @@ The open source Firebase alternative.
 | functions.environment.DB_USERNAME | string | `"supabase_functions_admin"` |  |
 | functions.fullnameOverride | string | `""` |  |
 | functions.image.pullPolicy | string | `"IfNotPresent"` |  |
-| functions.image.repository | string | `"supabase/edge-runtime"` |  |
-| functions.image.tag | string | `"latest"` |  |
+| functions.image.repository | string | `"onprem/edge-runtime"` |  |
+| functions.image.tag | string | `"v1.77.4"` |  |
 | functions.imagePullSecrets | list | `[]` |  |
 | functions.livenessProbe | object | `{}` |  |
 | functions.nameOverride | string | `""` |  |
@@ -161,8 +161,8 @@ The open source Firebase alternative.
 | imgproxy.environment.IMGPROXY_USE_ETAG | string | `"true"` |  |
 | imgproxy.fullnameOverride | string | `""` |  |
 | imgproxy.image.pullPolicy | string | `"IfNotPresent"` |  |
-| imgproxy.image.repository | string | `"darthsim/imgproxy"` |  |
-| imgproxy.image.tag | string | `"latest"` |  |
+| imgproxy.image.repository | string | `"onprem/imgproxy"` |  |
+| imgproxy.image.tag | string | `"v3.31.4"` |  |
 | imgproxy.imagePullSecrets | list | `[]` |  |
 | imgproxy.livenessProbe | object | `{}` |  |
 | imgproxy.nameOverride | string | `""` |  |
@@ -308,8 +308,8 @@ The open source Firebase alternative.
 | realtime.environment.SECRET_KEY_BASE | string | `"UpNVntnq"` |  |
 | realtime.fullnameOverride | string | `""` |  |
 | realtime.image.pullPolicy | string | `"IfNotPresent"` |  |
-| realtime.image.repository | string | `"supabase/realtime"` |  |
-| realtime.image.tag | string | `"latest"` |  |
+| realtime.image.repository | string | `"onprem/realtime"` |  |
+| realtime.image.tag | string | `"v2.143.3"` |  |
 | realtime.imagePullSecrets | list | `[]` |  |
 | realtime.livenessProbe | object | `{}` |  |
 | realtime.nameOverride | string | `""` |  |
@@ -458,8 +458,8 @@ The open source Firebase alternative.
 | vector.enabled | bool | `false` |  |
 | vector.fullnameOverride | string | `""` |  |
 | vector.image.pullPolicy | string | `"IfNotPresent"` |  |
-| vector.image.repository | string | `"timberio/vector"` |  |
-| vector.image.tag | string | `"latest"` |  |
+| vector.image.repository | string | `"onprem/vector"` |  |
+| vector.image.tag | string | `"0.53.0-alpine"` |  |
 | vector.imagePullSecrets | list | `[]` |  |
 | vector.livenessProbe | object | `{}` |  |
 | vector.nameOverride | string | `""` |  |

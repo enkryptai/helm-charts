@@ -25,37 +25,9 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
-| `*-env-cm` and `onprem` ConfigMaps are normal release resources, not `pre-install`/`pre-upgrade` hooks | [#144](https://github.com/enkryptai/helm-charts/pull/144) |
 
 ### Upgrading from 1.2.1
 
-- **ConfigMaps are no longer hooks (#144).** The app ConfigMaps (`*-env-cm` and
-  supabase `onprem`) were created by Helm hooks, so the release didn't own
-  them. Helm refuses to take them over on upgrade (`exists and cannot be
-  imported into the current release: invalid ownership metadata`). Before the
-  first `helm upgrade` to this version, hand them to the release (set
-  `RELEASE` and `NS` to your release name and namespace; ConfigMaps that don't
-  exist are skipped):
-
-  ```sh
-  RELEASE=enkryptai NS=enkryptai-stack
-  for ns in "$NS" redteam-jobs; do
-    for cm in compliance-scan-env-cm frontend-env-cm gateway-env-cm \
-              gateway-migration-env-cm guardrails-env-cm leaderboard-client-env-cm \
-              leaderboard-server-env-cm litellm-gateway-env-cm mcp-scanner-env-cm \
-              redteam-proxy-env-cm secure-mcp-gateway-env-cm skill-scanner-env-cm onprem; do
-      kubectl get configmap "$cm" -n "$ns" >/dev/null 2>&1 || continue
-      kubectl label configmap "$cm" -n "$ns" app.kubernetes.io/managed-by=Helm --overwrite
-      kubectl annotate configmap "$cm" -n "$ns" --overwrite \
-        meta.helm.sh/release-name="$RELEASE" meta.helm.sh/release-namespace="$NS" \
-        helm.sh/hook- helm.sh/hook-weight-
-    done
-  done
-  ```
-
-  `redteam-proxy-env-cm` also lives in every namespace listed in
-  `redteam-proxy.configMapNamespaces` (default `enkryptai-stack` and
-  `redteam-jobs`); add any other namespace you set there to the outer loop.
 - **In-cluster URLs (#138).** The `litellm`, `guardrails` and `redteam-proxy`
   defaults now build Service URLs from `{{ .Release.Name }}` and
   `{{ .Release.Namespace }}`, and these ConfigMap values and the
@@ -79,16 +51,6 @@ the `index.yaml` entry.
 
 ### Fixed
 
-- **enkryptai-stack:** the app ConfigMaps (`compliance-scan`, `frontend`,
-  `gateway-kong` (`gateway-env-cm`, `gateway-migration-env-cm`), `guardrails`,
-  `leaderboard-client`, `leaderboard-server`, `litellm`, `mcp-scanner`,
-  `redteam-proxy`, `secure-mcp-gateway`, `skill-scanner`, supabase `onprem`)
-  were `pre-install,pre-upgrade` hooks with no delete policy. Helm deleted and
-  recreated them on every upgrade, and `helm uninstall` left them behind
-  because hook resources are not part of the release. They are now normal
-  resources: Helm creates ConfigMaps before Deployments in the same release,
-  and nothing that runs before them (pre-install hooks) reads them. Rendered
-  output is unchanged apart from the two hook annotations.
 - **enkryptai-stack:** `litellm` `GR_MULTIMODAL_SERVICE_URL` pointed at
   `enkryptai-guardrails-multimodal`, a Service that doesn't exist; it now
   points at `<release>-guardrails-multi-modal`. Multimodal guardrails didn't

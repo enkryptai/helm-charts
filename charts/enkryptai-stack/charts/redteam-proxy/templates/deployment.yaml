@@ -45,7 +45,7 @@ spec:
                 {{- end }}
             - configMapRef:
                 name: redteam-proxy-env-cm
-          {{- if or .Values.env .Values.supabaseKey.secretRef .Values.nextjsAuthToken.secretRef }}
+          {{- if or .Values.env .Values.supabaseKey.secretRef .Values.nextjsAuthToken.secretRef .Values.s3.secretRef }}
           env:
             {{- with .Values.env }}
             {{- tpl (toYaml .) $ | nindent 12 }}
@@ -64,6 +64,20 @@ spec:
                 secretKeyRef:
                   name: {{ . }}
                   key: {{ $.Values.nextjsAuthToken.secretRefKey }}
+                  optional: true
+            {{- end }}
+            {{- with .Values.s3.secretRef }}
+            - name: ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: {{ $.Values.s3.secretRefKey.keyId }}
+                  optional: true
+            - name: SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: {{ $.Values.s3.secretRefKey.accessKey }}
                   optional: true
             {{- end }}
           {{- end }}

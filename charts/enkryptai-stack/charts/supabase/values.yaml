@@ -776,6 +776,12 @@ testimage:
 postgresalpine:
   repository: onprem/postgres
   tag: "15-alpine"
+# create-s3-buckets Job credentials; on-prem can point these at onprem S3_PROTOCOL_ACCESS_KEY_ID and _SECRET.
+s3Bucket:
+  secretRef: s3-cred
+  secretRefKey:
+    keyId: AWS_ACCESS_KEY_ID
+    accessKey: AWS_SECRET_ACCESS_KEY
 aws:
   repository: onprem/aws-cli
   tag: "2.27.55"

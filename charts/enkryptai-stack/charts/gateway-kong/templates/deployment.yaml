@@ -55,6 +55,20 @@ spec:
                 name: gateway-env-secret
             - configMapRef:
                 name: gateway-env-cm
+          # Same database user as the migrations and db-check-and-grant; overrides the gateway-env-secret copy.
+          env:
+            - name: KONG_PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-migration-env-secret
+                  key: KONG_PG_USER
+                  optional: true
+            - name: KONG_PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-migration-env-secret
+                  key: KONG_PG_PASSWORD
+                  optional: true
           {{- with .Values.startupProbe }}
           {{- if .enabled }}
           startupProbe:

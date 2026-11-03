@@ -43,9 +43,9 @@ db:
   enabled: false
   image:
     # Docker Hub, not from global.registry (component is off by default)
-    repository: docker.io/supabase/postgres
+    repository: onprem/supabase-postgres
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "17.6.1.136"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
@@ -206,9 +206,9 @@ realtime:
   enabled: false
   image:
     # Docker Hub, not from global.registry (component is off by default)
-    repository: docker.io/supabase/realtime
+    repository: onprem/realtime
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "v2.143.3"
   imagePullSecrets: []
   nameOverride: ""
   fullnameOverride: ""
@@ -346,9 +346,9 @@ imgproxy:
   enabled: false
   image:
     # Docker Hub, not from global.registry (component is off by default)
-    repository: docker.io/darthsim/imgproxy
+    repository: onprem/imgproxy
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "v3.31.4"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
@@ -445,9 +445,9 @@ kong:
 analytics:
   enabled: false
   image:
-    repository: supabase/logflare
+    repository: onprem/logflare
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "1.50.15"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
@@ -494,9 +494,9 @@ vector:
   enabled: false
   image:
     # Docker Hub, not from global.registry (component is off by default)
-    repository: docker.io/timberio/vector
+    repository: onprem/vector
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "0.53.0-alpine"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
@@ -527,9 +527,9 @@ functions:
   enabled: false
   image:
     # Docker Hub, not from global.registry (component is off by default)
-    repository: docker.io/supabase/edge-runtime
+    repository: onprem/edge-runtime
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "v1.77.4"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""

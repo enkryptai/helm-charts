@@ -187,16 +187,19 @@ fluentBit:
   env:
     - name: ELASTIC_PORT
       value: "9200"
+    # opensearch-cred is the OpenSearch operator's admin Secret (platform-stack, same namespace).
     - name: ELASTIC_USERNAME
       valueFrom:
         secretKeyRef:
-          name: "enkryptai-opensearch-admin-password"
+          name: "opensearch-cred"
           key: "username"
+          optional: true
     - name: ELASTIC_PASSWORD
       valueFrom:
         secretKeyRef:
-          name: "enkryptai-opensearch-admin-password"
+          name: "opensearch-cred"
           key: "password"
+          optional: true
 
 configMap:
   gatewayEnv:

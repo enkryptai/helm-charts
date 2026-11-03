@@ -25,7 +25,6 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
-| `utils/post-installation.sh` reads the OpenFGA IDs from the OpenFGA API, not from pod logs | [#142](https://github.com/enkryptai/helm-charts/pull/142) |
 
 ### Upgrading from 1.2.1
 
@@ -39,9 +38,6 @@ the `index.yaml` entry.
 - **Remote model fallback is off (#138).** `litellm.configMap.LOCAL_MODEL_FALLBACK_TO_REMOTE`
   is now `'false'`. Set it to `'true'` if you want guardrails to fall back to a
   hosted model when the local model is unavailable.
-- **`utils/post-installation.sh` (F-6, #142).** The script now needs `jq` on the
-  machine that runs it. Run it the same way as before; `--print-only` shows
-  the IDs without changing anything.
 - **Hosted endpoints (#138).** PostHog and the hosted leaderboard and MCP
   scanner Supabase URLs are empty by default. Set them in your values file if
   you use those features.
@@ -72,14 +68,6 @@ the `index.yaml` entry.
   Service URLs (`*-litellm`, `*-guardrails-model`, `supabase-storage`,
   `valkey`) no longer assume the release is called `enkryptai` and runs in
   `enkryptai-stack`.
-- **utils:** `post-installation.sh` took the OpenFGA store and model IDs from
-  the first `store_id` / `authorization_model_id` it found in the last 1000
-  lines of the OpenFGA pod logs, with the release name hardcoded as
-  `enkryptai`. Once the request logs had rotated it found nothing, and it
-  could pick a store or model that wasn't the current one. It now reads the
-  store (`EnkryptAI`, the one `openfga-sync` creates) and its latest
-  authorization model from the OpenFGA API, through the Kubernetes API
-  server's service proxy (`kubectl get --raw`; no port-forward or extra pod).
 
 ### Changed
 
@@ -88,12 +76,6 @@ the `index.yaml` entry.
   `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_LEADERBOARD_SUPABASE_URL` and
   `NEXT_PUBLIC_MCP_SCANNER_SUPABASE_URL` empty in `frontend`;
   `NEXT_PUBLIC_POSTHOG_HOST` empty in `leaderboard-client`.
-- **utils:** `post-installation.sh` sets the Secret keys with one merge patch
-  (adds or replaces), leaves Secrets owned by an `ExternalSecret` alone and
-  prints the IDs to put in the secret store instead, and has new options:
-  `--service`, `--store-name`, `--print-only` and `--no-restart`. It fails
-  with a clear message when there is no store yet (the `openfga-sync` Job
-  hasn't run) or when several stores match.
 
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 

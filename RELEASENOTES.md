@@ -25,7 +25,6 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
-| One image helper and one pull-Secret helper for every image and pod in the chart (`global.imageRegistry`, `global.imagePullSecrets`) | [#145](https://github.com/enkryptai/helm-charts/pull/145) |
 
 ### Upgrading from 1.2.1
 
@@ -72,31 +71,6 @@ the `index.yaml` entry.
 
 ### Changed
 
-- **enkryptai-stack:** every image in the chart and its subcharts (upstream
-  `openfga` excepted) now goes through one helper, `enkryptai-stack.image`.
-  The registry comes from `image.registry`, else `global.imageRegistry` (new),
-  else `global.registry`; a repository that already starts with a registry
-  host is used as is. Every pod spec goes through
-  `enkryptai-stack.imagePullSecrets`: the component's own list plus
-  `global.imagePullSecrets`, without duplicates, names or `{name: ...}` maps.
-  With the default values the rendered images are unchanged. Repositories in
-  the default values still carry `vpcdeployment.azurecr.io`, so
-  `global.imageRegistry` only moves images whose repository has no host
-  (Supabase, `openfga-sync`, busybox, nginx, the bucket and test Jobs);
-  moving the rest is a values change that comes separately.
-- **enkryptai-stack:** Supabase pods (auth, kong, meta, rest, studio,
-  storage, minio, the bucket Job, the test Jobs) and the `nginx-html`
-  Deployment now get `global.imagePullSecrets`; before, only the
-  per-component lists (Supabase) or nothing (`nginx-html`, test Jobs).
-- **enkryptai-stack:** the Supabase `realtime` init container used
-  `postgres:15-alpine` from Docker Hub; it now uses `postgresalpine` from the
-  registry like the other wait-for-db init containers. The optional Supabase
-  `db`, `functions`, `imgproxy`, `realtime` and `vector` images (all off by
-  default) are written as `docker.io/...` so they keep coming from Docker Hub.
-- **enkryptai-stack:** not covered by the helpers: upstream `openfga` (set
-  `openfga.imagePullSecrets`), the `secure-mcp-gateway` `initContainers`
-  value (`amazon/aws-cli:latest`), and `gateway-kong`'s
-  `create-gateway-configmap` Job (removed by #134).
 - **enkryptai-stack:** no data leaves the cluster by default:
   `LOCAL_MODEL_FALLBACK_TO_REMOTE: 'false'` in `litellm`;
   `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_LEADERBOARD_SUPABASE_URL` and

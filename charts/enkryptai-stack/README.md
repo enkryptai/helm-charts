@@ -218,7 +218,7 @@ A Helm chart for Kubernetes
 | openfga.datastore.migrations.resources | object | `{}` |  |
 | openfga.datastore.uri | string | `nil` |  |
 | openfga.datastore.uriSecret | string | `"openfga-env-secret"` |  |
-| openfga.datastore.waitForMigrations | bool | `true` |  |
+| openfga.datastore.waitForMigrations | bool | `false` |  |
 | openfga.experimentals | list | `[]` |  |
 | openfga.extraEnvVars[0].name | string | `"OPENFGA_HTTP_TLS_ENABLED"` |  |
 | openfga.extraEnvVars[0].value | string | `"false"` |  |
@@ -302,9 +302,9 @@ A Helm chart for Kubernetes
 | openfga.maxConcurrentReadsForListUsers | string | `nil` |  |
 | openfga.maxTuplesPerWrite | string | `nil` |  |
 | openfga.maxTypesPerAuthorizationModel | string | `nil` |  |
-| openfga.migrate.annotations."helm.sh/hook" | string | `"post-install, post-upgrade"` |  |
+| openfga.migrate.annotations."helm.sh/hook" | string | `"pre-install, pre-upgrade"` |  |
 | openfga.migrate.annotations."helm.sh/hook-delete-policy" | string | `"before-hook-creation"` |  |
-| openfga.migrate.annotations."helm.sh/hook-weight" | string | `"-15"` |  |
+| openfga.migrate.annotations."helm.sh/hook-weight" | string | `"-5"` |  |
 | openfga.migrate.extraInitContainers | list | `[]` |  |
 | openfga.migrate.extraVolumeMounts | list | `[]` |  |
 | openfga.migrate.extraVolumes | list | `[]` |  |
@@ -339,7 +339,7 @@ A Helm chart for Kubernetes
 | openfga.service.port | int | `8080` |  |
 | openfga.service.type | string | `"ClusterIP"` |  |
 | openfga.serviceAccount.annotations | object | `{}` |  |
-| openfga.serviceAccount.create | bool | `true` |  |
+| openfga.serviceAccount.create | bool | `false` |  |
 | openfga.serviceAccount.name | string | `""` |  |
 | openfga.sidecars | list | `[]` |  |
 | openfga.startupProbe.enabled | bool | `false` |  |

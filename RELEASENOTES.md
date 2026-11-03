@@ -25,7 +25,6 @@ the `index.yaml` entry.
 | Change | Pull request |
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
-| Supabase: `onprem` ConfigMap URLs use the release name (typo fixed); `analytics.enabled: true` renders again | [#143](https://github.com/enkryptai/helm-charts/pull/143) |
 
 ### Upgrading from 1.2.1
 
@@ -69,25 +68,6 @@ the `index.yaml` entry.
   Service URLs (`*-litellm`, `*-guardrails-model`, `supabase-storage`,
   `valkey`) no longer assume the release is called `enkryptai` and runs in
   `enkryptai-stack`.
-- **enkryptai-stack:** the Supabase `onprem` ConfigMap had
-  `STUDIO_PG_META_URL: http://enkrytpai-supabase-meta:8080` and
-  `SUPABASE_URL: http://enkrytpai-supabase-kong:8000` (misspelled release
-  name, so neither host exists). They are now
-  `http://{{ .Release.Name }}-supabase-meta:8080` and
-  `http://{{ .Release.Name }}-supabase-kong:8000`, and the `onprem`
-  ConfigMap values go through `tpl`. Studio is the only component that reads
-  these keys, and while `supabase.kong.enabled` / `supabase.meta.enabled` are
-  on (the default) it sets both in its own `env`, which wins, so nothing that
-  runs changes. A `supabase.configMap` value that contains a literal `{{`
-  now has to be escaped.
-- **enkryptai-stack:** `supabase.analytics.enabled: true` failed to render
-  (`nil pointer evaluating interface {}.repository`): the analytics
-  `init-db` container read `.Values.supabaseinitdb`, which only exists in the
-  parent chart's values and isn't visible to the Supabase subchart. It now
-  uses `supabase.postgresalpine`, the same `pg_isready` image as the `auth`
-  and `storage` init containers. Its `echo "Database is ready"` was a second
-  `sh -c` argument (so it became `$0` and never ran); it is now part of the
-  script.
 
 ### Changed
 

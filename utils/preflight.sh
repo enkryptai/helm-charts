@@ -358,7 +358,7 @@ SECRETS=(
 "enkryptai-stack guardrails-env-secret guardrails"
 "enkryptai-stack onprem Supabase(on-prem database)"
 "enkryptai-stack openfga-env-secret openfga"
-"enkryptai-stack opensearch-cred opensearch"
+"enkryptai-stack opensearch-cred opensearch,gateway-kong"
 "enkryptai-stack opensearch-securityconfig opensearch"
 "enkryptai-stack postgres-superuser-secret Supabase(on-prem)"
 "enkryptai-stack redteam-proxy-env-secret redteaming"

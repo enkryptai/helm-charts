@@ -48,9 +48,13 @@ env:
 # Downloads enkrypt_mcp_config.json from S3 into the shared volume before the
 # gateway starts. Needs the s3-credentials secret (ACCOUNT_ID, AWS_ACCESS_KEY_ID,
 # AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME, S3_BUCKET_REGION).
+# An init container's image may be a {repository, tag} map: the registry from
+# global.imageRegistry / global.registry is put in front, as for every other image.
 initContainers:
   - name: config-downloader
-    image: amazon/aws-cli:latest
+    image:
+      repository: onprem/aws-cli
+      tag: "2.27.55"
     securityContext:
       allowPrivilegeEscalation: false
       runAsNonRoot: true

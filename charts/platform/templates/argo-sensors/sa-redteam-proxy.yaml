@@ -1,20 +1,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: redteam-jobs-binding-workflow
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: argo-events-role-workflow
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: redteam-jobs
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
   name: argo-events-role
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -111,20 +97,6 @@ rules:
   - update
   - patch
   - delete
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: redteam-jobs-binding-events
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: argo-events-role
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: redteam-jobs
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1

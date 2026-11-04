@@ -30,7 +30,7 @@ spec:
         {{- toYaml .Values.analytics.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: {{.Values.global.registry}}/{{.Values.supabaseinitdb.repository}}:{{.Values.supabaseinitdb.tag}}
+          image: {{.Values.global.registry}}/{{.Values.postgresalpine.repository}}:{{.Values.postgresalpine.tag}}
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_HOST
@@ -58,7 +58,7 @@ spec:
               echo "Waiting for database to start..."
               sleep 2
               done
-            - echo "Database is ready"
+              echo "Database is ready"
       containers:
         - name: {{ include "supabase.analytics.name" $ }}
           securityContext:

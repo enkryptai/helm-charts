@@ -238,6 +238,12 @@ configMap:
     KONG_PROXY_ACCESS_LOG: 'off'
     KONG_PROXY_LISTEN: 0.0.0.0:8000
     KONG_SSL_PROTOCOLS: TLSv1.1 TLSv1.2 TLSv1.3
+    # Kong creates spans only when tracing is on (Kong's default is off). The
+    # opentelemetry plugin in files/kong.yaml exports them to
+    # tempo.monitoring:4318. Same values as apiaas prod; set
+    # KONG_TRACING_INSTRUMENTATIONS: "off" on clusters without Tempo.
+    KONG_TRACING_INSTRUMENTATIONS: all
+    KONG_TRACING_SAMPLING_RATE: '0.03'
     KONG_UPSTREAM_KEEPALIVE_MAX_REQUESTS: '100000'
     DECK_SKILL_SCANNER_URL: "http://skill-scanner:8080"
     # Write-side switch for cache value encryption; read by Kong via {vault://env/enkrypt-cache-encryption-enabled}.
@@ -260,6 +266,4 @@ configMap:
     KONG_SSL_PROTOCOLS: TLSv1.1 TLSv1.2 TLSv1.3
     KONG_TRACING_INSTRUMENTATIONS: all
     KONG_TRACING_SAMPLING_RATE: '0.03'
-    KONG_TRACING_INSTRUMENTATIONS: all
-    KONG_TRACING_SAMPLING_RATE: "0.03"
     KONG_UPSTREAM_KEEPALIVE_MAX_REQUESTS: '100000'

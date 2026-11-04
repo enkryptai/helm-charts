@@ -316,6 +316,12 @@ redteam-proxy:
       value: "nats://nats:4222"
     - name: IS_PROXY_MODE
       value: "true"
+    - name: SENTRY_LITELLM_GATEWAY_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: litellm-gateway-env-secret
+          key: SENTRY_LITELLM_GATEWAY_API_KEY
+          optional: true
 
   resources:
     requests:

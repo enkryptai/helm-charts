@@ -45,9 +45,27 @@ spec:
                 {{- end }}
             - configMapRef:
                 name: redteam-proxy-env-cm
-          {{- if .Values.env }}
+          {{- if or .Values.env .Values.supabaseKey.secretRef .Values.nextjsAuthToken.secretRef }}
           env:
-            {{- tpl (toYaml .Values.env) . | nindent 12 }}
+            {{- with .Values.env }}
+            {{- tpl (toYaml .) $ | nindent 12 }}
+            {{- end }}
+            {{- with .Values.supabaseKey.secretRef }}
+            - name: SUPABASE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: {{ $.Values.supabaseKey.secretRefKey }}
+                  optional: true
+            {{- end }}
+            {{- with .Values.nextjsAuthToken.secretRef }}
+            - name: NEXTJS_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: {{ $.Values.nextjsAuthToken.secretRefKey }}
+                  optional: true
+            {{- end }}
           {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:

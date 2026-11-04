@@ -26,6 +26,7 @@ the `index.yaml` entry.
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 | browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
+| `gateway-kong` ships its decK config in the chart instead of fetching it from GitHub at install | [#134](https://github.com/enkryptai/helm-charts/pull/134) |
 | `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
 
 ### Upgrading from 1.2.1
@@ -57,6 +58,28 @@ the `index.yaml` entry.
   upgrade run
   `kubectl rollout restart deployment/redteam-proxy deployment/<release>-litellm -n <namespace>`.
   Red team job pods pick up the change on their next run.
+- **decK config in the chart (#134).** The release now owns the
+  `gateway-kong-temp-config` ConfigMap, which a hook Job used to create. On an
+  existing install, the upgrade fails with `invalid ownership metadata` unless
+  you adopt the ConfigMap first (Helm 3.17 or later can use
+  `helm upgrade --take-ownership` instead):
+
+  ```bash
+  kubectl -n <namespace> label cm gateway-kong-temp-config app.kubernetes.io/managed-by=Helm --overwrite
+  kubectl -n <namespace> annotate cm gateway-kong-temp-config \
+    meta.helm.sh/release-name=<release> meta.helm.sh/release-namespace=<namespace> --overwrite
+  ```
+
+  After the upgrade, delete the old hook objects, which Helm doesn't track:
+
+  ```bash
+  kubectl -n <namespace> delete job create-gateway-configmap --ignore-not-found
+  kubectl -n <namespace> delete rolebinding gateway-configmap-binding --ignore-not-found
+  kubectl -n <namespace> delete role gateway-configmap-role --ignore-not-found
+  kubectl -n <namespace> delete serviceaccount gateway-configmap-sa --ignore-not-found
+  ```
+
+  Route changes now go in `gateway-kong/files/kong.yaml`.
 
 ### Added
 

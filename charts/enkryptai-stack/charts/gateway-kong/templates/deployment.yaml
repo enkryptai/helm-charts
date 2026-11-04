@@ -17,6 +17,8 @@ spec:
       {{- include "gateway-kong.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        checksum/kong-config: {{ include (print $.Template.BasePath "/kong-config-configmap.yaml") . | sha256sum }}
       labels:
         {{- include "gateway-kong.labels" . | nindent 8 }}
     spec:

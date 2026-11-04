@@ -781,6 +781,11 @@ aws:
   tag: "2.27.55"
 
 configMap:
+  DB_NAME: postgres
+  DB_USER: supabase_admin
+  DB_USERNAME: supabase_admin
+  GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI: pg-functions://postgres/public/custom_access_token_hook
+  NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
   DB_HOST: supabase-cluster-rw
   DB_PORT: '5432'
   DB_SSL: disable

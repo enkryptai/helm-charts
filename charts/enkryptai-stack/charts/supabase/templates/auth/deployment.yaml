@@ -18,10 +18,11 @@ spec:
       {{- include "supabase.auth.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.auth.podAnnotations }}
       annotations:
+        checksum/onprem: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.auth.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "supabase.auth.selectorLabels" . | nindent 8 }}
     spec:

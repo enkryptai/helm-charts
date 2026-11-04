@@ -113,6 +113,11 @@ the `index.yaml` entry.
 
 ### Changed
 
+- **enkryptai-stack:** the Supabase `auth`, `kong`, `meta`, `minio`, `rest`,
+  `storage` and `studio` pods read `DB_NAME`, `DB_USER`, `DB_USERNAME`,
+  `GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI` and `NEXT_ANALYTICS_BACKEND_PROVIDER`
+  from the `onprem` ConfigMap instead of the `onprem` Secret, and carry a
+  `checksum/onprem` annotation so a change rolls them.
 - **enkryptai-stack:** no data leaves the cluster by default:
   `LOCAL_MODEL_FALLBACK_TO_REMOTE: 'false'` in `litellm`;
   `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_LEADERBOARD_SUPABASE_URL` and

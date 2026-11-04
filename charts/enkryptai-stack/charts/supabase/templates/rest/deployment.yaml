@@ -14,10 +14,11 @@ spec:
       {{- include "supabase.rest.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.rest.podAnnotations }}
       annotations:
+        checksum/onprem: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.rest.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "supabase.rest.selectorLabels" . | nindent 8 }}
     spec:
@@ -68,6 +69,7 @@ spec:
                   name: {{ include "supabase.secret.db" . }}
                   key: password_encoded
                   {{- end }}
+            {{- if not .Values.configMap.DB_NAME }}
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
@@ -78,6 +80,7 @@ spec:
                   name: {{ include "supabase.secret.db" . }}
                   key: database
                   {{- end }}
+            {{- end }}
             - name: PGRST_DB_URI
               value: $(DB_DRIVER)://$(DB_USER):$(DB_PASSWORD_ENC)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSL)
             - name: PGRST_JWT_SECRET

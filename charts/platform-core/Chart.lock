@@ -9,7 +9,7 @@ dependencies:
   repository: https://nats-io.github.io/k8s/helm/charts
   version: 2.12.6
 - name: nack
-  repository: https://nats-io.github.io/k8s/helm/charts/
+  repository: https://nats-io.github.io/k8s/helm/charts
   version: 0.33.2
 - name: storage-class
   repository: file://./charts/storage-class
@@ -26,5 +26,5 @@ dependencies:
 - name: valkey
   repository: https://valkey.io/valkey-helm/
   version: 0.10.0
-digest: sha256:cf937cc5ccc04083e06983aa4275a83f45af7b08dfa21eb491f00ff2ed168b27
-generated: "2026-07-27T17:08:03.678020178+05:30"
+digest: sha256:fea0a4e695975db1f17dbe03ce201a9b36b666ca19c939fa3462bc3461782537
+generated: "2026-10-30T18:56:22.971218-05:00"

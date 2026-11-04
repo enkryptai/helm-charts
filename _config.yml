@@ -1,0 +1,7 @@
+# GitHub Pages (Jekyll) settings for the Helm repository site.
+#
+# RELEASENOTES.md contains Helm template syntax ({{ ... }}), which Jekyll's
+# Liquid engine tries to evaluate and fails on. Excluding it keeps the Pages
+# build working; the file still renders normally on GitHub.
+exclude:
+  - RELEASENOTES.md

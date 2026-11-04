@@ -52,9 +52,9 @@ nextjsAuthToken:
   secretRef: gateway-env-secret
   secretRefKey: DECK_NEXT_JS_BASIC_AUTH
 
-# Empty keeps ACCESS_KEY_ID and SECRET_ACCESS_KEY from the envFrom Secret; on-prem can set onprem.
+# ACCESS_KEY_ID and SECRET_ACCESS_KEY come from this Secret; empty keeps the envFrom Secret's copy.
 s3:
-  secretRef: ""
+  secretRef: onprem
   secretRefKey:
     keyId: S3_PROTOCOL_ACCESS_KEY_ID
     accessKey: S3_PROTOCOL_ACCESS_KEY_SECRET

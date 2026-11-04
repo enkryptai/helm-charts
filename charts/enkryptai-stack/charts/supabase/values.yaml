@@ -776,12 +776,12 @@ testimage:
 postgresalpine:
   repository: onprem/postgres
   tag: "15-alpine"
-# create-s3-buckets Job credentials; on-prem can point these at onprem S3_PROTOCOL_ACCESS_KEY_ID and _SECRET.
+# create-s3-buckets Job credentials (the MinIO service pair); AWS_DEFAULT_REGION still comes from s3-cred.
 s3Bucket:
-  secretRef: s3-cred
+  secretRef: onprem
   secretRefKey:
-    keyId: AWS_ACCESS_KEY_ID
-    accessKey: AWS_SECRET_ACCESS_KEY
+    keyId: S3_PROTOCOL_ACCESS_KEY_ID
+    accessKey: S3_PROTOCOL_ACCESS_KEY_SECRET
 aws:
   repository: onprem/aws-cli
   tag: "2.27.55"

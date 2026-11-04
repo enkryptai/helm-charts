@@ -3,8 +3,9 @@ kind: OpenSearchCluster
 metadata:
   name: enkryptai-opensearch
   annotations:
-    "helm.sh/hook-weight": "10"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "10") | nindent 4 }}
+    # keep: helm uninstall leaves this data cluster in place.
+    "helm.sh/resource-policy": keep
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:

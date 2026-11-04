@@ -3,8 +3,9 @@ kind: Cluster
 metadata:
   name: cluster-openfga
   annotations:
-    "helm.sh/hook-weight": "20"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "20") | nindent 4 }}
+    # keep: helm uninstall leaves this data cluster in place.
+    "helm.sh/resource-policy": keep
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:

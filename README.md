@@ -243,12 +243,26 @@ helm repo update
 Update Complete. ⎈Happy Helming!⎈
 ```
 
-3. Install Platform Helm Chart
+3. Install the Platform Core and Platform Helm Charts
 
+From platform-stack 1.3.0, the operators (CloudNativePG, OpenSearch operator, Argo, NATS, GPU operator, Valkey) are their own release, `platform-core`, installed first. Because their CRDs already exist when `platform-stack` installs, the database clusters, OpenSearch and the Argo Events resources are normal resources: `helm upgrade` updates them.
+
+a. Create the platform-core values file. Take the `platform-core:` block of `./values/platform.yaml`, move it to the top level, and add the `global:` block:
 
 ```bash
+yq '.["platform-core"] * {"global": .global}' ./values/platform.yaml > ./values/platform-core.yaml
+```
+
+b. Install platform-core, then platform-stack with `platform-core.enabled: false` (the default):
+
+```bash
+helm upgrade --install platform-core enkryptai/platform-core -n enkryptai-stack -f ./values/platform-core.yaml --timeout 15m
 helm upgrade --install platform enkryptai/platform-stack -n enkryptai-stack -f ./values/platform.yaml --timeout 15m
 ```
+
+> **Existing installs (platform-stack 1.2.x):** keep one release. Set `platform-core.enabled: true` in `./values/platform.yaml` and upgrade `platform` as before; the database, OpenSearch and Argo Events resources then stay post-install hooks. Upgrading an existing release with `platform-core.enabled: false` is blocked, because it would delete the operators and their CRDs. See RELEASENOTES 1.3.0.
+
+> **Helm 4:** Helm 4 applies server-side. The OpenSearch operator co-owns `spec.nodePools` of the OpenSearch cluster, so the first `helm upgrade` of `platform` after an install needs `--force-conflicts`. The flag is harmless on later upgrades.
 
 ```output
 Release "platform" does not exist. Installing it now.
@@ -341,8 +355,8 @@ The script is interactive and will ask for confirmation before each destructive 
  
 #### What It Does
  
-1. Uninstalls the `platform` and `enkryptai-stack` Helm releases.
-2. Deletes core workloads — StatefulSets, Deployments, and database Clusters.
+1. Uninstalls the `enkryptai` and `platform` Helm releases.
+2. Deletes core workloads — StatefulSets, Deployments, and database Clusters. `helm uninstall` keeps the database and OpenSearch clusters (`helm.sh/resource-policy: keep`), so this step removes them while the operators still run. It then uninstalls the `platform-core` release, if there is one.
 3. **Patches and removes finalizers** from Argo Events and OpenSearch resources. Finalizers prevent Kubernetes from deleting resources until certain conditions are met. Since the operators managing these resources are already being removed, the finalizers must be cleared manually to avoid resources getting stuck in `Terminating`.
 4. Deletes cluster-wide CRDs for CNPG, OpenSearch, NATS, and Argo.
 5. **Deletes PVCs** — PVCs hold persistent data (databases, search indices). They are not removed automatically by Helm or resource deletion, so this step cleans them up explicitly.  This is irreversible — all stored data will be permanently lost.

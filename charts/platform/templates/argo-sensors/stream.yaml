@@ -4,8 +4,7 @@ metadata:
   name: workflows
   namespace: argo-events
   annotations:
-    "helm.sh/hook": post-install
-    "helm.sh/hook-weight": "10"
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "10") | nindent 4 }}
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
@@ -33,8 +32,7 @@ metadata:
   name: workflows-logs
   namespace: argo-events
   annotations:
-    "helm.sh/hook": post-install
-    "helm.sh/hook-weight": "10"
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "10") | nindent 4 }}
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:

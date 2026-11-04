@@ -3,8 +3,7 @@ kind: OpensearchTenant
 metadata:
   name: global
   annotations:
-    "helm.sh/hook-weight": "12"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "12") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -15,8 +14,7 @@ kind: OpensearchTenant
 metadata:
   name: admin
   annotations:
-    "helm.sh/hook-weight": "12"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "12") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -27,8 +25,7 @@ kind: OpensearchTenant
 metadata:
   name: kibanaserver
   annotations:
-    "helm.sh/hook-weight": "12"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "12") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}

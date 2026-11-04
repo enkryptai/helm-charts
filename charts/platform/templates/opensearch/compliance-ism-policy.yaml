@@ -3,8 +3,7 @@ kind: OpenSearchISMPolicy
 metadata:
   name: compliance-retention-policy
   annotations:
-    helm.sh/hook-weight: "17"
-    helm.sh/hook: "post-install,post-upgrade"
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install,post-upgrade" "weight" "17") | nindent 4 }}
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 

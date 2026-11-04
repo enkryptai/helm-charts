@@ -4,8 +4,7 @@ metadata:
   name: redteam-eventbus
   namespace: argo-events
   annotations:
-    "helm.sh/hook-weight": "1"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "1") | nindent 4 }}
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:

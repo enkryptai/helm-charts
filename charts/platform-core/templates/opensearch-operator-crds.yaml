@@ -1,0 +1,15 @@
+{{- /*
+OpenSearch operator CRDs, copied unchanged from opensearch-operator 2.8.0
+(files/) because the subchart cannot annotate them. They get
+helm.sh/resource-policy: keep, as the CNPG CRDs already do: deleting these
+CRDs deletes every OpenSearchCluster, and its data, with them.
+The subchart's own copy is off (opensearch-operator.installCRDs: false).
+When upgrading the operator, replace files/opensearch-operator-crds/ with the
+new chart's files/.
+*/ -}}
+{{- range $path, $_ := .Files.Glob "files/opensearch-operator-crds/*.yaml" }}
+{{- $crd := $.Files.Get $path | fromYaml }}
+{{- $_ := set $crd.metadata "annotations" (merge (dict "helm.sh/resource-policy" "keep") (default dict $crd.metadata.annotations)) }}
+---
+{{ toYaml $crd }}
+{{- end }}

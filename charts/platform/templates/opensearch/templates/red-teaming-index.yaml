@@ -2,8 +2,7 @@ apiVersion: opensearch.opster.io/v1
 kind: OpensearchIndexTemplate
 metadata:
   annotations:
-    helm.sh/hook: post-install, post-upgrade
-    helm.sh/hook-weight: "18"
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install, post-upgrade" "weight" "18") | nindent 4 }}
   name: red-teaming-template
   namespace: enkryptai-stack
 spec:

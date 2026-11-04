@@ -3,8 +3,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: all-access
   annotations:
-    "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "18") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -19,8 +18,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: own-index
   annotations:
-    "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "18") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -35,8 +33,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: readall
   annotations:
-    "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "18") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -51,8 +48,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: manage-snapshots
   annotations:
-    "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "18") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}
@@ -67,8 +63,7 @@ kind: OpensearchUserRoleBinding
 metadata:
   name: dashboard-server
   annotations:
-    "helm.sh/hook-weight": "18"
-    "helm.sh/hook": post-install
+    {{- include "platform.hookAnnotations" (dict "root" $ "hook" "post-install" "weight" "18") | nindent 4 }}
 spec:
   opensearchCluster:
     name: {{ .Values.clustername }}

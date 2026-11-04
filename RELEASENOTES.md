@@ -26,6 +26,8 @@ the `index.yaml` entry.
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 | browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
+| `gateway-kong` ships its decK config in the chart instead of fetching it from GitHub at install | [#134](https://github.com/enkryptai/helm-charts/pull/134) |
+| `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
 
 ### Upgrading from 1.2.1
 
@@ -49,16 +51,6 @@ the `index.yaml` entry.
   `DECK_OPENFGA_AUTHORIZATION_MODEL_ID` (`utils/post-installation.sh` writes
   them; with External Secrets, put them in the secret store). If your values
   file sets these keys in a ConfigMap, remove them.
-- **Optional decK services off by default.** `gateway-kong` no longer loads the
-  leaderboard, MCP scanner and skill scanner services into Kong unless
-  `gateway-kong.deck.leaderboard.enabled`, `deck.mcpScanner.enabled` or
-  `deck.skillScanner.enabled` is `true`. An install that runs
-  `leaderboard-server`, `mcp-scanner` or `skill-scanner` sets the matching
-  flag to `true`. With a flag off, its `DECK_*` keys are not needed in
-  `gateway-env-secret`. On upgrade, decK removes that service with its
-  routes and plugins; the public leaderboard consumer and its key-auth
-  credential stay until you delete them. Remove those `DECK_*` keys only after
-  the upgrade has synced; decK masks a value only while its variable is set.
 - **Telemetry and metering off (#146).** `ENKRYPT_GATEWAY_URL` is only used when
   `GR_MODELS_MODE` or `RT_MODELS_MODE` is `enkrypt_hosted`; if you use that
   mode, set it (and `ENKRYPT_METERING_ENABLED`, if you meter) in your values
@@ -66,6 +58,38 @@ the `index.yaml` entry.
   upgrade run
   `kubectl rollout restart deployment/redteam-proxy deployment/<release>-litellm -n <namespace>`.
   Red team job pods pick up the change on their next run.
+- **decK config in the chart (#134).** The release now owns the
+  `gateway-kong-temp-config` ConfigMap, which a hook Job used to create. On an
+  existing install, the upgrade fails with `invalid ownership metadata` unless
+  you adopt the ConfigMap first (Helm 3.17 or later can use
+  `helm upgrade --take-ownership` instead):
+
+  ```bash
+  kubectl -n <namespace> label cm gateway-kong-temp-config app.kubernetes.io/managed-by=Helm --overwrite
+  kubectl -n <namespace> annotate cm gateway-kong-temp-config \
+    meta.helm.sh/release-name=<release> meta.helm.sh/release-namespace=<namespace> --overwrite
+  ```
+
+  After the upgrade, delete the old hook objects, which Helm doesn't track:
+
+  ```bash
+  kubectl -n <namespace> delete job create-gateway-configmap --ignore-not-found
+  kubectl -n <namespace> delete rolebinding gateway-configmap-binding --ignore-not-found
+  kubectl -n <namespace> delete role gateway-configmap-role --ignore-not-found
+  kubectl -n <namespace> delete serviceaccount gateway-configmap-sa --ignore-not-found
+  ```
+
+  Route changes now go in `gateway-kong/files/kong.yaml`.
+
+### Added
+
+- **enkryptai-stack (#147):** `litellm.serviceAccount` (`create`, `annotations`,
+  `name`) for workload identity, for example an IRSA
+  `eks.amazonaws.com/role-arn` annotation. `create: true` makes a
+  ServiceAccount (named `<release>-litellm` unless `name` is set); `name` alone
+  uses an existing one. `name` and `annotations` go through `tpl`. With the
+  defaults the Deployment is unchanged and uses the namespace's default
+  ServiceAccount.
 
 ### Fixed
 
@@ -89,19 +113,39 @@ the `index.yaml` entry.
 
 ### Changed
 
+- **enkryptai-stack:** the Supabase `auth`, `kong`, `meta`, `minio`, `rest`,
+  `storage` and `studio` pods read `DB_NAME`, `DB_USER`, `DB_USERNAME`,
+  `GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI` and `NEXT_ANALYTICS_BACKEND_PROVIDER`
+  from the `onprem` ConfigMap instead of the `onprem` Secret, and carry a
+  `checksum/onprem` annotation so a change rolls them.
 - **enkryptai-stack:** no data leaves the cluster by default:
   `LOCAL_MODEL_FALLBACK_TO_REMOTE: 'false'` in `litellm`;
   `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_LEADERBOARD_SUPABASE_URL` and
   `NEXT_PUBLIC_MCP_SCANNER_SUPABASE_URL` empty in `frontend`;
   `NEXT_PUBLIC_POSTHOG_HOST` empty in `leaderboard-client`.
-- **enkryptai-stack:** `gateway-kong` loads the leaderboard, MCP scanner and
-  skill scanner decK services only when `deck.leaderboard`, `deck.mcpScanner`
-  or `deck.skillScanner` is enabled (default `false`).
 - **enkryptai-stack:** `redteam-proxy` sets `ANONYMIZED_TELEMETRY: "false"`, so
   browser-use in the proxy and red-team job pods no longer sends the task
   (target URL, attack prompt) to PostHog. In `litellm`,
   `ENKRYPT_METERING_ENABLED` is `'false'` and `ENKRYPT_GATEWAY_URL` is empty
   by default.
+
+## Unreleased: F-33 red team Workflow identity (`platform-stack`)
+
+Merged to `main`, not published yet. The release PR adds the version bump, the
+package and the `index.yaml` entry.
+
+### Security
+
+- **platform-stack:** red team Workflow pods ran as `redteam-jobs:default`,
+  which two ClusterRoleBindings gave the cluster-wide `argo-events-role`
+  (Secrets in every namespace, `pods/exec`, pod create), and its token was
+  mounted in the job container, which never uses it (F-33). Workflows now run
+  as a new `redteam-workflow` ServiceAccount with `automountServiceAccountToken:
+  false`, bound only in `redteam-jobs` to `argo-events-role-workflow`; the
+  executor reads its token from the `redteam-workflow.service-account-token`
+  Secret, so only the `init` and `wait` containers get it. The
+  `redteam-jobs-binding-events` and `redteam-jobs-binding-workflow`
+  ClusterRoleBindings are removed.
 
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 

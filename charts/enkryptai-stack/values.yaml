@@ -886,6 +886,15 @@ litellm:
     enabled: false
     name: litellm-gateway-env-secret
 
+  # ServiceAccount for the LiteLLM pods, for workload identity (for example an
+  # IRSA eks.amazonaws.com/role-arn annotation). With create: false and no name,
+  # the pods use the namespace's default ServiceAccount. annotations apply only
+  # when create is true; name and annotations go through tpl.
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+
   nodeSelector: {}
 
   tolerations: []

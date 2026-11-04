@@ -26,6 +26,7 @@ the `index.yaml` entry.
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 | browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
+| `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
 
 ### Upgrading from 1.2.1
 
@@ -56,6 +57,16 @@ the `index.yaml` entry.
   upgrade run
   `kubectl rollout restart deployment/redteam-proxy deployment/<release>-litellm -n <namespace>`.
   Red team job pods pick up the change on their next run.
+
+### Added
+
+- **enkryptai-stack (#147):** `litellm.serviceAccount` (`create`, `annotations`,
+  `name`) for workload identity, for example an IRSA
+  `eks.amazonaws.com/role-arn` annotation. `create: true` makes a
+  ServiceAccount (named `<release>-litellm` unless `name` is set); `name` alone
+  uses an existing one. `name` and `annotations` go through `tpl`. With the
+  defaults the Deployment is unchanged and uses the namespace's default
+  ServiceAccount.
 
 ### Fixed
 

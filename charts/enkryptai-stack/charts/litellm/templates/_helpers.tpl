@@ -49,3 +49,18 @@ Selector labels
 app.kubernetes.io/name: {{ include "litellm.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+ServiceAccount name (through tpl): the given name, else the full name if the
+chart creates one, else empty (the pods use the namespace's default
+ServiceAccount)
+*/}}
+{{- define "litellm.serviceAccountName" -}}
+{{- $sa := .Values.serviceAccount | default dict }}
+{{- $name := tpl (toString ($sa.name | default "")) . }}
+{{- if $sa.create }}
+{{- default (include "litellm.fullname" .) $name }}
+{{- else }}
+{{- $name }}
+{{- end }}
+{{- end }}

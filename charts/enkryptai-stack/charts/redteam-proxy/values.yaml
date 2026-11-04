@@ -44,6 +44,14 @@ env:
   - name: SENTRY_LITELLM_GATEWAY_URL
     value: "http://{{ .Release.Name }}-litellm:4000"
 
+# SUPABASE_KEY and NEXTJS_AUTH_TOKEN from their owner Secrets, kept out of env so a list override cannot drop them; empty secretRef keeps the envFrom copy.
+supabaseKey:
+  secretRef: onprem
+  secretRefKey: serviceKey
+nextjsAuthToken:
+  secretRef: gateway-env-secret
+  secretRefKey: DECK_NEXT_JS_BASIC_AUTH
+
 resources:
   requests:
     cpu: 100m

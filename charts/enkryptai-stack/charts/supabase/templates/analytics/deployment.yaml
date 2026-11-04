@@ -127,13 +127,23 @@ spec:
             - name: LOGFLARE_FEATURE_FLAG_OVERRIDE
               value: $(FEATURE_FLAG_OVERRIDE)
             {{- end }}
+          {{- with .Values.analytics.startupProbe }}
+          {{- if .enabled }}
+          startupProbe:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.analytics.livenessProbe }}
+          {{- if .enabled }}
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- with .Values.analytics.readinessProbe }}
+          {{- if .enabled }}
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           ports:
             - containerPort: {{ .Values.analytics.service.port }}

@@ -113,13 +113,23 @@ spec:
                   name: {{ include "supabase.secret.db" . }}
                   key: database
                   {{- end }}
+          {{- with .Values.db.startupProbe }}
+          {{- if .enabled }}
+          startupProbe:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.db.livenessProbe }}
+          {{- if .enabled }}
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- with .Values.db.readinessProbe }}
+          {{- if .enabled }}
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           ports:
             - name: http

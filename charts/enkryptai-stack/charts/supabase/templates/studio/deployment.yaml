@@ -81,13 +81,23 @@ spec:
                   name: {{ include "supabase.secret.analytics" . }}
                   key: apiKey
             {{- end }}
+          {{- with .Values.studio.startupProbe }}
+          {{- if .enabled }}
+          startupProbe:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.studio.livenessProbe }}
+          {{- if .enabled }}
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- with .Values.studio.readinessProbe }}
+          {{- if .enabled }}
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           ports:
             - name: http

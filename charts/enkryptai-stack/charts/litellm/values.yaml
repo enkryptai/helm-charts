@@ -30,11 +30,24 @@ resources:
     cpu: 1
     memory: 2Gi
 
+# Probes: each is rendered as-is when enabled (any probe type and field).
+# startupProbe holds off liveness/readiness until the app is up.
+startupProbe:
+  enabled: false
+  httpGet:
+    path: /
+    port: https
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+
 livenessProbe:
+  enabled: true
   httpGet:
     path: /
     port: https
 readinessProbe:
+  enabled: true
   httpGet:
     path: /
     port: https

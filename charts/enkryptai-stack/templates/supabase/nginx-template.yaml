@@ -26,6 +26,24 @@ spec:
         - containerPort: 80
           name: nginx-html
           protocol: TCP
+        {{- with .Values.supabase.customtemplate.startupProbe }}
+        {{- if .enabled }}
+        startupProbe:
+          {{- toYaml (omit . "enabled") | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- with .Values.supabase.customtemplate.livenessProbe }}
+        {{- if .enabled }}
+        livenessProbe:
+          {{- toYaml (omit . "enabled") | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- with .Values.supabase.customtemplate.readinessProbe }}
+        {{- if .enabled }}
+        readinessProbe:
+          {{- toYaml (omit . "enabled") | nindent 10 }}
+        {{- end }}
+        {{- end }}
         volumeMounts:
         - mountPath: /usr/share/nginx/html
           name: email-template

@@ -80,13 +80,23 @@ spec:
               value: $(DB_PASSWORD)
             - name: PG_META_DB_SSL_MODE
               value: $(DB_SSL)
+          {{- with .Values.meta.startupProbe }}
+          {{- if .enabled }}
+          startupProbe:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.meta.livenessProbe }}
+          {{- if .enabled }}
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- with .Values.meta.readinessProbe }}
+          {{- if .enabled }}
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           ports:
             - name: http

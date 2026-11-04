@@ -105,11 +105,33 @@ ingress:
 
 resources: {}
 
+# Probes: each is rendered as-is when enabled (any probe type and field).
+# startupProbe holds off liveness/readiness until the app is up.
+# The gateway serves only the MCP endpoint on 8000 (no health route), so these
+# check the port.
+startupProbe:
+  enabled: false
+  tcpSocket:
+    port: 8000
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+
 livenessProbe:
   enabled: false
+  tcpSocket:
+    port: 8000
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 3
 
 readinessProbe:
   enabled: false
+  tcpSocket:
+    port: 8000
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
 
 autoscaling:
   enabled: false

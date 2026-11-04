@@ -45,13 +45,23 @@ spec:
             - --console-address
             - ":9001"
             - /data
+          {{- with .Values.minio.startupProbe }}
+          {{- if .enabled }}
+          startupProbe:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.minio.livenessProbe }}
+          {{- if .enabled }}
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- with .Values.minio.readinessProbe }}
+          {{- if .enabled }}
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           ports:
             - name: http

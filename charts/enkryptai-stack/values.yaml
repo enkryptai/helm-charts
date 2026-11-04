@@ -482,6 +482,28 @@ supabase:
       
   customtemplate:
     enabled: false
+    # Probes for the nginx-html Deployment (serves the e-mail template).
+    startupProbe:
+      enabled: false
+      tcpSocket:
+        port: 80
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 24
+    livenessProbe:
+      enabled: false
+      tcpSocket:
+        port: 80
+      periodSeconds: 20
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readinessProbe:
+      enabled: false
+      tcpSocket:
+        port: 80
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
   storage:
     enabled: true
     image:
@@ -829,10 +851,12 @@ litellm:
 
   # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   livenessProbe:
+    enabled: true
     httpGet:
       path: /
       port: https
   readinessProbe:
+    enabled: true
     httpGet:
       path: /
       port: https

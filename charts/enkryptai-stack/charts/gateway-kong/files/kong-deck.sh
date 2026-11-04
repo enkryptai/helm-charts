@@ -112,6 +112,9 @@ fi
 # Public Leaderboard user setup
 # ---------------------------------------------------------
 
+# The chart ships kong-leaderboard.yaml only when the leaderboard is on (gateway-kong deck.leaderboard.enabled).
+if [ -f /mnt/deck/kong-leaderboard.yaml ]; then
+
 # Check if the public Leaderboard user exists
 checkLeaderboardUserResponse=$(curl -s -o /dev/null -w "%{http_code}" $DECK_KONG_ADDR/consumers/$DECK_LEADERBOARD_PUBLIC_CONSUMER_EMAIL)
 
@@ -207,6 +210,8 @@ if [ "$CreateLeaderboardUserKeyAuth" = true ]; then
   fi
 fi
 
+fi
+
 # ---------------------------------------------------------
 # Deck sync Kong configuration
 # ---------------------------------------------------------
@@ -241,7 +246,7 @@ fi
 # https://docs.konghq.com/deck/latest/reference/deck/
 #: only manage tagged entities
 # --parallelism 1: serialize API calls to reduce transient errors
-deck gateway sync /mnt/deck/kong.yaml --skip-consumers --parallelism 1 --verbose 0
+deck gateway sync /mnt/deck/kong*.yaml --skip-consumers --parallelism 1 --verbose 0
 
 SYNC_EXIT_CODE=$?
 
@@ -250,7 +255,7 @@ if [ $SYNC_EXIT_CODE -ne 0 ]; then
   echo "Initial sync failed (exit code: $SYNC_EXIT_CODE). Retrying in 15 seconds..."
   sleep 15
   echo "Retrying deck sync with verbose logging..."
-  deck gateway sync /mnt/deck/kong.yaml --skip-consumers --parallelism 1 --verbose 1
+  deck gateway sync /mnt/deck/kong*.yaml --skip-consumers --parallelism 1 --verbose 1
   SYNC_EXIT_CODE=$?
 fi
 

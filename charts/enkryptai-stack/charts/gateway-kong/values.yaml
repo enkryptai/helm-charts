@@ -140,6 +140,14 @@ secrets:
   elastic:
     ELASTIC_HOST: elastic-host
     ELASTIC_PASSWORD: password
+# decK services of optional apps; set true only where that app runs, so its DECK_* keys are needed.
+deck:
+  leaderboard:
+    enabled: false
+  mcpScanner:
+    enabled: false
+  skillScanner:
+    enabled: false
 configMaps:
   kongConfig:
     enabled: true

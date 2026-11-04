@@ -26,7 +26,6 @@ the `index.yaml` entry.
 | ------ | ------------ |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 | browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
-| `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
 
 ### Upgrading from 1.2.1
 
@@ -50,6 +49,16 @@ the `index.yaml` entry.
   `DECK_OPENFGA_AUTHORIZATION_MODEL_ID` (`utils/post-installation.sh` writes
   them; with External Secrets, put them in the secret store). If your values
   file sets these keys in a ConfigMap, remove them.
+- **Optional decK services off by default.** `gateway-kong` no longer loads the
+  leaderboard, MCP scanner and skill scanner services into Kong unless
+  `gateway-kong.deck.leaderboard.enabled`, `deck.mcpScanner.enabled` or
+  `deck.skillScanner.enabled` is `true`. An install that runs
+  `leaderboard-server`, `mcp-scanner` or `skill-scanner` sets the matching
+  flag to `true`. With a flag off, its `DECK_*` keys are not needed in
+  `gateway-env-secret`. On upgrade, decK removes that service with its
+  routes and plugins; the public leaderboard consumer and its key-auth
+  credential stay until you delete them. Remove those `DECK_*` keys only after
+  the upgrade has synced; decK masks a value only while its variable is set.
 - **Telemetry and metering off (#146).** `ENKRYPT_GATEWAY_URL` is only used when
   `GR_MODELS_MODE` or `RT_MODELS_MODE` is `enkrypt_hosted`; if you use that
   mode, set it (and `ENKRYPT_METERING_ENABLED`, if you meter) in your values
@@ -57,16 +66,6 @@ the `index.yaml` entry.
   upgrade run
   `kubectl rollout restart deployment/redteam-proxy deployment/<release>-litellm -n <namespace>`.
   Red team job pods pick up the change on their next run.
-
-### Added
-
-- **enkryptai-stack (#147):** `litellm.serviceAccount` (`create`, `annotations`,
-  `name`) for workload identity, for example an IRSA
-  `eks.amazonaws.com/role-arn` annotation. `create: true` makes a
-  ServiceAccount (named `<release>-litellm` unless `name` is set); `name` alone
-  uses an existing one. `name` and `annotations` go through `tpl`. With the
-  defaults the Deployment is unchanged and uses the namespace's default
-  ServiceAccount.
 
 ### Fixed
 
@@ -95,6 +94,9 @@ the `index.yaml` entry.
   `NEXT_PUBLIC_POSTHOG_HOST`, `NEXT_PUBLIC_LEADERBOARD_SUPABASE_URL` and
   `NEXT_PUBLIC_MCP_SCANNER_SUPABASE_URL` empty in `frontend`;
   `NEXT_PUBLIC_POSTHOG_HOST` empty in `leaderboard-client`.
+- **enkryptai-stack:** `gateway-kong` loads the leaderboard, MCP scanner and
+  skill scanner decK services only when `deck.leaderboard`, `deck.mcpScanner`
+  or `deck.skillScanner` is enabled (default `false`).
 - **enkryptai-stack:** `redteam-proxy` sets `ANONYMIZED_TELEMETRY: "false"`, so
   browser-use in the proxy and red-team job pods no longer sends the task
   (target URL, attack prompt) to PostHog. In `litellm`,

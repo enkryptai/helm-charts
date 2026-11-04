@@ -1,4 +1,13 @@
 {{- /* decK config shipped unrendered: its {{ env "DECK_..." }} references are for decK, not Helm. */ -}}
+{{- $deck := .Values.deck }}
+{{- $core := .Files.Get "files/kong.yaml" }}
+{{- if not (or $deck.mcpScanner.enabled $deck.skillScanner.enabled) }}
+{{- /* Without the line, enkrypt-db-proxy takes its schema default. */}}
+{{- $core = replace "      mcp_scanner_basic_auth: ${{ env \"DECK_MCP_SCANNER_BASIC_AUTH\" }}\n" "" $core }}
+{{- if contains "DECK_MCP_SCANNER_BASIC_AUTH" $core }}
+{{- fail "files/kong.yaml reads DECK_MCP_SCANNER_BASIC_AUTH outside the line this template removes" }}
+{{- end }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,6 +16,12 @@ metadata:
     {{- include "gateway-kong.labels" . | nindent 4 }}
 data:
   kong.yaml: |
-{{ .Files.Get "files/kong.yaml" | indent 4 }}
+{{ $core | indent 4 }}
+  {{- range $file, $on := dict "kong-leaderboard.yaml" $deck.leaderboard.enabled "kong-mcp-scanner.yaml" $deck.mcpScanner.enabled "kong-skill-scanner.yaml" $deck.skillScanner.enabled }}
+  {{- if $on }}
+  {{ $file }}: |
+{{ $.Files.Get (printf "files/%s" $file) | indent 4 }}
+  {{- end }}
+  {{- end }}
   kong-deck.sh: |
 {{ .Files.Get "files/kong-deck.sh" | indent 4 }}

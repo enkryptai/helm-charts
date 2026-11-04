@@ -17,6 +17,9 @@ A Helm chart for EnkryptAI Kong Gateway
 | configMaps.fluentBit.name | string | `"fluent-bit-config"` |  |
 | configMaps.kongConfig.enabled | bool | `true` |  |
 | configMaps.kongConfig.name | string | `"gateway-kong-temp-config"` |  |
+| deck.leaderboard.enabled | bool | `false` | Adds the `enkrypt_leaderboard` decK service and the public leaderboard consumer. Needs `DECK_LEADERBOARD_AUTH`, `DECK_LEADERBOARD_DETAILS_PASSWORD`, `DECK_LEADERBOARD_PUBLIC_CONSUMER_EMAIL` and `DECK_LEADERBOARD_PUBLIC_CONSUMER_API_KEY` in `gateway-env-secret`. Set `true` when `leaderboard-server` runs. |
+| deck.mcpScanner.enabled | bool | `false` | Adds the `enkrypt_mcp_scanner` decK service. Needs `DECK_MCP_SCANNER_BASIC_AUTH`. Set `true` when `mcp-scanner` runs. |
+| deck.skillScanner.enabled | bool | `false` | Adds the `enkrypt_skill_scanner` decK service. Needs `DECK_MCP_SCANNER_BASIC_AUTH`. Set `true` when `skill-scanner` runs. |
 | externalSecrets.enabled | bool | `true` |  |
 | externalSecrets.repoName | string | `"enkryptai/gateway"` |  |
 | externalSecrets.secretStoreRefName | string | `"enkryptai-clustersecret-store"` |  |

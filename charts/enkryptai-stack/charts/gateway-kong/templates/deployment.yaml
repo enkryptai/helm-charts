@@ -146,6 +146,18 @@ spec:
         - name: fluent-bit
           image: "{{ .Values.image.fluentBit.repository }}:{{ .Values.image.fluentBit.tag }}"
           env:
+            {{- with .Values.fluentBit.opensearchCredentials }}
+            - name: ELASTIC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .secretRef | quote }}
+                  key: {{ .secretRefKey.username | quote }}
+            - name: ELASTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .secretRef | quote }}
+                  key: {{ .secretRefKey.password | quote }}
+            {{- end }}
           {{- include "gateway-kong.renderEnv" .Values.fluentBit.env | nindent 12 }}
           {{- with .Values.image.fluentBit.envFrom }}
           envFrom:

@@ -102,7 +102,7 @@ The following table summarizes which applications use each secret.
 | `guardrails-env-secret`        | `guardrails`                                                         |
 | `onprem`                       | Supabase (on-prem database and related services)                     |
 | `openfga-env-secret`           | `openfga`                                                            |
-| `opensearch-cred`              | `opensearch`                                                         |
+| `opensearch-cred`              | `opensearch`, `gateway-kong` (Fluent Bit log shipping)               |
 | `opensearch-securityconfig`    | `opensearch`                                                         |
 | `postgres-superuser-secret`    | Supabase on-prem                                                     |
 | `redteam-proxy-env-secret`     | `redteaming`, `redteam-jobs`                                         |

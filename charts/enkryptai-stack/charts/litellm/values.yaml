@@ -61,8 +61,8 @@ configMap:
     BEAM_URL: https://multimodal-guardrails-adc411c.app.beam.cloud
     BENCHMARK_ANTHROPIC_MODEL: anthropic/claude-3-5-haiku-20241022
     BENCHMARK_CHAT_MODEL: openai/gpt-4.1-mini
-    ENKRYPT_GATEWAY_URL: https://gateway.enkrypt.ai
-    ENKRYPT_METERING_ENABLED: 'true'
+    ENKRYPT_GATEWAY_URL: ''
+    ENKRYPT_METERING_ENABLED: 'false'
     ENKRYPT_ORG_ID: org_your_org_id
     GATEWAY_HOST: 0.0.0.0
     GR_ADHERENCE_MODEL: openai/gpt-4.1-mini

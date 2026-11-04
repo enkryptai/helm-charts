@@ -89,6 +89,8 @@ configMapNamespaces:
   - redteam-jobs
 configMap:
   # NEXT_PUBLIC_SUPABASE_URL: "https://auth.example.com/"
+  # browser-use sends the task (target URL, attack prompt) to PostHog unless this is "false".
+  ANONYMIZED_TELEMETRY: "false"
   ENDPOINT: http://supabase-storage.{{ .Release.Namespace }}:5000/s3
   REDIS_URL: redis://valkey.{{ .Release.Namespace }}:6379
   REGION: us-east-1

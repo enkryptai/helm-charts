@@ -39,6 +39,7 @@ spec:
           image: "{{ .Values.functions.image.repository }}:{{ .Values.functions.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.functions.image.pullPolicy }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.functions.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}

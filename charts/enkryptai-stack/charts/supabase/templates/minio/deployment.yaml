@@ -41,6 +41,10 @@ spec:
                 name: {{ .Values.secret.onprem.name }}
             - configMapRef:
                 name: onprem
+          {{- with include "enkryptai-stack.proxy.env" $ }}
+          env:
+            {{- . | nindent 12 }}
+          {{- end }}
           args:
             - server
             - --console-address

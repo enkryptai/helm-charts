@@ -34,15 +34,18 @@ spec:
             - name: {{ .name }}
               containerPort: {{ .containerPort }}
             {{- end }}
-          {{- if .Values.useEnvFrom }}
-          {{- with .Values.envFrom }}
+          {{- $caEnvFrom := include "enkryptai-stack.trustedCA.envFrom" $ }}
+          {{- if or (not .Values.useEnvFrom) .Values.envFrom $caEnvFrom }}
           envFrom:
+            {{- with $caEnvFrom }}{{ . | nindent 12 }}{{ end }}
+            {{- if .Values.useEnvFrom }}
+            {{- with .Values.envFrom }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- else }}
-          envFrom:
+            {{- end }}
+            {{- else }}
             - secretRef:
                 name: {{ .Values.secrets.name }}
+            {{- end }}
           {{- end }}
           {{- if .Values.env }}
           env:
@@ -70,6 +73,14 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          volumeMounts:
+            {{- . | nindent 12 }}
+          {{- end }}
+      {{- with include "enkryptai-stack.trustedCA.volume" $ }}
+      volumes:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -101,6 +101,7 @@ spec:
           image: "{{ .Values.storage.image.repository }}:{{ .Values.storage.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.storage.image.pullPolicy }}
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
             - configMapRef:
@@ -239,6 +240,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
+            {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 12 }}{{ end }}
           {{- with .Values.storage.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -256,13 +258,17 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if not .Values.storage.persistence.enabled }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or (not .Values.storage.persistence.enabled) $caVolume }}
       volumes:
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
+        {{- if not .Values.storage.persistence.enabled }}
         - name: storage-data
           emptyDir:
             medium: ""
         {{- with .Values.storage.volumes }}
           {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- end }}
       {{- end }}
   {{- if .Values.storage.persistence.enabled }}

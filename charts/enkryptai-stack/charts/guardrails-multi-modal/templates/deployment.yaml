@@ -34,9 +34,13 @@ spec:
             - name: {{ .name }}
               containerPort: {{ .containerPort }}
             {{- end }}
-          {{- with .Values.envFrom }}
+          {{- $caEnvFrom := include "enkryptai-stack.trustedCA.envFrom" $ }}
+          {{- if or .Values.envFrom $caEnvFrom }}
           envFrom:
+            {{- with $caEnvFrom }}{{ . | nindent 12 }}{{ end }}
+            {{- with .Values.envFrom }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- end }}
           {{- with .Values.resources }}
           resources:
@@ -60,6 +64,14 @@ spec:
             {{- toYaml (omit . "enabled") | nindent 12 }}
           {{- end }}
           {{- end }}
+          {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          volumeMounts:
+            {{- . | nindent 12 }}
+          {{- end }}
+      {{- with include "enkryptai-stack.trustedCA.volume" $ }}
+      volumes:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

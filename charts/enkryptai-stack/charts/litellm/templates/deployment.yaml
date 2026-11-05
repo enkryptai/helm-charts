@@ -32,6 +32,7 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 name: {{ .Values.secrets.name }}
             - configMapRef:
@@ -62,6 +63,14 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          volumeMounts:
+            {{- . | nindent 12 }}
+          {{- end }}
+      {{- with include "enkryptai-stack.trustedCA.volume" $ }}
+      volumes:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- with (include "litellm.serviceAccountName" .) }}
       serviceAccountName: {{ . | quote }}
       {{- end }}

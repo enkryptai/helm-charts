@@ -44,11 +44,17 @@ spec:
           {{- toYaml (omit . "enabled") | nindent 10 }}
         {{- end }}
         {{- end }}
+        {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}
+        envFrom:
+          {{- . | nindent 10 }}
+        {{- end }}
         volumeMounts:
+        {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 8 }}{{ end }}
         - mountPath: /usr/share/nginx/html
           name: email-template
       dnsPolicy: ClusterFirst
       volumes:
+      {{- with include "enkryptai-stack.trustedCA.volume" $ }}{{ . | nindent 6 }}{{ end }}
       - configMap:
           defaultMode: 420
           name: email-template

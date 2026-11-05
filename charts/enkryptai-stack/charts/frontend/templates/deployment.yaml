@@ -61,6 +61,7 @@ spec:
                   key: DECK_INITIAL_SAMPLE_MODEL_PASSWORD
                   optional: true
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 {{- if .Values.useEnvFrom }}
                 name: {{ .Values.externalSecret.secretName }}
@@ -93,6 +94,14 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          volumeMounts:
+            {{- . | nindent 12 }}
+          {{- end }}
+      {{- with include "enkryptai-stack.trustedCA.volume" $ }}
+      volumes:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -40,6 +40,7 @@ spec:
           image: "{{ .Values.vector.image.repository }}:{{ .Values.vector.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.vector.image.pullPolicy }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.vector.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}

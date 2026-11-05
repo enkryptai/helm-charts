@@ -62,6 +62,7 @@ spec:
             - configMapRef:
                 name: onprem
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.auth.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}

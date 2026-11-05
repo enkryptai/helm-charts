@@ -22,6 +22,10 @@ spec:
       - image: {{.Values.global.registry}}/{{.Values.nginxalpine.repository}}:{{.Values.nginxalpine.tag}}
         imagePullPolicy: IfNotPresent
         name: nginx
+        {{- with include "enkryptai-stack.proxy.env" $ }}
+        env:
+          {{- . | nindent 10 }}
+        {{- end }}
         ports:
         - containerPort: 80
           name: nginx-html

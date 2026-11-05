@@ -45,9 +45,13 @@ spec:
                 {{- end }}
             - configMapRef:
                 name: guardrails-env-cm
-          {{- with .Values.env }}
+          {{- $proxyEnv := include "enkryptai-stack.proxy.env" $ }}
+          {{- if or .Values.env $proxyEnv }}
           env:
+          {{- with $proxyEnv }}{{ . | nindent 12 }}{{ end }}
+          {{- with .Values.env }}
           {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- with .Values.startupProbe }}
           {{- if .enabled }}

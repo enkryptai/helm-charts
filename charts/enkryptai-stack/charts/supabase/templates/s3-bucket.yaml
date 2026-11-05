@@ -62,18 +62,22 @@ spec:
         - name: AWS_ACCESS_KEY_ID
           valueFrom:
             secretKeyRef:
-              name: s3-cred
-              key: AWS_ACCESS_KEY_ID
+              name: {{ .Values.s3Bucket.secretRef | default "s3-cred" }}
+              key: {{ .Values.s3Bucket.secretRefKey.keyId | default "AWS_ACCESS_KEY_ID" }}
         - name: AWS_SECRET_ACCESS_KEY
           valueFrom:
             secretKeyRef:
-              name: s3-cred
-              key: AWS_SECRET_ACCESS_KEY
+              name: {{ .Values.s3Bucket.secretRef | default "s3-cred" }}
+              key: {{ .Values.s3Bucket.secretRefKey.accessKey | default "AWS_SECRET_ACCESS_KEY" }}
         - name: AWS_DEFAULT_REGION
+          {{- with .Values.s3Bucket.region }}
+          value: {{ . | quote }}
+          {{- else }}
           valueFrom:
             secretKeyRef:
               name: s3-cred
               key: AWS_DEFAULT_REGION
+          {{- end }}
         - name: SUPABASE_SERVICE_ROLE_KEY
           valueFrom:
             secretKeyRef:

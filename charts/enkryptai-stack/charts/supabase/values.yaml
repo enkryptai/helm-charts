@@ -776,6 +776,13 @@ testimage:
 postgresalpine:
   repository: onprem/postgres
   tag: "15-alpine"
+# create-s3-buckets Job: credentials (the MinIO service pair) and region, the same stub storage uses; empty region reads s3-cred.
+s3Bucket:
+  region: stub
+  secretRef: onprem
+  secretRefKey:
+    keyId: S3_PROTOCOL_ACCESS_KEY_ID
+    accessKey: S3_PROTOCOL_ACCESS_KEY_SECRET
 aws:
   repository: onprem/aws-cli
   tag: "2.27.55"

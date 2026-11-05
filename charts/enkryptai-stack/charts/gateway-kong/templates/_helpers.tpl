@@ -50,23 +50,7 @@ app: gateway-kong
 {{- end }}
 
 {{- define "gateway-kong.imagePullSecrets" -}}
-{{- $pullSecrets := list }}
-{{- if .Values.image.pullSecrets }}
-  {{- range .Values.image.pullSecrets }}
-    {{- $pullSecrets = append $pullSecrets . }}
-  {{- end }}
-{{- end }}
-{{- if .Values.global.imagePullSecrets }}
-  {{- range .Values.global.imagePullSecrets }}
-    {{- $pullSecrets = append $pullSecrets . }}
-  {{- end }}
-{{- end }}
-{{- if $pullSecrets }}
-imagePullSecrets:
-  {{- range $pullSecrets | uniq }}
-  - name: {{ . }}
-  {{- end }}
-{{- end }}
+{{- include "enkryptai-stack.imagePullSecrets" (dict "global" .Values.global "local" .Values.image.pullSecrets) }}
 {{- end }}
 
 {{- define "gateway-kong.renderEnv" -}}

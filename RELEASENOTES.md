@@ -27,7 +27,7 @@ the `index.yaml` entry.
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 | browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
 | `gateway-kong` ships its decK config in the chart instead of fetching it from GitHub at install | [#134](https://github.com/enkryptai/helm-charts/pull/134) |
-| `supabase` test images move to eMudhra-clean rebuilds: `onprem/curljq:latest-emudhra-20261105`, `onprem/postgres:15-alpine-emudhra-20261105` | this PR |
+| `supabase` test images move to eMudhra-clean rebuilds: `onprem/curljq:latest-emudhra-20261105`, `onprem/postgres:15-alpine-emudhra-20261105` | [#171](https://github.com/enkryptai/helm-charts/pull/171) |
 | `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
 
 ### Upgrading from 1.2.1

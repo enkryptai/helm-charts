@@ -43,7 +43,8 @@ service:
 # Not exposed publicly by default; leaderboard-client reaches it in-cluster.
 ingress:
   enabled: false
-  className: nginx
+  # Empty: global.ingress.className (enkryptai-stack), else the cluster default.
+  className: ""
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:

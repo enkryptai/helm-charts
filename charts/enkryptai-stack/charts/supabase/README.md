@@ -204,7 +204,7 @@ The open source Firebase alternative.
 | kong.image.tag | string | `"2.8.1"` |  |
 | kong.imagePullSecrets | list | `[]` |  |
 | kong.ingress.annotations."nginx.ingress.kubernetes.io/rewrite-target" | string | `"/"` |  |
-| kong.ingress.className | string | `"nginx"` |  |
+| kong.ingress.className | string | `""` | Empty: `global.ingress.className` (enkryptai-stack), else the cluster default IngressClass |
 | kong.ingress.enabled | bool | `false` |  |
 | kong.ingress.hosts[0].host | string | `"example.com"` |  |
 | kong.ingress.hosts[0].paths[0].path | string | `"/"` |  |

@@ -3,12 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "supabase.auth.fullname" . }}
+  {{- include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "Deployment" "name" (include "supabase.auth.fullname" .) "annotations" .Values.auth.deploymentAnnotations) | nindent 2 }}
   labels:
     {{- include "supabase.labels" . | nindent 4 }}
-  {{- with .Values.auth.deploymentAnnotations }}
-  annotations:
-  {{ toYaml . | nindent 4 }}
-  {{- end }}
 spec:
   {{- if not .Values.auth.autoscaling.enabled }}
   replicas: {{ .Values.auth.replicaCount }}

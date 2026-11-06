@@ -3,12 +3,9 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "supabase.storage.fullname" . }}
+  {{- include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "StatefulSet" "name" (include "supabase.storage.fullname" .) "annotations" .Values.storage.deploymentAnnotations) | nindent 2 }}
   labels:
     {{- include "supabase.labels" . | nindent 4 }}
-  {{- with .Values.storage.deploymentAnnotations }}
-  annotations:
-  {{ toYaml . | nindent 4 }}
-  {{- end }}
 spec:
   serviceName: {{ include "supabase.storage.fullname" . }}
   {{- if not .Values.storage.autoscaling.enabled }}

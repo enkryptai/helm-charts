@@ -3,10 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "leaderboard-server.fullname" . }}
-  {{- with .Values.podAnnotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+  {{- include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "Deployment" "name" (include "leaderboard-server.fullname" .) "annotations" .Values.podAnnotations) | nindent 2 }}
   labels:
     {{- include "leaderboard-server.labels" . | nindent 4 }}
 spec:

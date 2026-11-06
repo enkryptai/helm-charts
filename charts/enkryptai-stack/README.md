@@ -45,7 +45,7 @@ A Helm chart for Kubernetes
 | frontend.livenessProbe.initialDelaySeconds | int | `120` |  |
 | frontend.livenessProbe.timeoutSeconds | int | `10` |  |
 | frontend.nodeSelector | object | `{}` |  |
-| frontend.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| frontend.podAnnotations | object | `{}` |  |
 | frontend.podLabels.app | string | `"frontend"` |  |
 | frontend.readinessProbe.enabled | bool | `true` |  |
 | frontend.readinessProbe.failureThreshold | int | `3` |  |
@@ -141,6 +141,7 @@ A Helm chart for Kubernetes
 | global.imagePullSecrets | list | `[]` | Pull Secrets added to every pod in the chart (names, or `{name: ...}` maps). This is the normal way to set them. A component's own list (`<app>.image.pullSecrets`, `supabase.<component>.imagePullSecrets`) is only for exceptions and is merged in front of this one. The upstream `openfga` chart doesn't read it: set `openfga.imagePullSecrets` too. |
 | global.imageRegistry | string | `""` | Registry put in front of every image repository that has no registry host (for example `onprem/busybox`). Overrides `global.registry`; empty falls back to it. A repository that starts with a host (`vpcdeployment.azurecr.io/...`, `docker.io/...`) is used as written. A component's own `image.registry` wins over both, for exceptions. |
 | global.registry | string | `"vpcdeployment.azurecr.io"` |  |
+| global.reloadSecrets | object | `{}` | Reloader named lists for Secrets no chart renders, keyed by "<Kind>/<name>" of the workload (templates/_reloader.tpl); empty adds nothing. |
 | global.storageClass | string | `""` |  |
 | guardrails.affinity | object | `{}` |  |
 | guardrails.autoscaling.enabled | bool | `true` |  |
@@ -163,7 +164,7 @@ A Helm chart for Kubernetes
 | guardrails.livenessProbe.timeoutSeconds | int | `10` |  |
 | guardrails.nameOverride | string | `""` |  |
 | guardrails.nodeSelector | object | `{}` |  |
-| guardrails.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| guardrails.podAnnotations | object | `{}` |  |
 | guardrails.podLabels.app | string | `"guardrails"` |  |
 | guardrails.readinessProbe.enabled | bool | `true` |  |
 | guardrails.readinessProbe.httpGet.path | string | `"/health"` |  |
@@ -411,7 +412,7 @@ A Helm chart for Kubernetes
 | redteam-proxy.livenessProbe.timeoutSeconds | int | `10` |  |
 | redteam-proxy.nameOverride | string | `""` |  |
 | redteam-proxy.nodeSelector | object | `{}` |  |
-| redteam-proxy.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| redteam-proxy.podAnnotations | object | `{}` |  |
 | redteam-proxy.podLabels.app | string | `"redteam-proxy"` |  |
 | redteam-proxy.readinessProbe.enabled | bool | `true` |  |
 | redteam-proxy.readinessProbe.httpGet.path | string | `"/health"` |  |

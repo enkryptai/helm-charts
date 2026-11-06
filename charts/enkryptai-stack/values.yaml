@@ -29,6 +29,9 @@ global:
 
   registry: vpcdeployment.azurecr.io
 
+  # -- Reloader named lists for Secrets no chart renders, keyed by "<Kind>/<name>" of the workload (templates/_reloader.tpl); empty adds nothing.
+  reloadSecrets: {}
+
   externalSecrets:
     enabled: false
     namespaceOverride: enkryptai-stack
@@ -70,8 +73,7 @@ frontend:
     tag: "7961f95"
   serviceAccount:
     create: false
-  podAnnotations:
-    reloader.stakater.com/auto: "true"
+  podAnnotations: {}
   podLabels: {}
 
   service:
@@ -317,8 +319,7 @@ redteam-proxy:
   nameOverride: ""
   fullnameOverride: "redteam-proxy"
 
-  podAnnotations:
-    reloader.stakater.com/auto: "true"
+  podAnnotations: {}
 
   podLabels: {}
 
@@ -421,8 +422,7 @@ guardrails:
   nameOverride: ""
   fullnameOverride: "guardrails"
 
-  podAnnotations:
-    reloader.stakater.com/auto: "true"
+  podAnnotations: {}
 
   podLabels: {}
 
@@ -939,8 +939,7 @@ guardrails-model:
   nameOverride: ""
   fullnameOverride: ""
   podLabels: {}
-  podAnnotations:
-  secret.reloader.stakater.com/reload: ""
+  podAnnotations: {}
   service:
     type: ClusterIP
     ports:
@@ -1007,8 +1006,7 @@ guardrails-multi-modal:
   nameOverride: ""
   fullnameOverride: ""
   podLabels: {}
-  podAnnotations:
-    secret.reloader.stakater.com/reload: ""
+  podAnnotations: {}
   service:
     type: ClusterIP
     ports:

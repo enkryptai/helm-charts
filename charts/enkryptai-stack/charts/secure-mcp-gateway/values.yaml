@@ -14,8 +14,7 @@ serviceAccountName: ""
 
 strategy: {}
 
-podAnnotations:
-  reloader.stakater.com/auto: "true"
+podAnnotations: {}
 
 podLabels:
   app: secure-mcp-gateway

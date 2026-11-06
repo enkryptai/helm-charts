@@ -28,6 +28,13 @@ the `index.yaml` entry.
 | browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
 | `gateway-kong` ships its decK config in the chart instead of fetching it from GitHub at install | [#134](https://github.com/enkryptai/helm-charts/pull/134) |
 | `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
+| OpenFGA migrations run before the Deployment, so `helm install --wait` doesn't hang | [#135](https://github.com/enkryptai/helm-charts/pull/135) |
+| Fluent Bit memory limit `256Gi` → `256Mi` | [#136](https://github.com/enkryptai/helm-charts/pull/136) |
+| Startup, readiness and liveness probes for every workload, set from values (new ones off by default, except `guardrails-model` startup/readiness and `gateway-kong` readiness) | [#139](https://github.com/enkryptai/helm-charts/pull/139) |
+| `utils/post-installation.sh` reads the OpenFGA IDs from the OpenFGA API, not from pod logs | [#142](https://github.com/enkryptai/helm-charts/pull/142) |
+| Supabase: `onprem` ConfigMap URLs use the release name (typo fixed); `analytics.enabled: true` renders again | [#143](https://github.com/enkryptai/helm-charts/pull/143) |
+| `*-env-cm` and `onprem` ConfigMaps are normal release resources, not `pre-install`/`pre-upgrade` hooks | [#144](https://github.com/enkryptai/helm-charts/pull/144) |
+| Kong tracing on in the gateway container (`KONG_TRACING_*` in `gatewayEnv`, 3% sampling) | [#154](https://github.com/enkryptai/helm-charts/pull/154) |
 
 ### Upgrading from 1.2.1
 
@@ -80,6 +87,75 @@ the `index.yaml` entry.
   ```
 
   Route changes now go in `gateway-kong/files/kong.yaml`.
+- **OpenFGA (#135).** If your values file sets `openfga.serviceAccount.create`,
+  `openfga.datastore.waitForMigrations` or `openfga.migrate.annotations`,
+  remove those keys (or set them to the new defaults). Otherwise the old
+  post-install hook stays and `helm install --wait` still hangs. The OpenFGA
+  pods restart once on upgrade.
+- **Fluent Bit (#136).** If your values file copies
+  `gateway-kong.resources.fluentBit.limits.memory: "256Gi"`, change it to
+  `256Mi` or remove it.
+- **ConfigMaps are no longer hooks (#144).** The app ConfigMaps (`*-env-cm` and
+  supabase `onprem`) were created by Helm hooks, so the release didn't own
+  them. Helm refuses to take them over on upgrade (`exists and cannot be
+  imported into the current release: invalid ownership metadata`). Before the
+  first `helm upgrade` to this version, hand them to the release (set
+  `RELEASE` and `NS` to your release name and namespace; ConfigMaps that
+  don't exist are skipped). The loop also covers the #134
+  `gateway-kong-temp-config`, so it replaces the adoption step above:
+
+  ```sh
+  RELEASE=enkryptai NS=enkryptai-stack
+  for ns in "$NS" redteam-jobs; do
+    for cm in compliance-scan-env-cm frontend-env-cm gateway-env-cm \
+              gateway-migration-env-cm guardrails-env-cm leaderboard-client-env-cm \
+              leaderboard-server-env-cm litellm-gateway-env-cm mcp-scanner-env-cm \
+              redteam-proxy-env-cm secure-mcp-gateway-env-cm skill-scanner-env-cm onprem \
+              gateway-kong-temp-config; do
+      kubectl get configmap "$cm" -n "$ns" >/dev/null 2>&1 || continue
+      kubectl label configmap "$cm" -n "$ns" app.kubernetes.io/managed-by=Helm --overwrite
+      kubectl annotate configmap "$cm" -n "$ns" --overwrite \
+        meta.helm.sh/release-name="$RELEASE" meta.helm.sh/release-namespace="$NS" \
+        helm.sh/hook- helm.sh/hook-weight-
+    done
+  done
+  ```
+
+  `redteam-proxy-env-cm` also lives in every namespace listed in
+  `redteam-proxy.configMapNamespaces` (default `enkryptai-stack` and
+  `redteam-jobs`); add any other namespace you set there to the outer loop.
+- **`utils/post-installation.sh` (F-6, #142).** The script now needs `jq` on the
+  machine that runs it. Run it the same way as before; `--print-only` shows
+  the IDs without changing anything.
+- **Probes (#139).** The probes that are on today stay on. Three new probes
+  are on by default: `guardrails-model` startup and readiness (the pod, the
+  Service and `helm --wait` now wait until the model is serving, up to
+  20 minutes on a cold start), and `gateway-kong` readiness (`kong health`).
+  These roll the guardrails-model and gateway-kong pods once on upgrade. Every
+  other new probe ships with `enabled: false`. To
+  turn one on, set `<component>.<startup|liveness|readiness>Probe.enabled: true`
+  (Supabase: `supabase.<component>.<type>Probe`, nginx-html:
+  `supabase.customtemplate.<type>Probe`, gateway-kong sidecars:
+  `gateway-kong.sync.<type>Probe` and `gateway-kong.fluentBit.<type>Probe`).
+  Turning probes on rolls the pods once.
+- **Probe values shape (#139).** Every probe block is rendered as-is when
+  `enabled: true`, so any probe type (`httpGet`, `tcpSocket`, `exec`, `grpc`)
+  and any field can be set. Probe blocks for the Supabase components now need
+  `enabled: true`; values files that set a Supabase probe without it still
+  work for the components where the chart default is set, but should add it.
+  To switch a probe to another type in a values file, set the old handler to
+  `null` (for example `httpGet: null`).
+- **Kong tracing (#154).** Kong now creates traces for 3% of requests and
+  the `opentelemetry` plugin sends them to `tempo.monitoring:4318`. The
+  gateway pods don't restart on ConfigMap changes, so run
+  `kubectl -n <namespace> rollout restart deploy/gateway-kong` after the
+  upgrade. If the cluster has no Tempo at `tempo.monitoring`, Kong logs export
+  errors for the sampled requests (requests themselves are not affected); turn
+  tracing off with
+  `gateway-kong.configMap.gatewayEnv.KONG_TRACING_INSTRUMENTATIONS: "off"`.
+  To change the sampling, set
+  `gateway-kong.configMap.gatewayEnv.KONG_TRACING_SAMPLING_RATE` (`"1.0"`
+  traces every request).
 
 ### Added
 
@@ -90,6 +166,26 @@ the `index.yaml` entry.
   uses an existing one. `name` and `annotations` go through `tpl`. With the
   defaults the Deployment is unchanged and uses the namespace's default
   ServiceAccount.
+- **enkryptai-stack:** a `startupProbe` for every workload, and the missing
+  readiness and liveness probes (#139). Off by default, except the three
+  marked *on*:
+
+  | Workload | Probe |
+  | -------- | ----- |
+  | `guardrails-model` | router `GET /health` on 8080 (startup budget 20 min, for the model load); startup and readiness *on* |
+  | `secure-mcp-gateway` | `tcpSocket` 8000 (the gateway has no health route) |
+  | `gateway-kong` (gateway) | `kong health` (startup, readiness); readiness *on* |
+  | `gateway-kong` (`fluent-bit`) | `GET /api/v1/health` on 2020 (startup, liveness; no readiness, so a log backend outage doesn't take Kong out of the Service) |
+  | `gateway-kong` (`gateway-deck-sync`) | none by default (no port); values hooks only |
+  | Supabase `auth`, `meta` | `GET /health` |
+  | Supabase `rest` | `GET /` (readiness), `tcpSocket` 3000 (startup, liveness) |
+  | Supabase `storage` | `GET /status` |
+  | Supabase `kong` | `tcpSocket` 8000 |
+  | Supabase `minio` | `GET /minio/health/live`, `/minio/health/ready` |
+  | Supabase `studio` | `GET /api/profile` (startup, readiness) |
+  | `nginx-html` | `tcpSocket` 80 |
+  | `openfga` | the upstream chart's startup and liveness probes |
+  | other subcharts | `startupProbe` on the existing health path |
 
 ### Fixed
 
@@ -110,6 +206,67 @@ the `index.yaml` entry.
   Service URLs (`*-litellm`, `*-guardrails-model`, `supabase-storage`,
   `valkey`) no longer assume the release is called `enkryptai` and runs in
   `enkryptai-stack`.
+- **enkryptai-stack:** `helm install --wait` no longer hangs on OpenFGA. The
+  `openfga-migrate` Job is now a `pre-install, pre-upgrade` hook (it was
+  `post-install, post-upgrade, post-rollback, post-delete`), so it runs before
+  the Deployment. `openfga.datastore.waitForMigrations` is `false` and
+  `openfga.serviceAccount.create` is `false`: the `wait-for-migration` init
+  container, the `openfga` ServiceAccount and the `openfga-job-status-reader`
+  Role and RoleBinding are no longer rendered, and the `k8s-wait-for` image is
+  no longer needed (#135).
+- **enkryptai-stack:** the gateway-kong `fluent-bit` sidecar memory limit was
+  `256Gi` (effectively no limit); it is now `256Mi`, next to its `64Mi`
+  request. Fixed in both `values.yaml` and the `gateway-kong` subchart
+  defaults (#136).
+- **enkryptai-stack:** the app ConfigMaps (`compliance-scan`, `frontend`,
+  `gateway-kong` (`gateway-env-cm`, `gateway-migration-env-cm`), `guardrails`,
+  `leaderboard-client`, `leaderboard-server`, `litellm`, `mcp-scanner`,
+  `redteam-proxy`, `secure-mcp-gateway`, `skill-scanner`, supabase `onprem`)
+  were `pre-install,pre-upgrade` hooks with no delete policy. Helm deleted and
+  recreated them on every upgrade, and `helm uninstall` left them behind
+  because hook resources are not part of the release. They are now normal
+  resources: Helm creates ConfigMaps before Deployments in the same release,
+  and nothing that runs before them (pre-install hooks) reads them. Rendered
+  output is unchanged apart from the two hook annotations (#144).
+- **enkryptai-stack:** the Supabase `onprem` ConfigMap had
+  `STUDIO_PG_META_URL: http://enkrytpai-supabase-meta:8080` and
+  `SUPABASE_URL: http://enkrytpai-supabase-kong:8000` (misspelled release
+  name, so neither host exists). They are now
+  `http://{{ .Release.Name }}-supabase-meta:8080` and
+  `http://{{ .Release.Name }}-supabase-kong:8000`, and the `onprem`
+  ConfigMap values go through `tpl`. Studio is the only component that reads
+  these keys, and while `supabase.kong.enabled` / `supabase.meta.enabled` are
+  on (the default) it sets both in its own `env`, which wins, so nothing that
+  runs changes. A `supabase.configMap` value that contains a literal `{{`
+  now has to be escaped (#143).
+- **enkryptai-stack:** `supabase.analytics.enabled: true` failed to render
+  (`nil pointer evaluating interface {}.repository`): the analytics
+  `init-db` container read `.Values.supabaseinitdb`, which only exists in the
+  parent chart's values and isn't visible to the Supabase subchart. It now
+  uses `supabase.postgresalpine`, the same `pg_isready` image as the `auth`
+  and `storage` init containers. Its `echo "Database is ready"` was a second
+  `sh -c` argument (so it became `$0` and never ran); it is now part of the
+  script (#143).
+- **utils:** `post-installation.sh` took the OpenFGA store and model IDs from
+  the first `store_id` / `authorization_model_id` it found in the last 1000
+  lines of the OpenFGA pod logs, with the release name hardcoded as
+  `enkryptai`. Once the request logs had rotated it found nothing, and it
+  could pick a store or model that wasn't the current one. It now reads the
+  store (`EnkryptAI`, the one `openfga-sync` creates) and its latest
+  authorization model from the OpenFGA API, through the Kubernetes API
+  server's service proxy (`kubectl get --raw`; no port-forward or extra pod)
+  (#142).
+- **enkryptai-stack:** the `guardrails` subchart's default probes pointed at
+  port 80; the container listens on 8000. (The stack's values set 8000, so
+  installs with the stack defaults weren't affected.) (#139)
+- **enkryptai-stack:** `litellm` and `guardrails-multi-modal` probe defaults had
+  no `enabled` key; they now have `enabled: true` (#139).
+- **enkryptai-stack:** `KONG_TRACING_INSTRUMENTATIONS` and
+  `KONG_TRACING_SAMPLING_RATE` were only in `gateway-kong.configMap.migrationEnv`
+  (listed twice), which feeds the migration init containers, so the gateway
+  container never created spans. They are now in `configMap.gatewayEnv`
+  (`all`, `0.03`, the apiaas prod values); the duplicate pair in
+  `migrationEnv` is removed (#154).
 
 ### Changed
 
@@ -128,6 +285,16 @@ the `index.yaml` entry.
   (target URL, attack prompt) to PostHog. In `litellm`,
   `ENKRYPT_METERING_ENABLED` is `'false'` and `ENKRYPT_GATEWAY_URL` is empty
   by default.
+- **utils:** `post-installation.sh` sets the Secret keys with one merge patch
+  (adds or replaces), leaves Secrets owned by an `ExternalSecret` alone and
+  prints the IDs to put in the secret store instead, and has new options:
+  `--service`, `--store-name`, `--print-only` and `--no-restart`. It fails
+  with a clear message when there is no store yet (the `openfga-sync` Job
+  hasn't run) or when several stores match (#142).
+- **enkryptai-stack:** every probe template uses the same block
+  (`with` + `enabled` + `toYaml (omit . "enabled")`), in our subcharts, the
+  Supabase subchart and `nginx-html`. Before, several templates rendered only
+  `httpGet` or `exec` and a fixed list of fields, and dropped the rest (#139).
 
 ## Unreleased: F-33 red team Workflow identity (`platform-stack`)
 
@@ -146,6 +313,85 @@ package and the `index.yaml` entry.
   Secret, so only the `init` and `wait` containers get it. The
   `redteam-jobs-binding-events` and `redteam-jobs-binding-workflow`
   ClusterRoleBindings are removed.
+
+## Unreleased — platform-core as its own release (`platform-stack`, `platform-core`)
+
+Merged to `main`, not published yet. `charts/platform/Chart.yaml` is already
+at 1.3.0; `platform-core` changed but is still versioned 1.3.0 (the published
+version), so the release PR bumps it to 1.3.1, points `platform-stack` at it,
+and updates the version table above.
+
+| Chart            | Version         | Pull request |
+| ---------------- | --------------- | ------------ |
+| `platform-stack` | 1.2.2 → 1.3.0   | [#133](https://github.com/enkryptai/helm-charts/pull/133) |
+| `platform-core`  | 1.3.0 → 1.3.1   | [#133](https://github.com/enkryptai/helm-charts/pull/133) |
+
+### Upgrading from 1.2.x
+
+Existing installs keep one release. Before `helm upgrade` of an existing
+`platform-stack` release:
+
+1. **Set `platform-core.enabled: true`** in your platform values. The default
+   is now `false` (platform-core as its own release). Upgrading an existing
+   release with `false` fails with "release ... still owns platform-core",
+   because it would delete the operators, their CRDs and the OpenSearch
+   cluster.
+2. Coming from 1.2.1, also do the 1.2.2 steps below (Argo CRD adoption, Kong
+   password, GPU flag, backup values).
+
+With `platform-core.enabled: true` the release renders the same resources as
+1.2.2, apart from the changes listed here. Moving an existing install to
+separate releases is not supported yet; reinstall to change layout.
+
+### Added
+
+- **platform-stack:** `platform-core.enabled` (default `false`). With `false`,
+  platform-core is installed first as its own release
+  (`helm install platform-core enkryptai/platform-core`), and the CNPG
+  Clusters, the OpenSearch cluster, its roles, tenants, role bindings, index
+  templates and ISM policies, the Argo EventBus, EventSource and Sensor, the
+  NATS Streams and the `opensearch-cred` and `openfga-env-secret` Secrets are
+  normal resources: `helm upgrade` now updates them and no longer deletes and
+  recreates the post-upgrade ones. With `true` they stay hooks, as in 1.2.x.
+  The migration ConfigMap and the three Jobs stay hooks in both layouts.
+- **platform-stack:** upgrade guard (`templates/platform-core-guard.yaml`):
+  stops an upgrade with `platform-core.enabled: false` when this release
+  still owns the platform-core CRDs.
+- **platform-stack:** `helm.sh/resource-policy: keep` on `supabase-cluster`,
+  `cluster-openfga` and `enkryptai-opensearch`, so `helm uninstall` leaves
+  the data in place. `utils/uninstall.sh` deletes them explicitly.
+- **platform-core:** `helm.sh/resource-policy: keep` on the OpenSearch
+  operator CRDs, as the CNPG CRDs already have. Deleting these CRDs deleted
+  the OpenSearch cluster and its data. The CRDs are now rendered from
+  `files/opensearch-operator-crds/` (unchanged from opensearch-operator
+  2.8.0) with `opensearch-operator.installCRDs: false`.
+
+### Changed
+
+- **platform-core:** default values now match the `platform-core:` block of
+  platform-stack (image tags, `gpu-operator.enabled: false`,
+  `argo-workflows.crds.full: false`, `singleNamespace: false`, Argo
+  retention policy, `argo-events.namespaceOverride`), so a separate
+  platform-core release renders the same resources as the bundled one.
+- **utils/uninstall.sh:** uninstalls `enkryptai`, then `platform`, deletes the
+  data clusters while the operators still run, then uninstalls
+  `platform-core`. Label selectors include `platform-core`.
+- **README:** install order platform-core → platform → enkryptai, and how to
+  build the platform-core values file.
+
+### Removed
+
+- **platform-stack:** the second copy of the 3 OpenSearch tenants and 5 role
+  bindings at the end of `roles-all.yaml` (also in `tenant.yaml` and
+  `role-binding.yaml`). As normal resources the duplicates would fail the
+  install.
+
+### Notes
+
+- **Helm 4** applies server-side. The OpenSearch operator co-owns
+  `spec.nodePools` of the OpenSearch cluster, so the first `helm upgrade` of
+  `platform` after an install with separate releases needs
+  `--force-conflicts`.
 
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 

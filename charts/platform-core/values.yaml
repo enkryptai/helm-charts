@@ -726,7 +726,7 @@ argo-workflows:
     image:
       registry: vpcdeployment.azurecr.io
       repository: onprem/workflow-controller
-      tag: "v4.0.4"
+      tag: "v4.0.15"
     parallelism:
     # -- Globally limits the rate at which pods are created.
     # This is intended to mitigate flooding of the Kubernetes API server by workflows with a large amount of
@@ -887,7 +887,7 @@ argo-workflows:
     image:
       registry: vpcdeployment.azurecr.io
       repository: onprem/argocli
-      tag: "v4.0.4"
+      tag: "v4.0.15"
     deploymentAnnotations: {}
     podAnnotations: {}
     podLabels: {}

@@ -11,8 +11,7 @@ fullnameOverride: "redteam-proxy"
 podAnnotations:
   reloader.stakater.com/auto: "true"
 
-podLabels:
-  app: redteam-proxy
+podLabels: {}
 
 strategy:
   type: RollingUpdate

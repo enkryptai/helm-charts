@@ -119,7 +119,7 @@ Before installing the EnkryptAI Helm charts, ensure the following components are
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | **Kubernetes Cluster**                             | EKS Version **≥ 1.31, ≤ 1.34** (tested on **v1.34**)                                                                                | [Kubernetes Docs](https://kubernetes.io/docs/setup/)                                         |
 | **Cert Manager (AWS Certificate Manager)** | Used for managing TLS/SSL certificates for services.                                                                      | [AWS Cert Manager Setup](https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) |
-| **Ingress Controller (NGINX)**             | Required for routing external traffic to services inside the cluster.                                                     | [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/deploy/)               |
+| **Ingress Controller**                     | Required for routing external traffic to services inside the cluster. Any controller works; platform-stack can install Traefik (`traefik-stack.enabled: true`) as the cluster default. See [Choosing the IngressClass](#choosing-the-ingressclass). | [Traefik](https://doc.traefik.io/traefik/providers/kubernetes-ingress/) / [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/deploy/) |
 | **Metrics Server**                         | Required for resource metrics (CPU/Memory) used by autoscalers and monitoring.                                            | [Metrics Server Installation](https://github.com/kubernetes-sigs/metrics-server)             |
 
 > [!NOTE]
@@ -143,9 +143,35 @@ NOTE: Ensure that your vpc environment has access to pull image required for enk
 
 | Service / Component        | Purpose                          | Domain         | Ingress Class (Controller) | Certificate Source                          |
 |-----------------------------|----------------------------------|----------------|-----------------------------|---------------------------------------------|
-| **Frontend (Web App)**      | EnkryptAI Web UI                 | `app.<domain>` | `nginx` *(or `alb` if on AWS)* | cert-manager *(Let’s Encrypt)* / ACM *(for ALB)* |
-| **Gateway-Kong (API Gateway)** | Routes all backend API traffic  | `api.<domain>` | `nginx` *(or `alb`)*        | cert-manager / ACM                         |
-| **Supabase (Auth Service)** | Authentication & Database APIs   | `auth.<domain>`| `nginx` *(or `alb`)*        | cert-manager / ACM                         |
+| **Frontend (Web App)**      | EnkryptAI Web UI                 | `app.<domain>` | `global.ingress.className` *(default: cluster default class)* | cert-manager *(Let’s Encrypt)* / ACM *(for ALB)* |
+| **Gateway-Kong (API Gateway)** | Routes all backend API traffic  | `api.<domain>` | `global.ingress.className`  | cert-manager / ACM                         |
+| **Supabase (Auth Service)** | Authentication & Database APIs   | `auth.<domain>`| `global.ingress.className`  | cert-manager / ACM                         |
+
+### Choosing the IngressClass
+
+Every Ingress in `enkryptai-stack` takes its class from its own
+`<component>.ingress.className` when that is set, and from
+`global.ingress.className` otherwise. Both are empty by default, so the
+Ingresses have no `ingressClassName` and the cluster's default IngressClass
+serves them.
+
+- **Traefik from platform-stack** (`traefik-stack.enabled: true`): it is the
+  default IngressClass, so nothing to set. Its class is named
+  `<platform release>-traefik` (for example `platform-traefik`); set that in
+  `global.ingress.className` to pin it when the cluster has more than one
+  controller.
+- **Another controller** (ingress-nginx, ALB): set
+  `global.ingress.className: nginx` (or `alb`) once, instead of per component.
+
+```yaml
+global:
+  ingress:
+    className: ""   # or platform-traefik, nginx, alb
+```
+
+The `nginx.ingress.kubernetes.io/*` annotations in the default values only
+affect ingress-nginx; other controllers ignore them. Traefik has no request
+body size limit by default.
 
 
 ### For NGINX Ingress
@@ -155,7 +181,7 @@ If you’re using **NGINX** as your ingress controller, configure TLS through **
 ```yaml
 ingress:
   enabled: true
-  className: nginx
+  className: nginx   # or set global.ingress.className: nginx once
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
@@ -203,6 +229,7 @@ ingress:
 
 | When using                         | Set `ingressClassName` to | Cert managed by |
 | ---------------------------------- | ------------------------- | --------------- |
+| Traefik (platform-stack)           | empty (cluster default) or `<platform release>-traefik` | cert-manager    |
 | NGINX Ingress Controller           | `nginx`                   | cert-manager    |
 | AWS Load Balancer Controller (ALB) | `alb`                     | AWS ACM         |
 

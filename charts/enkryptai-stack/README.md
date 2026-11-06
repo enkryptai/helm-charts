@@ -32,7 +32,7 @@ A Helm chart for Kubernetes
 | frontend.image.tag | string | `"dev-1764326836"` |  |
 | frontend.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
 | frontend.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
-| frontend.ingress.className | string | `"nginx"` |  |
+| frontend.ingress.className | string | `""` | Empty: `global.ingress.className` |
 | frontend.ingress.enabled | bool | `true` |  |
 | frontend.ingress.hosts[0].host | string | `"app.anishs.xyz"` |  |
 | frontend.ingress.hosts[0].paths[0].path | string | `"/"` |  |
@@ -91,7 +91,7 @@ A Helm chart for Kubernetes
 | gateway-kong.image.sync.tag | string | `"57df811"` |  |
 | gateway-kong.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
 | gateway-kong.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
-| gateway-kong.ingress.className | string | `"nginx"` |  |
+| gateway-kong.ingress.className | string | `""` | Empty: `global.ingress.className` |
 | gateway-kong.ingress.enabled | bool | `true` |  |
 | gateway-kong.ingress.hosts[0].host | string | `"api.anishs.xyz"` |  |
 | gateway-kong.ingress.hosts[0].paths[0].path | string | `"/"` |  |
@@ -138,6 +138,7 @@ A Helm chart for Kubernetes
 | global.domain | string | `"djj.enkryptai.com"` |  |
 | global.externalSecret | bool | `false` |  |
 | global.imagePullPolicy | string | `"IfNotPresent"` |  |
+| global.ingress.className | string | `""` | IngressClass for every Ingress whose own `ingress.className` is empty. Empty: the cluster default IngressClass (the platform-stack Traefik is the default, named `<platform release>-traefik`) |
 | global.registry | string | `"vpcdeployment.azurecr.io"` |  |
 | global.storageClass | string | `""` |  |
 | guardrails.affinity | object | `{}` |  |
@@ -431,7 +432,7 @@ A Helm chart for Kubernetes
 | redteam-proxy.tolerations | list | `[]` |  |
 | supabase.ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
 | supabase.ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
-| supabase.ingress.className | string | `"nginx"` |  |
+| supabase.ingress.className | string | `""` | Empty: `global.ingress.className` |
 | supabase.ingress.enabled | bool | `true` |  |
 | supabase.ingress.hosts[0].host | string | `"auth.anishs.xyz"` |  |
 | supabase.ingress.hosts[0].paths[0].path | string | `"/"` |  |

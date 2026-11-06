@@ -1,0 +1,192 @@
+enabled: false
+# Every name, label and annotation below is rendered by the templates as-is;
+# nothing is hardcoded there. Label/annotation values, configMap.data,
+# secret.stringData, configMap.name, secret.name, env and extraEnvFrom go
+# through tpl, so they may use {{ .Release.Name }} etc.
+replicaCount: 1
+
+# Deployment/Service/HPA name: "<release>-<chart name>" by default.
+nameOverride: ""
+fullnameOverride: ""
+# Container name; empty means the chart name (or nameOverride).
+containerName: ""
+
+# Used for the Deployment selector, the Service selector and the pod labels.
+# Immutable on a Deployment after the first install.
+selectorLabels:
+  app.kubernetes.io/name: redteam-model
+  app.kubernetes.io/instance: "{{ .Release.Name }}"
+# Labels on every resource (Deployment, pods, Service, ConfigMap, Secret, HPA).
+labels:
+  app: redteam-model
+  helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
+  app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+
+deployment:
+  labels: {}
+  annotations: {}
+podLabels: {}
+podAnnotations:
+  secret.reloader.stakater.com/reload: ""
+
+# vLLM image serving two models on one GPU (see the Dockerfile):
+#   judge    -> gpt-oss-20b (mxfp4)        on :8000
+#   attacker -> gpt-oss-20b-ablit (bf16)   on :8001
+image:
+  repository: vpcdeployment.azurecr.io/enkryptai-prod/redteam-model
+  pullPolicy: IfNotPresent
+  # TODO: set the real image tag (empty falls back to the chart appVersion)
+  tag: ""
+  # Pull Secret names, merged with global.imagePullSecrets.
+  pullSecrets: []
+strategy:
+  type: Recreate
+command: []
+args: []
+serviceAccountName: ""
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  labels: {}
+  annotations: {}
+  # port defaults to containerPort, targetPort to containerPort; protocol optional.
+  ports:
+    - name: judge
+      containerPort: 8000
+    - name: attacker
+      containerPort: 8001
+
+# ConfigMap and Secret: redteam-model loads redteam-proxy's env
+# (redteam-proxy-env-cm and redteam-proxy-env-secret) through envFrom.
+# redteam-proxy owns both: it creates the ConfigMap (in its
+# configMapNamespaces) and the Secret (secrets.enabled or its ExternalSecret),
+# so create is false here. Set create: true and another name to give
+# redteam-model its own ConfigMap/Secret instead (keys from data/stringData;
+# values go through tpl).
+configMap:
+  create: false
+  name: redteam-proxy-env-cm
+  envFrom: true
+  # true lets the pod start when the ConfigMap is missing (e.g. redteam-proxy off).
+  optional: false
+  labels: {}
+  annotations: {}
+  data: {}
+
+secret:
+  create: false
+  name: redteam-proxy-env-secret
+  envFrom: true
+  optional: true
+  type: Opaque
+  labels: {}
+  annotations: {}
+  stringData: {}
+
+# More envFrom sources, appended after the ConfigMap and Secret above.
+extraEnvFrom: []
+# Tuning for the two vLLM servers (the image's own defaults). env wins over
+# envFrom, so these apply even if the redteam-proxy ConfigMap has the same keys.
+env:
+  - name: JUDGE_GPU_UTIL
+    value: "0.26"
+  - name: JUDGE_MAX_LEN
+    value: "32768"
+  - name: ATTACKER_GPU_UTIL
+    value: "0.60"
+  - name: ATTACKER_MAX_LEN
+    value: "16384"
+
+# Probes: each is rendered as-is when enabled (any probe type and field).
+# The attacker model only starts after the judge is healthy, and both models
+# are pulled from Hugging Face on start, so startup can take a long time
+# (the image HEALTHCHECK allows 3600s). startupProbe allows 10s x 360 = 1h.
+# The probes check both vLLM servers, same as the image HEALTHCHECK.
+# The entrypoint exits if either server dies, so liveness is off by default.
+startupProbe:
+  enabled: true
+  exec:
+    command:
+      - sh
+      - -c
+      - curl -fs -o /dev/null http://127.0.0.1:8000/health && curl -fs -o /dev/null http://127.0.0.1:8001/health
+  periodSeconds: 10
+  timeoutSeconds: 15
+  failureThreshold: 360
+livenessProbe:
+  enabled: false
+  exec:
+    command:
+      - sh
+      - -c
+      - curl -fs -o /dev/null http://127.0.0.1:8000/health && curl -fs -o /dev/null http://127.0.0.1:8001/health
+  periodSeconds: 30
+  timeoutSeconds: 15
+  failureThreshold: 3
+readinessProbe:
+  enabled: true
+  exec:
+    command:
+      - sh
+      - -c
+      - curl -fs -o /dev/null http://127.0.0.1:8000/health && curl -fs -o /dev/null http://127.0.0.1:8001/health
+  periodSeconds: 10
+  timeoutSeconds: 15
+  failureThreshold: 3
+
+# Both models share one GPU (JUDGE_GPU_UTIL + ATTACKER_GPU_UTIL of its
+# memory). The bf16 attacker alone is ~40GB, so this needs an 80GB-class GPU
+# (A100/H100 80GB).
+resources:
+  requests:
+    cpu: "2"
+    memory: "16Gi"
+    nvidia.com/gpu: 1
+  limits:
+    cpu: "8"
+    memory: "64Gi"
+    nvidia.com/gpu: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: ""
+  targetMemoryUtilizationPercentage: ""
+  labels: {}
+  annotations: {}
+
+# Init containers, rendered as-is (through tpl) before the main container.
+# Example: wait for / pre-download models into a shared volume.
+# initContainers:
+#   - name: wait-for-something
+#     image: busybox:1.36
+#     command: ["sh", "-c", "echo ready"]
+initContainers: []
+
+# Trusted CA: set global.trustedCA.configMapName (see docs/trusted-ca.md) to
+# mount the bundle and set NODE_EXTRA_CA_CERTS, SSL_CERT_FILE,
+# REQUESTS_CA_BUNDLE and AWS_CA_BUNDLE (the Hugging Face download uses
+# REQUESTS_CA_BUNDLE). The CA mount and volume come before volumes and
+# volumeMounts below.
+# Optional extra volumes, e.g. a PVC on /root/.cache/huggingface so the
+# models (~55GB) are not downloaded again on every pod restart.
+volumes: []
+volumeMounts: []
+
+# redteam-proxy's ExternalSecret already creates redteam-proxy-env-secret, so
+# none here (a second ExternalSecret with that name would fight over it).
+# Add entries only when secret.name points at a redteam-model-only Secret.
+# redteam-proxy's ExternalSecret already creates redteam-proxy-env-secret, so
+# none here (a second ExternalSecret with that name would fight over it).
+# Add entries only when secret.name points at a redteam-model-only Secret.
+externalSecrets:
+  enabled: false
+  secrets: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

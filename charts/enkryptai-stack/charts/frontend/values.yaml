@@ -19,7 +19,8 @@ podLabels:
   app: frontend
 
 env:
-  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+  # "0" skips TLS verification; trust a private CA with global.trustedCA instead.
+  NODE_TLS_REJECT_UNAUTHORIZED: "1"
 
 service:
   type: ClusterIP

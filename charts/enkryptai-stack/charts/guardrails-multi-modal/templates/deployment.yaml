@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "guardrails-multi-modal.fullname" . }}
+  {{- with include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "Deployment" "name" (include "guardrails-multi-modal.fullname" .)) }}{{ . | nindent 2 }}{{- end }}
   labels:
     {{- include "guardrails-multi-modal.labels" . | nindent 4 }}
 spec:

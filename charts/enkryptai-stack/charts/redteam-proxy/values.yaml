@@ -8,11 +8,9 @@ image:
 nameOverride: ""
 fullnameOverride: "redteam-proxy"
 
-podAnnotations:
-  reloader.stakater.com/auto: "true"
+podAnnotations: {}
 
-podLabels:
-  app: redteam-proxy
+podLabels: {}
 
 strategy:
   type: RollingUpdate

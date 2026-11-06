@@ -12,11 +12,9 @@ serviceAccount:
   create: false
 
 podAnnotations:
-  reloader.stakater.com/auto: "true"
   instrumentation.opentelemetry.io/inject-nodejs: "true"
 
-podLabels:
-  app: frontend
+podLabels: {}
 
 env:
   NODE_TLS_REJECT_UNAUTHORIZED: "0"

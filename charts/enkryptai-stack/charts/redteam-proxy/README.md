@@ -32,7 +32,7 @@ A Helm chart for EnkryptAI RedTeam Proxy service
 | livenessProbe.timeoutSeconds | int | `10` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
-| podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| podAnnotations | object | `{}` |  |
 | podLabels.app | string | `"redteam-proxy"` |  |
 | readinessProbe.enabled | bool | `true` |  |
 | readinessProbe.httpGet.path | string | `"/health"` |  |

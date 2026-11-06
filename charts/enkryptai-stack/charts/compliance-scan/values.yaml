@@ -20,8 +20,7 @@ strategy:
 # 150s lets a 120s in-flight batch drain; killed sooner it is rescanned and billed twice.
 terminationGracePeriodSeconds: 150
 
-podAnnotations:
-  reloader.stakater.com/auto: "true"
+podAnnotations: {}
 
 podLabels:
   app: compliance-scan

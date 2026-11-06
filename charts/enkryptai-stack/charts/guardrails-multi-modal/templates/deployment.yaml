@@ -29,6 +29,10 @@ spec:
         - name: {{ .Chart.Name }}
           image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with include "enkryptai-stack.proxy.env" $ }}
+          env:
+            {{- . | nindent 12 }}
+          {{- end }}
           ports:
             {{- range .Values.service.ports }}
             - name: {{ .name }}

@@ -37,6 +37,7 @@ spec:
           image: {{ include "enkryptai-stack.image" (dict "image" $.Values.vector.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.vector.image.pullPolicy }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.vector.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}

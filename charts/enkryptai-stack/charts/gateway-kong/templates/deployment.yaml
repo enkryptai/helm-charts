@@ -115,6 +115,10 @@ spec:
                 name: gateway-env-secret
             - configMapRef:
                 name: gateway-env-cm
+          {{- with include "enkryptai-stack.proxy.env" $ }}
+          env:
+            {{- . | nindent 12 }}
+          {{- end }}
           command:
             - /bin/sh
           args:
@@ -164,6 +168,7 @@ spec:
         - name: fluent-bit
           image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.fluentBit "global" $.Values.global "default" "") | quote }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- with .Values.fluentBit.opensearchCredentials }}
             - name: ELASTIC_USERNAME
               valueFrom:

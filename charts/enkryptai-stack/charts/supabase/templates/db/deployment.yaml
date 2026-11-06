@@ -56,6 +56,7 @@ spec:
           image: {{ include "enkryptai-stack.image" (dict "image" $.Values.db.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.db.image.pullPolicy }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.db.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}

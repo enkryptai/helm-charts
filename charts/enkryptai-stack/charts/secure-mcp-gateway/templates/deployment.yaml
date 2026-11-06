@@ -70,9 +70,11 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.env }}
+          {{- $proxyEnv := include "enkryptai-stack.proxy.env" $ }}
+          {{- if or .Values.env $proxyEnv }}
           env:
-            {{- range $key, $val := . }}
+            {{- with $proxyEnv }}{{ . | nindent 12 }}{{ end }}
+            {{- range $key, $val := .Values.env }}
             - name: {{ $key }}
               value: {{ $val | toString | quote }}
             {{- end }}

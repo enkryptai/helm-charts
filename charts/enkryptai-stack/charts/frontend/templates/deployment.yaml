@@ -33,6 +33,7 @@ spec:
           image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             - name: NODE_TLS_REJECT_UNAUTHORIZED
               value: {{ .Values.env.NODE_TLS_REJECT_UNAUTHORIZED | quote }}
             # Read from the owners: onprem holds the Supabase JWTs, decK loads the Kong credentials from gateway-env-secret.

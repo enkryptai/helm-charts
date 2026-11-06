@@ -2,6 +2,13 @@ global:
   
   storageClass: ""
 
+  proxy:
+    # Outbound proxy URLs for every pod (docs/outbound-proxy.md); both empty changes nothing.
+    httpProxy: ""
+    httpsProxy: ""
+    # Extra comma-separated NO_PROXY entries, added to the in-cluster defaults: add the pod, Service and node CIDRs.
+    noProxy: ""
+
   imagePullPolicy: "IfNotPresent" 
   # -- Pull Secrets added to every pod in the chart (names, or `{name: ...}` maps).
   # This is the normal way to set them. A component's own list

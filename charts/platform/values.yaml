@@ -6,6 +6,12 @@ global:
     key: ca.crt
   registry: vpcdeployment.azurecr.io
   imagePullSecrets: []
+  proxy:
+    # Outbound proxy URLs for the red team Workflow pods (docs/outbound-proxy.md); both empty changes nothing.
+    httpProxy: ""
+    httpsProxy: ""
+    # Extra comma-separated NO_PROXY entries, added to the in-cluster defaults: add the pod, Service and node CIDRs.
+    noProxy: ""
 aws:
   region: "us-west-2"
 # Backups are off by default and left to the customer. For each CNPG Cluster,

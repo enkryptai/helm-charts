@@ -23,6 +23,10 @@ spec:
       - image: {{ include "enkryptai-stack.image" (dict "image" $.Values.nginxalpine "global" $.Values.global "default" "") | quote }}
         imagePullPolicy: IfNotPresent
         name: nginx
+        {{- with include "enkryptai-stack.proxy.env" $ }}
+        env:
+          {{- . | nindent 10 }}
+        {{- end }}
         ports:
         - containerPort: 80
           name: nginx-html

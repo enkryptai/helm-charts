@@ -135,7 +135,7 @@ A Helm chart for Kubernetes
 | gateway-kong.service.ports.https.targetPort | int | `8443` |  |
 | gateway-kong.service.type | string | `"ClusterIP"` |  |
 | gateway-kong.tolerations | list | `[]` |  |
-| global.domain | string | `"djj.enkryptai.com"` |  |
+| global.domain | string | `"example.com"` | Base domain; Ingress hosts and public URLs derive from it |
 | global.externalSecret | bool | `false` |  |
 | global.imagePullPolicy | string | `"IfNotPresent"` |  |
 | global.imagePullSecrets | list | `[]` | Pull Secrets added to every pod in the chart (names, or `{name: ...}` maps). This is the normal way to set them. A component's own list (`<app>.image.pullSecrets`, `supabase.<component>.imagePullSecrets`) is only for exceptions and is merged in front of this one. The upstream `openfga` chart doesn't read it: set `openfga.imagePullSecrets` too. |

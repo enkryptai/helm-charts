@@ -28,16 +28,13 @@ spec:
         {{- include "supabase.storage.selectorLabels" . | nindent 8 }}
     spec:
       restartPolicy: Always
-      {{- with .Values.storage.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global "local" $.Values.storage.imagePullSecrets) | nindent 6 }}
       serviceAccountName: {{ include "supabase.storage.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.storage.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: {{.Values.global.registry}}/{{.Values.postgresalpine.repository}}:{{.Values.postgresalpine.tag}}
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.postgresalpine "global" $.Values.global "default" "") | quote }}
           imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
@@ -79,7 +76,7 @@ spec:
                   name: {{ .Values.secret.onprem.name }}
                   key: S3_PROTOCOL_ACCESS_KEY_SECRET
           name: init-bucket
-          image: {{$.Values.global.registry}}/{{$.Values.storage.miniomc.image}}
+          image: {{ include "enkryptai-stack.image" (dict "image" (dict "repository" $.Values.storage.miniomc.image) "global" $.Values.global "default" "") | quote }}
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
@@ -98,7 +95,7 @@ spec:
         - name: {{ include "supabase.storage.name" $ }}
           securityContext:
             {{- toYaml .Values.storage.securityContext | nindent 12 }}
-          image: "{{ .Values.storage.image.repository }}:{{ .Values.storage.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.storage.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.storage.image.pullPolicy }}
           envFrom:
             - secretRef:

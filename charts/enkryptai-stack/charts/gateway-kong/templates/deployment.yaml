@@ -25,7 +25,7 @@ spec:
       {{- include "gateway-kong.imagePullSecrets" . | nindent 6 }}
       initContainers:
         - name: gateway-migrations
-          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.gateway "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           command:
             - kong
             - migrations
@@ -36,7 +36,7 @@ spec:
             - configMapRef:
                 name: gateway-migration-env-cm
         - name: gateway-migrations-up
-          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.gateway "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           command:
             - /bin/sh
             - -c
@@ -48,7 +48,7 @@ spec:
                 name: gateway-migration-env-cm
       containers:
         - name: gateway
-          image: "{{ .Values.image.gateway.repository }}:{{ .Values.image.gateway.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.gateway "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.image.gateway.pullPolicy }}
           envFrom:
             - secretRef:
@@ -106,7 +106,7 @@ spec:
             - mountPath: /tmp
               name: kong-tmp-vol
         - name: gateway-deck-sync
-          image: "{{ .Values.image.sync.repository }}:{{ .Values.image.sync.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.sync "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           envFrom:
             - secretRef:
                 name: gateway-env-secret
@@ -158,7 +158,7 @@ spec:
             - mountPath: /mnt/deck
               name: gateway-kong-temp-config
         - name: fluent-bit
-          image: "{{ .Values.image.fluentBit.repository }}:{{ .Values.image.fluentBit.tag }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.fluentBit "global" $.Values.global "default" "") | quote }}
           env:
             {{- with .Values.fluentBit.opensearchCredentials }}
             - name: ELASTIC_USERNAME

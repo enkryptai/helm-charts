@@ -3,8 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "supabase.functions.fullname" . }}
-  {{- include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "Deployment" "name" (include "supabase.functions.fullname" .)) | nindent 2 }}
-  {{- include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "Deployment" "name" (include "supabase.functions.fullname" .)) | nindent 2 }}
+  {{- with include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "Deployment" "name" (include "supabase.functions.fullname" .)) }}{{ . | nindent 2 }}{{- end }}
   labels:
     {{- include "supabase.labels" . | nindent 4 }}
 spec:

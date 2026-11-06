@@ -47,8 +47,7 @@ frontend:
     create: false
   podAnnotations:
     reloader.stakater.com/auto: "true"
-  podLabels:
-    app: frontend
+  podLabels: {}
 
   service:
     type: ClusterIP
@@ -296,8 +295,7 @@ redteam-proxy:
   podAnnotations:
     reloader.stakater.com/auto: "true"
 
-  podLabels:
-    app: redteam-proxy
+  podLabels: {}
 
   strategy:
     type: RollingUpdate
@@ -401,8 +399,7 @@ guardrails:
   podAnnotations:
     reloader.stakater.com/auto: "true"
 
-  podLabels:
-    app: guardrails
+  podLabels: {}
 
   strategy:
     type: Recreate

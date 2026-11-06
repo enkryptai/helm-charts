@@ -44,7 +44,7 @@ spec:
     {{ toYaml . | nindent 4 }}
     {{- end }}
     opensearchCredentialsSecret:
-      name: opensearch-cred
+      name: {{ .Values.opensearch.dashboards.credentialsSecret | default "opensearch-cred" }}
     enable: true
     tls:
       enable: false 

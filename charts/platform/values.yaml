@@ -68,6 +68,8 @@ opensearch:
     image: "vpcdeployment.azurecr.io/onprem/opensearch:3.2.0"
   dashboards:
     image: "vpcdeployment.azurecr.io/onprem/opensearch-dashboards:3.2.0"
+    # Secret with the username and password Dashboards logs in with.
+    credentialsSecret: opensearch-cred
   initHelper:
     image: "vpcdeployment.azurecr.io/onprem/busybox:uclibc"
   security:

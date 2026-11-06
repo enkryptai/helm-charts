@@ -14,10 +14,7 @@ spec:
       {{- include "supabase.realtime.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.realtime.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "secrets/db.yaml" "secrets/jwt.yaml") "annotations" .Values.realtime.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.realtime.selectorLabels" . | nindent 8 }}
     spec:

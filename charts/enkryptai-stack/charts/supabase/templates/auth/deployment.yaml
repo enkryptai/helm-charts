@@ -18,11 +18,7 @@ spec:
       {{- include "supabase.auth.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:
-        checksum/onprem: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- with .Values.auth.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secrets/db.yaml" "secrets/jwt.yaml" "secrets/smtp.yaml") "annotations" .Values.auth.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.auth.selectorLabels" . | nindent 8 }}
     spec:

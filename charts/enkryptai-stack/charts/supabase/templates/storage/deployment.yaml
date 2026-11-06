@@ -19,11 +19,7 @@ spec:
       {{- include "supabase.storage.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:
-        checksum/onprem: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- with .Values.storage.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secrets/db.yaml" "secrets/jwt.yaml" "secrets/s3.yaml") "annotations" .Values.storage.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.storage.selectorLabels" . | nindent 8 }}
     spec:

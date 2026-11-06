@@ -77,8 +77,10 @@ spec:
               value: {{ $val | toString | quote }}
             {{- end }}
           {{- end }}
-          {{- if or .Values.secrets.name .Values.configMap }}
+          {{- $caEnvFrom := include "enkryptai-stack.trustedCA.envFrom" $ }}
+          {{- if or .Values.secrets.name .Values.configMap $caEnvFrom }}
           envFrom:
+            {{- with $caEnvFrom }}{{ . | nindent 12 }}{{ end }}
             {{- with .Values.secrets.name }}
             - secretRef:
                 name: {{ . }}
@@ -114,13 +116,21 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
+          {{- $caMount := include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          {{- if or .Values.volumeMounts $caMount }}
           volumeMounts:
+            {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $caMount }}{{ . | nindent 12 }}{{ end }}
           {{- end }}
-      {{- with .Values.volumes }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or .Values.volumes $caVolume }}
       volumes:
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

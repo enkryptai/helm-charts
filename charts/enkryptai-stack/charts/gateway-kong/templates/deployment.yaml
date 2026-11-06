@@ -51,6 +51,7 @@ spec:
           image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.gateway "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.image.gateway.pullPolicy }}
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 name: gateway-env-secret
             - configMapRef:
@@ -105,9 +106,11 @@ spec:
               name: kong-prefix-vol
             - mountPath: /tmp
               name: kong-tmp-vol
+            {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 12 }}{{ end }}
         - name: gateway-deck-sync
           image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.sync "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 name: gateway-env-secret
             - configMapRef:
@@ -157,6 +160,7 @@ spec:
           volumeMounts:
             - mountPath: /mnt/deck
               name: gateway-kong-temp-config
+            {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 12 }}{{ end }}
         - name: fluent-bit
           image: {{ include "enkryptai-stack.image" (dict "image" $.Values.image.fluentBit "global" $.Values.global "default" "") | quote }}
           env:
@@ -173,9 +177,13 @@ spec:
                   key: {{ .secretRefKey.password | quote }}
             {{- end }}
           {{- include "gateway-kong.renderEnv" .Values.fluentBit.env | nindent 12 }}
-          {{- with .Values.image.fluentBit.envFrom }}
+          {{- $caEnvFrom := include "enkryptai-stack.trustedCA.envFrom" $ }}
+          {{- if or .Values.image.fluentBit.envFrom $caEnvFrom }}
           envFrom:
+            {{- with $caEnvFrom }}{{ . | nindent 12 }}{{ end }}
+            {{- with .Values.image.fluentBit.envFrom }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- end }}
           ports:
             - containerPort: 2020
@@ -200,6 +208,7 @@ spec:
             - mountPath: /var/lib/docker/containers
               name: varlibdockercontainers
               readOnly: true
+            {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 12 }}{{ end }}
           {{- with .Values.fluentBit.startupProbe }}
           {{- if .enabled }}
           startupProbe:
@@ -243,6 +252,7 @@ spec:
             path: /var/lib/docker/containers
             type: ""
           name: varlibdockercontainers
+        {{- with include "enkryptai-stack.trustedCA.volume" $ }}{{ . | nindent 8 }}{{ end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

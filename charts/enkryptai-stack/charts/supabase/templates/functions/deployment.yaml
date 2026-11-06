@@ -126,7 +126,12 @@ spec:
             {{- toYaml (omit . "enabled") | nindent 12 }}
           {{- end }}
           {{- end }}
+          {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}
+          envFrom:
+            {{- . | nindent 12 }}
+          {{- end }}
           volumeMounts:
+            {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 12 }}{{ end }}
             {{- with .Values.functions.volumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -137,6 +142,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
+        {{- with include "enkryptai-stack.trustedCA.volume" $ }}{{ . | nindent 8 }}{{ end }}
         {{- with .Values.functions.volumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}

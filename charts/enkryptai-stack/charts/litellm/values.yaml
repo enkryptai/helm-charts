@@ -87,6 +87,10 @@ configMap:
     ENKRYPT_METERING_ENABLED: 'false'
     ENKRYPT_ORG_ID: org_your_org_id
     GATEWAY_HOST: 0.0.0.0
+    # Gateway images built from sentry prod-v1.0.105 or later refuse to start
+    # when SENTRY_LITELLM_GATEWAY_API_KEY or LITELLM_MASTER_KEY is empty or the
+    # public default. Older images do not read this variable.
+    GATEWAY_REFUSE_DEFAULT_KEY: 'true'
     GR_ADHERENCE_MODEL: openai/gpt-4.1-mini
     GR_BIAS_MODEL: openai/gpt-4.1-mini
     GR_EMBEDDINGS_MODEL: openai/text-embedding-ada-002

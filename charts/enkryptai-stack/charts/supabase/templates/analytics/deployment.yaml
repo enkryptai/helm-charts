@@ -14,10 +14,7 @@ spec:
       {{- include "supabase.analytics.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.analytics.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "secrets/analytics.yaml" "secrets/db.yaml") "annotations" .Values.analytics.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.analytics.selectorLabels" . | nindent 8 }}
     spec:

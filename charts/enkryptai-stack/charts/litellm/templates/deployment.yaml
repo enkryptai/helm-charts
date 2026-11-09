@@ -12,10 +12,7 @@ spec:
       {{- include "litellm.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "litellm-gateway-env-cm.yaml" "secret.yaml") "annotations" .Values.podAnnotations) | nindent 6 }}
       labels:
         {{- include "litellm.labels" . | nindent 8 }}
         {{- with .Values.labels }}

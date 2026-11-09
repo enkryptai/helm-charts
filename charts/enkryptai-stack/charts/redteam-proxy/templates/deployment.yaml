@@ -21,6 +21,7 @@ spec:
   {{- end }}
   template:
     metadata:
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secret.yaml")) | nindent 6 }}
       labels:
         {{- include "redteam-proxy.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}

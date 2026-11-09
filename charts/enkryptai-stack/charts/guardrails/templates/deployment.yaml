@@ -21,6 +21,7 @@ spec:
   {{- end }}
   template:
     metadata:
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "guardrails-env-cm.yaml" "secret.yaml")) | nindent 6 }}
       labels:
         {{- include "guardrails.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}

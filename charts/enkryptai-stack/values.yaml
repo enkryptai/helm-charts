@@ -5,7 +5,8 @@ global:
   imagePullPolicy: "IfNotPresent" 
   imagePullSecrets: []
 
-  domain: "enkryptai.com"
+  # Ingress hosts and public URLs below derive from it (app., api., auth. and so on).
+  domain: "example.com"
   
   registry: vpcdeployment.azurecr.io
 
@@ -62,14 +63,14 @@ frontend:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: app.example.com
+      - host: "app.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
 
     tls:
       - hosts:
-          - app.example.com
+          - "app.{{ .Values.global.domain }}"
         secretName: frontend-cert
 
   resources:
@@ -113,9 +114,9 @@ frontend:
   affinity: {}
 
   configMap:
-    NEXT_PUBLIC_URL: "https://app.example.com"
-    NEXT_PUBLIC_APIAAS_KONG_URL: "https://api.example.com"
-    NEXT_PUBLIC_SUPABASE_URL:  "https://auth.example.com"
+    NEXT_PUBLIC_URL: "https://app.{{ .Values.global.domain }}"
+    NEXT_PUBLIC_APIAAS_KONG_URL: "https://api.{{ .Values.global.domain }}"
+    NEXT_PUBLIC_SUPABASE_URL: "https://auth.{{ .Values.global.domain }}"
 
   externalSecrets:
     enabled: false
@@ -186,13 +187,13 @@ gateway-kong:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: api.example.com
+      - host: "api.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - api.example.com
+          - "api.{{ .Values.global.domain }}"
         secretName: gateway-cert
   secrets:
     enabled: false
@@ -374,7 +375,7 @@ redteam-proxy:
     - enkryptai-stack
     - redteam-jobs
   configMap:
-    SUPABASE_URL: "https://auth.example.com"
+    SUPABASE_URL: "https://auth.{{ .Values.global.domain }}"
   secrets:
     enabled: false
 nodeSelector: {}
@@ -536,24 +537,23 @@ supabase:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: auth.example.com
+      - host: "auth.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - auth.example.com
+          - "auth.{{ .Values.global.domain }}"
         secretName: supabse-cert
 
   configMap:
-    API_EXTERNAL_URL: https://app.example.com
-    GOTRUE_EXTERNAL_REDIRECT_URLS: http://localhost:3000/api/auth/callback,https://auth.example.com/api/auth/callback
-    GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: https://auth.example.com/auth/v1/callback
-    GOTRUE_MAILER_EXTERNAL_HOSTS: auth.example.com,app.example.com,smtp.resend.com
-    GOTRUE_SITE_URL: https://app.example.com
-    SUPABASE_PUBLIC_URL: https://auth.example.com
-    GOTRUE_ADDITIONAL_REDIRECT_URLS: http://localhost:3000/red-teaming, http://localhost:3000/**,
-      https://app.example.com/**
+    API_EXTERNAL_URL: "https://app.{{ .Values.global.domain }}"
+    GOTRUE_EXTERNAL_REDIRECT_URLS: "http://localhost:3000/api/auth/callback,https://auth.{{ .Values.global.domain }}/api/auth/callback"
+    GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: "https://auth.{{ .Values.global.domain }}/auth/v1/callback"
+    GOTRUE_MAILER_EXTERNAL_HOSTS: "auth.{{ .Values.global.domain }},app.{{ .Values.global.domain }},smtp.resend.com"
+    GOTRUE_SITE_URL: "https://app.{{ .Values.global.domain }}"
+    SUPABASE_PUBLIC_URL: "https://auth.{{ .Values.global.domain }}"
+    GOTRUE_ADDITIONAL_REDIRECT_URLS: "http://localhost:3000/red-teaming, http://localhost:3000/**, https://app.{{ .Values.global.domain }}/**"
 
 
 openfga:
@@ -1038,13 +1038,13 @@ compliance-scan:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: compliance-scan.example.com
+      - host: "compliance-scan.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - compliance-scan.example.com
+          - "compliance-scan.{{ .Values.global.domain }}"
         secretName: compliance-scan-tls
 
   configMap:
@@ -1058,7 +1058,7 @@ compliance-scan:
     VALKEY_SSL: "false"
     VALKEY_DB: "0"
     STORE_BACKEND: "supabase"
-    SUPABASE_URL: "https://auth.example.com"
+    SUPABASE_URL: "https://auth.{{ .Values.global.domain }}"
     SUPABASE_SCANS_TABLE: "compliance_scans"
     SUPABASE_LOG_FILES_TABLE: "log_files"
     SUPABASE_SUBSCRIPTION_SELECT: "subscription:subscription!compliance_scans_id_fkey(email,consumer_id,plan_name,is_org,org_id)"
@@ -1100,13 +1100,13 @@ leaderboard-client:
     enabled: false
     className: nginx
     hosts:
-      - host: leaderboard.example.com
+      - host: "leaderboard.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - leaderboard.example.com
+          - "leaderboard.{{ .Values.global.domain }}"
         secretName: leaderboard-client-tls
   autoscaling:
     enabled: true
@@ -1177,13 +1177,13 @@ mcp-scanner:
     enabled: false
     className: nginx
     hosts:
-      - host: mcpscanner.example.com
+      - host: "mcpscanner.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - mcpscanner.example.com
+          - "mcpscanner.{{ .Values.global.domain }}"
         secretName: mcp-scanner-tls
   configMap:
     MODEL: "gpt-4.1-mini"
@@ -1219,13 +1219,13 @@ skill-scanner:
     enabled: false
     className: nginx
     hosts:
-      - host: skill-scanner.example.com
+      - host: "skill-scanner.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - skill-scanner.example.com
+          - "skill-scanner.{{ .Values.global.domain }}"
         secretName: skill-scanner-tls
   configMap:
     SUPABASE_URL: "https://cntaufdextzjjlwlvwws.supabase.co"
@@ -1268,13 +1268,13 @@ secure-mcp-gateway:
     enabled: false
     className: nginx
     hosts:
-      - host: mcp.example.com
+      - host: "mcp.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - mcp.example.com
+          - "mcp.{{ .Values.global.domain }}"
         secretName: mcp-tls
   # The config-downloader init container reads S3 credentials from this secret.
   externalSecrets:

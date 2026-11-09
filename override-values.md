@@ -40,7 +40,7 @@ If using a private registry, ensure:
 
 ## Configure Domain
 
-Update the base domain used by ingress resources and application endpoints.
+Set the base domain. Every Ingress host and public URL in `enkryptai-stack` derives from it.
 
 Example:
 
@@ -132,17 +132,8 @@ frontend:
     enabled: true
 ```
 
-Added you domain in frontend, gateway-kong and supabase
-```yaml
-    hosts:
-    - host: app.example.com # frontend
+Each Ingress host derives from `global.domain`: `app.<domain>` (frontend), `api.<domain>` (gateway-kong) and `auth.<domain>` (supabase). Set `hosts` and `tls` only to use a different host; see [Set Your Domain](./docs/secrets.md).
 
-    hosts:
-    - host: api.example.com  # gateway-kong
-
-    hosts:
-    - host: auth.example.com # supabase
-```
 ---
 
 # Traefik Configuration

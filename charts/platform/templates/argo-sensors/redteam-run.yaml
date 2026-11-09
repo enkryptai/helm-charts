@@ -76,9 +76,11 @@ spec:
                       name: redteam-proxy-env-cm
                   image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
                   workingDir: /app
-                  {{- if $.Values.sensor.env }}
+                  {{- $proxyEnv := include "platform.proxy.env" $ }}
+                  {{- if or $.Values.sensor.env $proxyEnv }}
                   env:
-                    {{- toYaml $.Values.sensor.env | nindent 20 }}
+                    {{- with $proxyEnv }}{{ . | nindent 20 }}{{ end }}
+                    {{- with $.Values.sensor.env }}{{ toYaml . | nindent 20 }}{{ end }}
                   {{- end }}
                 inputs:
                   parameters:

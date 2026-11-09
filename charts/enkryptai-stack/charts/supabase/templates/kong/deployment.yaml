@@ -14,11 +14,7 @@ spec:
       {{- include "supabase.kong.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:
-        checksum/onprem: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- with .Values.kong.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "kong/config.yaml" "secrets/jwt.yaml") "annotations" .Values.kong.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.kong.selectorLabels" . | nindent 8 }}
     spec:
@@ -44,6 +40,7 @@ spec:
             - configMapRef:
                 name: onprem
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.kong.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}

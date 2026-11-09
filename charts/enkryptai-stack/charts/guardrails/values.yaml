@@ -11,8 +11,7 @@ fullnameOverride: "guardrails"
 podAnnotations:
   reloader.stakater.com/auto: "true"
 
-podLabels:
-  app: guardrails
+podLabels: {}
 
 strategy:
   type: Recreate

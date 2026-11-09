@@ -22,10 +22,7 @@ spec:
       {{- include "mcp-scanner.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:
-        {{- with .Values.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secret.yaml") "annotations" .Values.podAnnotations) | nindent 6 }}
       labels:
         {{- include "mcp-scanner.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -63,9 +60,11 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.env }}
+          {{- $proxyEnv := include "enkryptai-stack.proxy.env" $ }}
+          {{- if or .Values.env $proxyEnv }}
           env:
-            {{- range $key, $val := . }}
+            {{- with $proxyEnv }}{{ . | nindent 12 }}{{ end }}
+            {{- range $key, $val := .Values.env }}
             - name: {{ $key }}
               value: {{ $val | toString | quote }}
             {{- end }}

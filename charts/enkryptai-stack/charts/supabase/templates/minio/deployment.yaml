@@ -15,11 +15,7 @@ spec:
       {{- include "supabase.minio.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:
-        checksum/onprem: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- with .Values.minio.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml") "annotations" .Values.minio.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.minio.selectorLabels" . | nindent 8 }}
     spec:
@@ -42,6 +38,10 @@ spec:
                 name: {{ .Values.secret.onprem.name }}
             - configMapRef:
                 name: onprem
+          {{- with include "enkryptai-stack.proxy.env" $ }}
+          env:
+            {{- . | nindent 12 }}
+          {{- end }}
           args:
             - server
             - --console-address

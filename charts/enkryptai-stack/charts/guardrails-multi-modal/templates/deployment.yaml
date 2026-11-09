@@ -29,15 +29,23 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with include "enkryptai-stack.proxy.env" $ }}
+          env:
+            {{- . | nindent 12 }}
+          {{- end }}
           ports:
             {{- range .Values.service.ports }}
             - name: {{ .name }}
               containerPort: {{ .containerPort }}
             {{- end }}
           {{- $caEnvFrom := include "enkryptai-stack.trustedCA.envFrom" $ }}
-          {{- if or .Values.envFrom $caEnvFrom }}
+          {{- if or .Values.envFrom .Values.secrets.enabled $caEnvFrom }}
           envFrom:
             {{- with $caEnvFrom }}{{ . | nindent 12 }}{{ end }}
+            {{- if .Values.secrets.enabled }}
+            - secretRef:
+                name: {{ include "guardrails-multi-modal.fullname" . }}-secret
+            {{- end }}
             {{- with .Values.envFrom }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

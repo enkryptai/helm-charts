@@ -15,11 +15,7 @@ spec:
       {{- include "supabase.vector.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:
-      {{- with .Values.vector.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-        checksum/config: {{ include (print $.Template.BasePath "/vector/config.yaml") . | sha256sum }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (concat (list "vector/config.yaml") (ternary (list "secrets/analytics.yaml") (list) .Values.analytics.enabled)) "annotations" .Values.vector.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.vector.selectorLabels" . | nindent 8 }}
     spec:
@@ -40,6 +36,7 @@ spec:
           image: "{{ .Values.vector.image.repository }}:{{ .Values.vector.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.vector.image.pullPolicy }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.vector.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}

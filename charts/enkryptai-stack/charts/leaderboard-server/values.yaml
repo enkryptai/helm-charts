@@ -47,14 +47,14 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
-    - host: leaderboard-server.example.com
+    - host: "leaderboard-server.{{ .Values.global.domain }}"
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: leaderboard-server-tls
       hosts:
-        - leaderboard-server.example.com
+        - "leaderboard-server.{{ .Values.global.domain }}"
 
 resources:
   limits:

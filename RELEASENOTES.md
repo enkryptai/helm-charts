@@ -513,7 +513,7 @@ Do these before `helm upgrade` of an existing `platform-stack` release:
 | ----------------- | ----------------- | ------------------------------------------------------------ |
 | `enkryptai-stack` | 1.1.23 → 1.1.24   | [#118](https://github.com/enkryptai/helm-charts/pull/118)    |
 | `platform-stack`  | 1.1.32 → 1.1.33   | [#118](https://github.com/enkryptai/helm-charts/pull/118)    |
-| Every Enkrypt image default is a pinned build that rejects the eMudhra forged chains (no `main`/`dev` tags, no `enkryptai-dev` repositories); `guardrail-multimodal` moves to `a5698ab`, which no longer bakes in `HF_TOKEN` | this PR |
+| Every Enkrypt image default is a pinned build that rejects the eMudhra forged chains (no `main`/`dev` tags, no `enkryptai-dev` repositories); `guardrail-multimodal` moves to `a5698ab`, which no longer bakes in `HF_TOKEN` | [#173](https://github.com/enkryptai/helm-charts/pull/173) |
 
 ### Added
 

@@ -40,7 +40,7 @@ migrationjob:
   tag: 18.3-alpine3.22
 sensor:
   natsURL: "nats://nats.enkryptai-stack:4222"
-  jobversion: "prod-v1.0.98"
+  jobversion: "prod-v1.0.106"
   jobImage: vpcdeployment.azurecr.io/enkryptai-prod/redteam-job
   env:
     - name: WORKER_TYPE

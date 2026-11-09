@@ -44,9 +44,11 @@ spec:
             - secretRef:
                 name: {{ .Values.secrets.name }}
           {{- end }}
-          {{- if .Values.env }}
+          {{- $proxyEnv := include "enkryptai-stack.proxy.env" $ }}
+          {{- if or .Values.env $proxyEnv }}
           env:
-            {{- toYaml .Values.env | nindent 12 }}
+            {{- with $proxyEnv }}{{ . | nindent 12 }}{{ end }}
+            {{- with .Values.env }}{{ toYaml . | nindent 12 }}{{ end }}
           {{- end }}
           {{- with .Values.startupProbe }}
           {{- if .enabled }}

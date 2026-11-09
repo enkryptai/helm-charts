@@ -15,8 +15,7 @@ podAnnotations:
   reloader.stakater.com/auto: "true"
   instrumentation.opentelemetry.io/inject-nodejs: "true"
 
-podLabels:
-  app: frontend
+podLabels: {}
 
 env:
   # "0" skips TLS verification; trust a private CA with global.trustedCA instead.

@@ -150,6 +150,10 @@ package and the `index.yaml` entry.
 - **platform-stack:** `argocli` and `workflow-controller` move from v4.0.4 to
   v4.0.15, whose images no longer trust the compromised eMudhra intermediates
   (the v4.0.4 bundle accepts all 12 published forged chains).
+- **platform-stack:** `argoexec` moves from v3.6.14 to v4.0.15, the same
+  version as the controller; the v3.6.14 bundle accepts all 12 published
+  forged chains. Copy `onprem/argoexec:v4.0.15` into the install's registry
+  with the other Argo images.
 - **platform-stack:** the red team job image moves from `prod-v1.0.98` to
   `prod-v1.0.106`, whose botocore, certifi, grpcio and bundled Node no longer
   trust the compromised eMudhra intermediates.

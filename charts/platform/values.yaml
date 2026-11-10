@@ -389,7 +389,7 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
         repository: onprem/argocli
-        tag: "v4.0.4"
+        tag: "v4.0.15"
       deploymentAnnotations: {}
       podAnnotations: {}
       podLabels: {}
@@ -417,7 +417,7 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
         repository: onprem/workflow-controller
-        tag: "v4.0.4"
+        tag: "v4.0.15"
       namespaceParallelism: "10"
       retentionPolicy:
         completed: 10

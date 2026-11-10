@@ -41,7 +41,7 @@ nginxalpine:
   tag: "alpine"
 openfgaSyncJob:
   repository: enkryptai-prod/openfga-sync
-  tag: v1.11.0
+  tag: "v1.14.0"
   annotations: 
     "helm.sh/hook-weight": "-6"    
     "helm.sh/hook": post-install,post-upgrade
@@ -55,7 +55,7 @@ frontend:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
-    tag: "7961f95"
+    tag: "main-1793361114"
   serviceAccount:
     create: false
   podAnnotations:
@@ -153,11 +153,11 @@ gateway-kong:
   image:
     gateway:
       repository: vpcdeployment.azurecr.io/enkryptai-prod/gateway
-      tag: "dev-1767798930"
+      tag: "main-1793361115"
       pullPolicy: IfNotPresent
     sync:
       repository: vpcdeployment.azurecr.io/enkryptai-prod/gateway-sync
-      tag: "a8a9b2c"
+      tag: "main-1793252843"
       pullPolicy: IfNotPresent
     fluentBit:
       repository: vpcdeployment.azurecr.io/onprem/fluent-bit
@@ -300,7 +300,7 @@ redteam-proxy:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "prod-v1.0.68"
+    tag: "prod-v1.0.106"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"
@@ -404,7 +404,7 @@ guardrails:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrails
     pullPolicy: IfNotPresent
-    tag: "prodgr-v0.0.5"
+    tag: "prodgr-v0.0.48"
 
   nameOverride: ""
   fullnameOverride: "guardrails"
@@ -842,7 +842,7 @@ litellm:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/litellm-gateway
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "main-1771906797"
+    tag: "main-1793357334"
 
   # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   imagePullSecrets: []
@@ -920,7 +920,7 @@ guardrails-model:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-model
     pullPolicy: IfNotPresent
-    tag: "main-1771906796"
+    tag: "main-1793357797"
   strategy:
     type: Recreate
   imagePullSecrets: []
@@ -988,7 +988,7 @@ guardrails-multi-modal:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-multimodal
     pullPolicy: IfNotPresent
-    tag: "ddc789c"
+    tag: "a5698ab"
   strategy:
     type: Recreate
   imagePullSecrets: []
@@ -1039,7 +1039,7 @@ compliance-scan:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/compliance-scan
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1792752754"
   # Internal service: it must not share a host with supabase (auth.*). The same host and path on two
   # ingresses sends all supabase traffic to compliance-scan, which breaks its own startup.
   ingress:
@@ -1107,7 +1107,7 @@ leaderboard-client:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-client
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1792756943"
   ingress:
     enabled: false
     className: nginx
@@ -1152,7 +1152,7 @@ leaderboard-server:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-server
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1793361115"
   ingress:
     enabled: false
   autoscaling:
@@ -1184,7 +1184,7 @@ mcp-scanner:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/mcp-scanner
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1793621450"
   ingress:
     enabled: false
     className: nginx
@@ -1275,7 +1275,7 @@ secure-mcp-gateway:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/secure-mcp-gateway
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1793683323"
   ingress:
     enabled: false
     className: nginx

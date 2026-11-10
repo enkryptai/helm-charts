@@ -5,7 +5,7 @@ replicaCount: 1
 image:
   repository: vpcdeployment.azurecr.io/enkryptai-prod/secure-mcp-gateway
   pullPolicy: IfNotPresent
-  tag: "main"
+  tag: "main-1793683323"
 
 nameOverride: ""
 fullnameOverride: "secure-mcp-gateway"

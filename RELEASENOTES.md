@@ -10,6 +10,9 @@ Because this repository publishes several charts with independent version
 numbers, entries are grouped by **release date**. Each entry lists the chart
 versions it published, and every change is prefixed with the chart it affects.
 
+Pull requests add their entry as a file under `releasenotes/unreleased/`; a release
+collects those files into a section here (`releasenotes/README.md`).
+
 | Chart             | Path                     | Latest version |
 | ----------------- | ------------------------ | -------------- |
 | `enkryptai-stack` | `charts/enkryptai-stack` | 1.2.1          |

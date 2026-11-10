@@ -1,5 +1,9 @@
 global:
   platform: azure
+  trustedCA:
+    # ConfigMap with the full PEM bundle (public CAs plus the private CA) in redteam-jobs; empty changes nothing. See docs/trusted-ca.md.
+    configMapName: ""
+    key: ca.crt
   registry: vpcdeployment.azurecr.io
   imagePullSecrets: []
   proxy:

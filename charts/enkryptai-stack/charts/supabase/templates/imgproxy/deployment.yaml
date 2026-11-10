@@ -62,8 +62,14 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
-          {{- if or (.Values.imgproxy.persistence.enabled) (.Values.imgproxy.volumes) }}
+          {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}
+          envFrom:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- $caMount := include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          {{- if or (.Values.imgproxy.persistence.enabled) (.Values.imgproxy.volumes) $caMount }}
           volumeMounts:
+            {{- with $caMount }}{{ . | nindent 12 }}{{ end }}
             {{- with .Values.imgproxy.volumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -76,8 +82,10 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if or (.Values.imgproxy.persistence.enabled) (.Values.imgproxy.volumes) }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or (.Values.imgproxy.persistence.enabled) (.Values.imgproxy.volumes) $caVolume }}
       volumes:
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
         {{- with .Values.imgproxy.volumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}

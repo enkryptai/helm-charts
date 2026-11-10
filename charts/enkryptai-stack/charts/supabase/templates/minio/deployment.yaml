@@ -33,6 +33,7 @@ spec:
           image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.minio.image.pullPolicy }}
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
             - configMapRef:
@@ -76,6 +77,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
+            {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 12 }}{{ end }}
           {{- with .Values.minio.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -93,13 +95,17 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if not .Values.minio.persistence.enabled }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or (not .Values.minio.persistence.enabled) $caVolume }}
       volumes:
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
+        {{- if not .Values.minio.persistence.enabled }}
         - name: minio-data
           emptyDir:
             medium: ""
         {{- with .Values.minio.volumes }}
           {{- toYaml . | nindent 8 }}
+        {{- end }}
         {{- end }}
       {{- end }}
   {{- if .Values.minio.persistence.enabled }}

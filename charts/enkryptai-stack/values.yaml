@@ -28,6 +28,11 @@ global:
       enabled: false                      
       name: "cluster-secret-store"
 
+  trustedCA:
+    # ConfigMap with the full PEM bundle (public CAs plus the private CA) in this namespace; empty changes nothing. See docs/trusted-ca.md.
+    configMapName: ""
+    key: ca.crt
+
 supabaseinitdb:
   repository: onprem/supabase-initdb
   tag: "latest"

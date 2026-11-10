@@ -1,0 +1,16 @@
+{{- if ((.Values.global).trustedCA).configMapName }}
+{{- /* Read through envFrom by the red team Workflow pods (_trusted-ca.tpl), so it lives in their namespace. */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-trusted-ca-env
+  namespace: redteam-jobs
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  NODE_EXTRA_CA_CERTS: /etc/enkryptai/trusted-ca/ca.crt
+  SSL_CERT_FILE: /etc/enkryptai/trusted-ca/ca.crt
+  REQUESTS_CA_BUNDLE: /etc/enkryptai/trusted-ca/ca.crt
+  AWS_CA_BUNDLE: /etc/enkryptai/trusted-ca/ca.crt
+{{- end }}

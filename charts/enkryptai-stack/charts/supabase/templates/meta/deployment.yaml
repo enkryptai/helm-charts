@@ -32,6 +32,7 @@ spec:
           image: "{{ .Values.global.registry }}/{{ .Values.meta.image.repository }}:{{ .Values.meta.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.meta.image.pullPolicy }}
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
             - configMapRef:
@@ -106,13 +107,21 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.meta.volumeMounts }}
+          {{- $caMount := include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          {{- if or .Values.meta.volumeMounts $caMount }}
           volumeMounts:
+            {{- with .Values.meta.volumeMounts }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $caMount }}{{ . | nindent 12 }}{{ end }}
           {{- end }}
-      {{- with .Values.meta.volumes }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or .Values.meta.volumes $caVolume }}
       volumes:
+        {{- with .Values.meta.volumes }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
       {{- end }}
       {{- with .Values.meta.nodeSelector }}
       nodeSelector:

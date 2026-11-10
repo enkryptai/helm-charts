@@ -140,13 +140,25 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.realtime.volumeMounts }}
-          volumeMounts:
-            {{- toYaml . | nindent 12 }}
+          {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}
+          envFrom:
+            {{- . | nindent 12 }}
           {{- end }}
-      {{- with .Values.realtime.volumes }}
+          {{- $caMount := include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          {{- if or .Values.realtime.volumeMounts $caMount }}
+          volumeMounts:
+            {{- with .Values.realtime.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $caMount }}{{ . | nindent 12 }}{{ end }}
+          {{- end }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or .Values.realtime.volumes $caVolume }}
       volumes:
+        {{- with .Values.realtime.volumes }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
       {{- end }}
       {{- with .Values.realtime.nodeSelector }}
       nodeSelector:

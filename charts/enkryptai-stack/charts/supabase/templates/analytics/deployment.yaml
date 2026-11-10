@@ -146,8 +146,14 @@ spec:
           ports:
             - containerPort: {{ .Values.analytics.service.port }}
               protocol: TCP
-          {{- if or (.Values.analytics.bigQuery.enabled) (.Values.analytics.volumes) }}
+          {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}
+          envFrom:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- $caMount := include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          {{- if or (.Values.analytics.bigQuery.enabled) (.Values.analytics.volumes) $caMount }}
           volumeMounts:
+            {{- with $caMount }}{{ . | nindent 12 }}{{ end }}
             {{- with .Values.analytics.volumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -161,8 +167,10 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if or (.Values.analytics.bigQuery.enabled) (.Values.analytics.volumes) }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or (.Values.analytics.bigQuery.enabled) (.Values.analytics.volumes) $caVolume }}
       volumes:
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
         {{- with .Values.analytics.volumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}

@@ -42,7 +42,7 @@ secret:
 db:
   enabled: false
   image:
-    # Docker Hub, not from global.registry (component is off by default)
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
     repository: onprem/supabase-postgres
     pullPolicy: IfNotPresent
     tag: "15.8.1.060"
@@ -267,7 +267,7 @@ rest:
 realtime:
   enabled: false
   image:
-    # Docker Hub, not from global.registry (component is off by default)
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
     repository: onprem/realtime
     pullPolicy: IfNotPresent
     tag: "v2.34.47"
@@ -455,7 +455,7 @@ storage:
 imgproxy:
   enabled: false
   image:
-    # Docker Hub, not from global.registry (component is off by default)
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
     repository: onprem/imgproxy
     pullPolicy: IfNotPresent
     tag: "v3.8.0"
@@ -630,7 +630,7 @@ analytics:
 vector:
   enabled: false
   image:
-    # Docker Hub, not from global.registry (component is off by default)
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
     repository: onprem/vector
     pullPolicy: IfNotPresent
     tag: "0.28.1-alpine"
@@ -667,7 +667,7 @@ vector:
 functions:
   enabled: false
   image:
-    # Docker Hub, not from global.registry (component is off by default)
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
     repository: onprem/edge-runtime
     pullPolicy: IfNotPresent
     tag: "v1.67.4"

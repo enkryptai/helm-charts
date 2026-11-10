@@ -24,7 +24,7 @@ spec:
         {{- toYaml .Values.analytics.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: {{.Values.global.registry}}/{{.Values.postgresalpine.repository}}:{{.Values.postgresalpine.tag}}
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.postgresalpine "global" $.Values.global "default" "") | quote }}
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_HOST

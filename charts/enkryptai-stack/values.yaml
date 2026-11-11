@@ -2,10 +2,18 @@ global:
   
   storageClass: ""
 
+  proxy:
+    # Outbound proxy URLs for every pod (docs/outbound-proxy.md); both empty changes nothing.
+    httpProxy: ""
+    httpsProxy: ""
+    # Extra comma-separated NO_PROXY entries, added to the in-cluster defaults: add the pod, Service and node CIDRs.
+    noProxy: ""
+
   imagePullPolicy: "IfNotPresent" 
   imagePullSecrets: []
 
-  domain: "enkryptai.com"
+  # Ingress hosts and public URLs below derive from it (app., api., auth. and so on).
+  domain: "example.com"
   
   registry: vpcdeployment.azurecr.io
 
@@ -20,6 +28,11 @@ global:
       enabled: false                      
       name: "cluster-secret-store"
 
+  trustedCA:
+    # ConfigMap with the full PEM bundle (public CAs plus the private CA) in this namespace; empty changes nothing. See docs/trusted-ca.md.
+    configMapName: ""
+    key: ca.crt
+
 supabaseinitdb:
   repository: onprem/supabase-initdb
   tag: "latest"
@@ -28,7 +41,7 @@ nginxalpine:
   tag: "alpine"
 openfgaSyncJob:
   repository: enkryptai-prod/openfga-sync
-  tag: v1.11.0
+  tag: "v1.14.0"
   annotations: 
     "helm.sh/hook-weight": "-6"    
     "helm.sh/hook": post-install,post-upgrade
@@ -42,13 +55,12 @@ frontend:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
-    tag: "7961f95"
+    tag: "main-1793361114"
   serviceAccount:
     create: false
   podAnnotations:
     reloader.stakater.com/auto: "true"
-  podLabels:
-    app: frontend
+  podLabels: {}
 
   service:
     type: ClusterIP
@@ -63,14 +75,14 @@ frontend:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: app.example.com
+      - host: "app.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
 
     tls:
       - hosts:
-          - app.example.com
+          - "app.{{ .Values.global.domain }}"
         secretName: frontend-cert
 
   resources:
@@ -114,9 +126,9 @@ frontend:
   affinity: {}
 
   configMap:
-    NEXT_PUBLIC_URL: "https://app.example.com"
-    NEXT_PUBLIC_APIAAS_KONG_URL: "https://api.example.com"
-    NEXT_PUBLIC_SUPABASE_URL:  "https://auth.example.com"
+    NEXT_PUBLIC_URL: "https://app.{{ .Values.global.domain }}"
+    NEXT_PUBLIC_APIAAS_KONG_URL: "https://api.{{ .Values.global.domain }}"
+    NEXT_PUBLIC_SUPABASE_URL: "https://auth.{{ .Values.global.domain }}"
 
   externalSecrets:
     enabled: false
@@ -141,11 +153,11 @@ gateway-kong:
   image:
     gateway:
       repository: vpcdeployment.azurecr.io/enkryptai-prod/gateway
-      tag: "dev-1767798930"
+      tag: "main-1793361115"
       pullPolicy: IfNotPresent
     sync:
       repository: vpcdeployment.azurecr.io/enkryptai-prod/gateway-sync
-      tag: "a8a9b2c"
+      tag: "main-1793252843"
       pullPolicy: IfNotPresent
     fluentBit:
       repository: vpcdeployment.azurecr.io/onprem/fluent-bit
@@ -187,13 +199,13 @@ gateway-kong:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: api.example.com
+      - host: "api.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - api.example.com
+          - "api.{{ .Values.global.domain }}"
         secretName: gateway-cert
   secrets:
     enabled: false
@@ -288,7 +300,7 @@ redteam-proxy:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "prod-v1.0.68"
+    tag: "prod-v1.0.106"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"
@@ -296,8 +308,7 @@ redteam-proxy:
   podAnnotations:
     reloader.stakater.com/auto: "true"
 
-  podLabels:
-    app: redteam-proxy
+  podLabels: {}
 
   strategy:
     type: RollingUpdate
@@ -376,7 +387,7 @@ redteam-proxy:
     - enkryptai-stack
     - redteam-jobs
   configMap:
-    SUPABASE_URL: "https://auth.example.com"
+    SUPABASE_URL: "https://auth.{{ .Values.global.domain }}"
   secrets:
     enabled: false
 nodeSelector: {}
@@ -393,7 +404,7 @@ guardrails:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrails
     pullPolicy: IfNotPresent
-    tag: "prodgr-v0.0.5"
+    tag: "prodgr-v0.0.48"
 
   nameOverride: ""
   fullnameOverride: "guardrails"
@@ -401,8 +412,7 @@ guardrails:
   podAnnotations:
     reloader.stakater.com/auto: "true"
 
-  podLabels:
-    app: guardrails
+  podLabels: {}
 
   strategy:
     type: Recreate
@@ -415,11 +425,11 @@ guardrails:
 
   resources:
     requests:
-      cpu: 0.5
-      memory: 500Mi
+      cpu: 500m
+      memory: 1Gi
     limits:
-      cpu: 0.5
-      memory: 500Mi
+      cpu: "2"
+      memory: 3Gi
 
   livenessProbe:
     enabled: true
@@ -539,24 +549,23 @@ supabase:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: auth.example.com
+      - host: "auth.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - auth.example.com
+          - "auth.{{ .Values.global.domain }}"
         secretName: supabse-cert
 
   configMap:
-    API_EXTERNAL_URL: https://app.example.com
-    GOTRUE_EXTERNAL_REDIRECT_URLS: http://localhost:3000/api/auth/callback,https://auth.example.com/api/auth/callback
-    GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: https://auth.example.com/auth/v1/callback
-    GOTRUE_MAILER_EXTERNAL_HOSTS: auth.example.com,app.example.com,smtp.resend.com
-    GOTRUE_SITE_URL: https://app.example.com
-    SUPABASE_PUBLIC_URL: https://auth.example.com
-    GOTRUE_ADDITIONAL_REDIRECT_URLS: http://localhost:3000/red-teaming, http://localhost:3000/**,
-      https://app.example.com/**
+    API_EXTERNAL_URL: "https://app.{{ .Values.global.domain }}"
+    GOTRUE_EXTERNAL_REDIRECT_URLS: "http://localhost:3000/api/auth/callback,https://auth.{{ .Values.global.domain }}/api/auth/callback"
+    GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: "https://auth.{{ .Values.global.domain }}/auth/v1/callback"
+    GOTRUE_MAILER_EXTERNAL_HOSTS: "auth.{{ .Values.global.domain }},app.{{ .Values.global.domain }},smtp.resend.com"
+    GOTRUE_SITE_URL: "https://app.{{ .Values.global.domain }}"
+    SUPABASE_PUBLIC_URL: "https://auth.{{ .Values.global.domain }}"
+    GOTRUE_ADDITIONAL_REDIRECT_URLS: "http://localhost:3000/red-teaming, http://localhost:3000/**, https://app.{{ .Values.global.domain }}/**"
 
 
 openfga:
@@ -833,7 +842,7 @@ litellm:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/litellm-gateway
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "main-1771906797"
+    tag: "main-1793357334"
 
   # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   imagePullSecrets: []
@@ -911,7 +920,7 @@ guardrails-model:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-model
     pullPolicy: IfNotPresent
-    tag: "main-1771906796"
+    tag: "main-1793357797"
   strategy:
     type: Recreate
   imagePullSecrets: []
@@ -979,7 +988,7 @@ guardrails-multi-modal:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-multimodal
     pullPolicy: IfNotPresent
-    tag: "ddc789c"
+    tag: "a5698ab"
   strategy:
     type: Recreate
   imagePullSecrets: []
@@ -1030,7 +1039,7 @@ compliance-scan:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/compliance-scan
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1792752754"
   # Internal service: it must not share a host with supabase (auth.*). The same host and path on two
   # ingresses sends all supabase traffic to compliance-scan, which breaks its own startup.
   ingress:
@@ -1041,13 +1050,13 @@ compliance-scan:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     hosts:
-      - host: compliance-scan.example.com
+      - host: "compliance-scan.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - compliance-scan.example.com
+          - "compliance-scan.{{ .Values.global.domain }}"
         secretName: compliance-scan-tls
 
   configMap:
@@ -1061,7 +1070,7 @@ compliance-scan:
     VALKEY_SSL: "false"
     VALKEY_DB: "0"
     STORE_BACKEND: "supabase"
-    SUPABASE_URL: "https://auth.example.com"
+    SUPABASE_URL: "https://auth.{{ .Values.global.domain }}"
     SUPABASE_SCANS_TABLE: "compliance_scans"
     SUPABASE_LOG_FILES_TABLE: "log_files"
     SUPABASE_SUBSCRIPTION_SELECT: "subscription:subscription!compliance_scans_id_fkey(email,consumer_id,plan_name,is_org,org_id)"
@@ -1098,18 +1107,18 @@ leaderboard-client:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-client
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1792756943"
   ingress:
     enabled: false
     className: nginx
     hosts:
-      - host: leaderboard.example.com
+      - host: "leaderboard.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - leaderboard.example.com
+          - "leaderboard.{{ .Values.global.domain }}"
         secretName: leaderboard-client-tls
   autoscaling:
     enabled: true
@@ -1143,7 +1152,7 @@ leaderboard-server:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-server
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1793361115"
   ingress:
     enabled: false
   autoscaling:
@@ -1175,18 +1184,18 @@ mcp-scanner:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/mcp-scanner
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1793621450"
   ingress:
     enabled: false
     className: nginx
     hosts:
-      - host: mcpscanner.example.com
+      - host: "mcpscanner.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - mcpscanner.example.com
+          - "mcpscanner.{{ .Values.global.domain }}"
         secretName: mcp-scanner-tls
   configMap:
     MODEL: "gpt-4.1-mini"
@@ -1222,13 +1231,13 @@ skill-scanner:
     enabled: false
     className: nginx
     hosts:
-      - host: skill-scanner.example.com
+      - host: "skill-scanner.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - skill-scanner.example.com
+          - "skill-scanner.{{ .Values.global.domain }}"
         secretName: skill-scanner-tls
   configMap:
     SUPABASE_URL: "https://cntaufdextzjjlwlvwws.supabase.co"
@@ -1266,18 +1275,18 @@ secure-mcp-gateway:
   image:
     repository: vpcdeployment.azurecr.io/enkryptai-prod/secure-mcp-gateway
     pullPolicy: IfNotPresent
-    tag: "main"
+    tag: "main-1793683323"
   ingress:
     enabled: false
     className: nginx
     hosts:
-      - host: mcp.example.com
+      - host: "mcp.{{ .Values.global.domain }}"
         paths:
           - path: /
             pathType: Prefix
     tls:
       - hosts:
-          - mcp.example.com
+          - "mcp.{{ .Values.global.domain }}"
         secretName: mcp-tls
   # The config-downloader init container reads S3 credentials from this secret.
   externalSecrets:

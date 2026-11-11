@@ -1,0 +1,15 @@
+{{- if ((.Values.global).trustedCA).configMapName }}
+{{- /* Read through envFrom by every pod (_trusted-ca.tpl); SSL_CERT_FILE and the others replace the default store. */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-trusted-ca-env
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  NODE_EXTRA_CA_CERTS: /etc/enkryptai/trusted-ca/ca.crt
+  SSL_CERT_FILE: /etc/enkryptai/trusted-ca/ca.crt
+  REQUESTS_CA_BUNDLE: /etc/enkryptai/trusted-ca/ca.crt
+  AWS_CA_BUNDLE: /etc/enkryptai/trusted-ca/ca.crt
+{{- end }}

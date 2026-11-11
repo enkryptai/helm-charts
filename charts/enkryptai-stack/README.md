@@ -135,7 +135,7 @@ A Helm chart for Kubernetes
 | gateway-kong.service.ports.https.targetPort | int | `8443` |  |
 | gateway-kong.service.type | string | `"ClusterIP"` |  |
 | gateway-kong.tolerations | list | `[]` |  |
-| global.domain | string | `"djj.enkryptai.com"` |  |
+| global.domain | string | `"example.com"` | Base domain; Ingress hosts and public URLs derive from it |
 | global.externalSecret | bool | `false` |  |
 | global.imagePullPolicy | string | `"IfNotPresent"` |  |
 | global.registry | string | `"vpcdeployment.azurecr.io"` |  |

@@ -29,6 +29,7 @@ Complete platform infrastructure stack
 | openfga.repository | string | `"onprem/postgresql"` |  |
 | openfga.tag | string | `"17.4-8"` |  |
 | opensearch.dashboards.image | string | `"vpcdeployment.azurecr.io/onprem/opensearch-dashboards:3.2.0"` |  |
+| opensearch.dashboards.credentialsSecret | string | `"opensearch-cred"` | Secret with the username and password Dashboards logs in with |
 | opensearch.general.image | string | `"vpcdeployment.azurecr.io/onprem/opensearch:3.2.0"` |  |
 | opensearch.initHelper.image | string | `"vpcdeployment.azurecr.io/onprem/busybox:latest"` |  |
 | opensearch.security | string | `nil` |  |
@@ -113,7 +114,7 @@ Complete platform infrastructure stack
 | platform-core.argo-workflows.executor.image.pullPolicy | string | `""` |  |
 | platform-core.argo-workflows.executor.image.registry | string | `"vpcdeployment.azurecr.io"` |  |
 | platform-core.argo-workflows.executor.image.repository | string | `"onprem/argoexec"` |  |
-| platform-core.argo-workflows.executor.image.tag | string | `"v3.6.14"` |  |
+| platform-core.argo-workflows.executor.image.tag | string | `"v4.0.15"` |  |
 | platform-core.argo-workflows.executor.resources | object | `{}` |  |
 | platform-core.argo-workflows.executor.securityContext | object | `{}` |  |
 | platform-core.argo-workflows.images.pullPolicy | string | `"Always"` |  |

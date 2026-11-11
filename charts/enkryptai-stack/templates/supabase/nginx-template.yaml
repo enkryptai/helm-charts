@@ -22,6 +22,10 @@ spec:
       - image: {{.Values.global.registry}}/{{.Values.nginxalpine.repository}}:{{.Values.nginxalpine.tag}}
         imagePullPolicy: IfNotPresent
         name: nginx
+        {{- with include "enkryptai-stack.proxy.env" $ }}
+        env:
+          {{- . | nindent 10 }}
+        {{- end }}
         ports:
         - containerPort: 80
           name: nginx-html
@@ -44,11 +48,17 @@ spec:
           {{- toYaml (omit . "enabled") | nindent 10 }}
         {{- end }}
         {{- end }}
+        {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}
+        envFrom:
+          {{- . | nindent 10 }}
+        {{- end }}
         volumeMounts:
+        {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 8 }}{{ end }}
         - mountPath: /usr/share/nginx/html
           name: email-template
       dnsPolicy: ClusterFirst
       volumes:
+      {{- with include "enkryptai-stack.trustedCA.volume" $ }}{{ . | nindent 6 }}{{ end }}
       - configMap:
           defaultMode: 420
           name: email-template
@@ -70,9 +80,9 @@ spec:
 apiVersion: v1
 data:
   template.html: "<strong>\U0001F44B Hi,</strong>\n<p>\n  Please enter the below code
-    to log in to Enkrypt AI \U0001F511\n</p>\n<h2>\n  {{ .Token }}\n</h2>\n<strong>Stay
-    secure with Enkrypt AI</strong>\n<br>\n<em>\n  Log in to <a href=\"{{ .SiteURL
-    }}\">{{ .SiteURL }}</a>\n  find out more.\n</em>\n"
+    to log in to Enkrypt AI \U0001F511\n</p>\n<h2>\n  {{"{{"}} .Token }}\n</h2>\n<strong>Stay
+    secure with Enkrypt AI</strong>\n<br>\n<em>\n  Log in to <a href=\"{{"{{"}} .SiteURL
+    }}\">{{"{{"}} .SiteURL }}</a>\n  find out more.\n</em>\n"
 kind: ConfigMap
 metadata:
   name: email-template

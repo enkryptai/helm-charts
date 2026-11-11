@@ -8,9 +8,9 @@ podAnnotations:
   secret.reloader.stakater.com/reload: ""
 
 image:
-  repository: enkryptai-dev/litellm-gateway
+  repository: enkryptai-prod/litellm-gateway
   pullPolicy: IfNotPresent
-  tag: "main-1771906797"
+  tag: "main-1793357334"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -87,6 +87,12 @@ configMap:
     ENKRYPT_METERING_ENABLED: 'false'
     ENKRYPT_ORG_ID: org_your_org_id
     GATEWAY_HOST: 0.0.0.0
+    # With 'true', gateway images built from sentry prod-v1.0.105 or later exit
+    # at startup unless SENTRY_LITELLM_GATEWAY_API_KEY (litellm-gateway-env-secret)
+    # is set and is not the public default. LITELLM_MASTER_KEY may be left unset
+    # (it then takes the gateway key) but must not be the default. Older images
+    # ignore this variable.
+    GATEWAY_REFUSE_DEFAULT_KEY: 'true'
     GR_ADHERENCE_MODEL: openai/gpt-4.1-mini
     GR_BIAS_MODEL: openai/gpt-4.1-mini
     GR_EMBEDDINGS_MODEL: openai/text-embedding-ada-002

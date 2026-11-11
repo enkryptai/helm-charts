@@ -773,10 +773,10 @@ minio:
 
 testimage:
   repository: onprem/curljq
-  tag: "latest"
+  tag: "latest-emudhra-20261105"
 postgresalpine:
   repository: onprem/postgres
-  tag: "15-alpine"
+  tag: "15-alpine-emudhra-20261105"
 # create-s3-buckets Job: credentials (the MinIO service pair) and region, the same stub storage uses; empty region reads s3-cred.
 s3Bucket:
   region: stub

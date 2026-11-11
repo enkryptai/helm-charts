@@ -21,6 +21,7 @@ spec:
   {{- end }}
   template:
     metadata:
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secret.yaml")) | nindent 6 }}
       labels:
         {{- include "redteam-proxy.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -37,6 +38,7 @@ spec:
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 {{- if .Values.useEnvFrom }}
                 name: {{ .Values.externalSecret.secretName }}
@@ -47,6 +49,7 @@ spec:
                 name: redteam-proxy-env-cm
           {{- if or .Values.env .Values.supabaseKey.secretRef .Values.nextjsAuthToken.secretRef .Values.s3.secretRef }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- with .Values.env }}
             {{- tpl (toYaml .) $ | nindent 12 }}
             {{- end }}
@@ -101,6 +104,14 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          volumeMounts:
+            {{- . | nindent 12 }}
+          {{- end }}
+      {{- with include "enkryptai-stack.trustedCA.volume" $ }}
+      volumes:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

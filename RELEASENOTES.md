@@ -29,7 +29,7 @@ the `index.yaml` entry.
 | `gateway-kong` ships its decK config in the chart instead of fetching it from GitHub at install | [#134](https://github.com/enkryptai/helm-charts/pull/134) |
 | `supabase` test images move to eMudhra-clean rebuilds: `onprem/curljq:latest-emudhra-20261105`, `onprem/postgres:15-alpine-emudhra-20261105` | [#171](https://github.com/enkryptai/helm-charts/pull/171) |
 | `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
-| `guardrails` API default resources 500m / 500Mi to request 500m / 1Gi, limit 2 CPU / 3Gi; `prodgr-v0.0.48` was OOM-killed at boot | [#PRNUM](https://github.com/enkryptai/helm-charts/pull/PRNUM) |
+| `guardrails` API default resources 500m / 500Mi to request 500m / 1Gi, limit 2 CPU / 3Gi; `prodgr-v0.0.48` was OOM-killed at boot | [#179](https://github.com/enkryptai/helm-charts/pull/179) |
 
 ### Upgrading from 1.2.1
 

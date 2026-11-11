@@ -21,7 +21,11 @@ spec:
     metadata:
       labels:
         {{- include "redteam-model.labels" (dict "context" $ "labels" .Values.podLabels) | nindent 8 }}
-      {{- include "redteam-model.annotations" (dict "context" $ "annotations" .Values.podAnnotations "indent" 6) }}
+      {{- /* checksum/<name> for the chart's own ConfigMap and Secret (#162); podAnnotations still go through tpl */}}
+      {{- $podAnnotations := include "redteam-model.renderMap" (dict "context" $ "maps" (list .Values.podAnnotations)) | fromYaml }}
+      {{- with include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secret.yaml") "annotations" $podAnnotations) }}
+      {{- . | trim | nindent 6 }}
+      {{- end }}
     spec:
       {{- include "redteam-model.imagePullSecrets" . | nindent 6 }}
       {{- with .Values.serviceAccountName }}

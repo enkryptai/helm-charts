@@ -1,0 +1,1 @@
+- **enkryptai-stack:** LiteLLM red team attacker models move to OpenRouter: `RT_ATTACKER_MODEL` is `openrouter/nvidia/nemotron-3-super-120b-a12b` and `RT_ATTACKER_FALLBACK` is `openrouter/qwen/qwen3-next-80b-a3b-instruct`. On upgrade, add `OPENROUTER_API_KEY` to `litellm-gateway-env-secret`.

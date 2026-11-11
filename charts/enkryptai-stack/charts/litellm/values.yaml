@@ -109,6 +109,12 @@ configMap:
     GR_SPONGE_MODEL: openai/gpt-4.1-mini
     GR_VERA_EVALUATOR_MODEL: openai/gpt-4.1
     LITELLM_DYNAMIC_CONFIG: 'false'
+    # Use LiteLLM's bundled Anthropic beta headers instead of fetching them from GitHub on first use.
+    LITELLM_LOCAL_ANTHROPIC_BETA_HEADERS: 'true'
+    # Use LiteLLM's bundled model cost map instead of fetching it from GitHub at startup.
+    LITELLM_LOCAL_MODEL_COST_MAP: 'true'
+    # Serve LiteLLM's bundled policy templates instead of fetching them from GitHub.
+    LITELLM_LOCAL_POLICY_TEMPLATES: 'true'
     LITELLM_NUM_RETRIES: '2'
     LITELLM_PROXY_CONFIG_PATH: ./config/litellm_proxy.yaml
     LITELLM_ROUTING_STRATEGY: simple-shuffle

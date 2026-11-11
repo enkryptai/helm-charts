@@ -411,7 +411,7 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
         repository: onprem/argoexec
-        tag: "v3.6.14"
+        tag: "v4.0.15"
         pullPolicy: ""
       resources: {}
       args: []

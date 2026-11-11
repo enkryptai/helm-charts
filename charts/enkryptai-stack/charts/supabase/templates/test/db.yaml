@@ -11,6 +11,7 @@ spec:
   ttlSecondsAfterFinished: 100
   template:
     spec:
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global) | nindent 6 }}
       containers:
         - command:
             - /bin/sh
@@ -21,7 +22,7 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
-          image: {{.Values.global.registry}}/{{.Values.postgresalpine.repository}}:{{.Values.postgresalpine.tag}}
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.postgresalpine "global" $.Values.global "default" "") | quote }}
           imagePullPolicy: IfNotPresent
           name: test-db
       restartPolicy: Never

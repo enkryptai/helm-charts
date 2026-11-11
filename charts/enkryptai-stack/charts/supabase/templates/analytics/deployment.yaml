@@ -18,16 +18,13 @@ spec:
       labels:
         {{- include "supabase.analytics.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.analytics.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global "local" $.Values.analytics.imagePullSecrets) | nindent 6 }}
       serviceAccountName: {{ include "supabase.analytics.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.analytics.podSecurityContext | nindent 8 }}
       initContainers:
         - name: init-db
-          image: {{.Values.global.registry}}/{{.Values.postgresalpine.repository}}:{{.Values.postgresalpine.tag}}
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.postgresalpine "global" $.Values.global "default" "") | quote }}
           imagePullPolicy: IfNotPresent
           env:
             - name: DB_HOST
@@ -60,7 +57,7 @@ spec:
         - name: {{ include "supabase.analytics.name" $ }}
           securityContext:
             {{- toYaml .Values.analytics.securityContext | nindent 12 }}
-          image: "{{ .Values.analytics.image.repository }}:{{ .Values.analytics.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "enkryptai-stack.image" (dict "image" $.Values.analytics.image "global" $.Values.global "default" $.Chart.AppVersion) | quote }}
           imagePullPolicy: {{ .Values.analytics.image.pullPolicy }}
           env:
             {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}

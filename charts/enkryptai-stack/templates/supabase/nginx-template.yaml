@@ -18,8 +18,9 @@ spec:
       labels:
         app: nginx-html
     spec:
+      {{- include "enkryptai-stack.imagePullSecrets" (dict "global" $.Values.global) | nindent 6 }}
       containers:
-      - image: {{.Values.global.registry}}/{{.Values.nginxalpine.repository}}:{{.Values.nginxalpine.tag}}
+      - image: {{ include "enkryptai-stack.image" (dict "image" $.Values.nginxalpine "global" $.Values.global "default" "") | quote }}
         imagePullPolicy: IfNotPresent
         name: nginx
         {{- with include "enkryptai-stack.proxy.env" $ }}

@@ -42,9 +42,10 @@ secret:
 db:
   enabled: false
   image:
-    repository: supabase/postgres
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
+    repository: onprem/supabase-postgres
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "15.8.1.060"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
@@ -266,9 +267,10 @@ rest:
 realtime:
   enabled: false
   image:
-    repository: supabase/realtime
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
+    repository: onprem/realtime
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "v2.34.47"
   imagePullSecrets: []
   nameOverride: ""
   fullnameOverride: ""
@@ -453,9 +455,10 @@ storage:
 imgproxy:
   enabled: false
   image:
-    repository: darthsim/imgproxy
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
+    repository: onprem/imgproxy
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "v3.8.0"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
@@ -575,9 +578,9 @@ kong:
 analytics:
   enabled: false
   image:
-    repository: supabase/logflare
+    repository: onprem/logflare
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "1.14.2"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
@@ -627,9 +630,10 @@ analytics:
 vector:
   enabled: false
   image:
-    repository: timberio/vector
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
+    repository: onprem/vector
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "0.28.1-alpine"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""
@@ -663,9 +667,10 @@ vector:
 functions:
   enabled: false
   image:
-    repository: supabase/edge-runtime
+    # from the registry like the other images, mirrored as onprem/<name> (component is off by default)
+    repository: onprem/edge-runtime
     pullPolicy: IfNotPresent
-    tag: "latest"
+    tag: "v1.67.4"
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: ""

@@ -138,7 +138,7 @@ A Helm chart for Kubernetes
 | global.domain | string | `"example.com"` | Base domain; Ingress hosts and public URLs derive from it |
 | global.externalSecret | bool | `false` |  |
 | global.imagePullPolicy | string | `"IfNotPresent"` |  |
-| global.ingress.className | string | `""` | IngressClass for every Ingress whose own `ingress.className` is empty. Empty: the cluster default IngressClass (the platform-stack Traefik is the default, named `<platform release>-traefik`) |
+| global.ingress.className | string | `""` | IngressClass for every Ingress whose own `ingress.className` is empty. Empty: the cluster default IngressClass (the platform-stack Traefik is the default, named `<platform release>-traefik`, or `traefik` when installed with `full-stack-override-values.yaml` or `manifests`) |
 | global.registry | string | `"vpcdeployment.azurecr.io"` |  |
 | global.storageClass | string | `""` |  |
 | guardrails.affinity | object | `{}` |  |

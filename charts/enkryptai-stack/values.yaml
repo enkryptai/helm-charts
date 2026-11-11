@@ -21,8 +21,9 @@ global:
     # `ingressClassName`, so the cluster's default IngressClass is used. The
     # platform-stack Traefik (`traefik-stack.enabled: true`) is the default
     # class, named `<platform release>-traefik` (for example
-    # `platform-traefik`). Set a name to pin one controller, for example
-    # `platform-traefik` or `nginx`.
+    # `platform-traefik`); installs from `full-stack-override-values.yaml` or
+    # the `manifests` umbrella name it `traefik` (`traefik.ingressClass.name`).
+    # Set a name to pin one controller, for example `platform-traefik` or `nginx`.
     # The upstream openfga chart doesn't read this: set
     # `openfga.ingress.className` if you turn its Ingress on.
     className: ""

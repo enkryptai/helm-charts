@@ -153,13 +153,17 @@ Every Ingress in `enkryptai-stack` takes its class from its own
 `<component>.ingress.className` when that is set, and from
 `global.ingress.className` otherwise. Both are empty by default, so the
 Ingresses have no `ingressClassName` and the cluster's default IngressClass
-serves them.
+serves them. The exception is OpenFGA: it is an upstream chart and doesn't read
+`global.ingress.className`, so set `openfga.ingress.className` if you turn its
+Ingress on.
 
 - **Traefik from platform-stack** (`traefik-stack.enabled: true`): it is the
   default IngressClass, so nothing to set. Its class is named
   `<platform release>-traefik` (for example `platform-traefik`); set that in
   `global.ingress.className` to pin it when the cluster has more than one
-  controller.
+  controller. If you install with `full-stack-override-values.yaml` or the
+  `manifests` umbrella, the class is `traefik` instead (set by
+  `traefik.ingressClass.name`).
 - **Another controller** (ingress-nginx, ALB): set
   `global.ingress.className: nginx` (or `alb`) once, instead of per component.
 

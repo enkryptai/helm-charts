@@ -6,6 +6,9 @@ enkryptai:
     imagePullPolicy: "IfNotPresent"
     domain: "djj.enkryptai.com"
     registry: vpcdeployment.azurecr.io
+    ingress:
+      # IngressClass for every Ingress whose own ingress.className is empty.
+      className: traefik
 
     externalSecrets:
       enabled: false
@@ -59,7 +62,7 @@ enkryptai:
 
     ingress:
       enabled: false
-      className: traefik
+      className: ""   # empty: global.ingress.className
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
         traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"
@@ -182,7 +185,7 @@ enkryptai:
 
     ingress:
       enabled: false
-      className: traefik
+      className: ""   # empty: global.ingress.className
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
         traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"
@@ -507,7 +510,7 @@ enkryptai:
         # - name: replicated-registry
     ingress:
       enabled: false
-      className: traefik
+      className: ""   # empty: global.ingress.className
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
         traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"

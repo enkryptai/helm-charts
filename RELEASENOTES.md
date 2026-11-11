@@ -29,6 +29,7 @@ the `index.yaml` entry.
 | `gateway-kong` ships its decK config in the chart instead of fetching it from GitHub at install | [#134](https://github.com/enkryptai/helm-charts/pull/134) |
 | `supabase` test images move to eMudhra-clean rebuilds: `onprem/curljq:latest-emudhra-20261105`, `onprem/postgres:15-alpine-emudhra-20261105` | [#171](https://github.com/enkryptai/helm-charts/pull/171) |
 | `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
+| `supabase` sign-in email: the custom OTP template keeps `{{ .Token }}` and `{{ .SiteURL }}` for GoTrue; Helm rendered them empty, so the email had no code | [#PRNUM](https://github.com/enkryptai/helm-charts/pull/PRNUM) |
 
 ### Upgrading from 1.2.1
 

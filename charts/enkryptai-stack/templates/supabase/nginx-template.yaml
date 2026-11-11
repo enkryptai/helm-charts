@@ -80,9 +80,9 @@ spec:
 apiVersion: v1
 data:
   template.html: "<strong>\U0001F44B Hi,</strong>\n<p>\n  Please enter the below code
-    to log in to Enkrypt AI \U0001F511\n</p>\n<h2>\n  {{ .Token }}\n</h2>\n<strong>Stay
-    secure with Enkrypt AI</strong>\n<br>\n<em>\n  Log in to <a href=\"{{ .SiteURL
-    }}\">{{ .SiteURL }}</a>\n  find out more.\n</em>\n"
+    to log in to Enkrypt AI \U0001F511\n</p>\n<h2>\n  {{"{{"}} .Token }}\n</h2>\n<strong>Stay
+    secure with Enkrypt AI</strong>\n<br>\n<em>\n  Log in to <a href=\"{{"{{"}} .SiteURL
+    }}\">{{"{{"}} .SiteURL }}</a>\n  find out more.\n</em>\n"
 kind: ConfigMap
 metadata:
   name: email-template

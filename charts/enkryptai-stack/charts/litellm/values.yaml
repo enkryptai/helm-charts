@@ -117,9 +117,11 @@ configMap:
     LOCAL_VLLM_URL: http://{{ .Release.Name }}-guardrails-model:8005/v1
     LOG_LEVEL: INFO
     RT_API_GENERATOR_MODEL: together_ai/MiniMaxAI/MiniMax-M3
-    RT_ATTACKER_FALLBACK: together_ai/MiniMaxAI/MiniMax-M3
+    # The two RT_ATTACKER models are on OpenRouter: OPENROUTER_API_KEY must be
+    # in litellm-gateway-env-secret.
+    RT_ATTACKER_FALLBACK: openrouter/qwen/qwen3-next-80b-a3b-instruct
     RT_ATTACKER_MAX_TOKENS: "2048"
-    RT_ATTACKER_MODEL: together_ai/google/gemma-4-31b-it
+    RT_ATTACKER_MODEL: openrouter/nvidia/nemotron-3-super-120b-a12b
     RT_ATTACKER_TEMPERATURE: "1.0"
     RT_BENIGN_GENERATOR_MODEL: together_ai/MiniMaxAI/MiniMax-M3
     RT_BROWSER_AGENT_MODEL: gemini/gemini-3.1-flash-lite

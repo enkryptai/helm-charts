@@ -50,26 +50,37 @@ spec:
                 - name: event-data
                   value: '{{"{{.Input.body}}"}}'
               entrypoint: process-order
+              {{- with include "platform.trustedCA.volume" $ }}
+              volumes:
+                {{- . | nindent 16 }}
+              {{- end }}
               {{- with .Values.global.imagePullSecrets }}
               imagePullSecrets:
               {{ toYaml . | nindent 14 }}
               {{- end }}
               templates:
               - container:
+                  {{- with include "platform.trustedCA.volumeMount" $ }}
+                  volumeMounts:
+                    {{- . | nindent 20 }}
+                  {{- end }}
                   command:
                   - python
                   - -m
                   - sentry.redteam.runner
                   envFrom:
+                  {{- with include "platform.trustedCA.envFrom" $ }}{{ . | nindent 18 }}{{ end }}
                   - secretRef:
                       name: redteam-proxy-env-secret
                   - configMapRef:
                       name: redteam-proxy-env-cm
                   image: {{ .Values.sensor.jobImage }}:{{ .Values.sensor.jobversion}}
                   workingDir: /app
-                  {{- if $.Values.sensor.env }}
+                  {{- $proxyEnv := include "platform.proxy.env" $ }}
+                  {{- if or $.Values.sensor.env $proxyEnv }}
                   env:
-                    {{- toYaml $.Values.sensor.env | nindent 20 }}
+                    {{- with $proxyEnv }}{{ . | nindent 20 }}{{ end }}
+                    {{- with $.Values.sensor.env }}{{ toYaml . | nindent 20 }}{{ end }}
                   {{- end }}
                 inputs:
                   parameters:

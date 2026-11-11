@@ -1,9 +1,9 @@
 replicaCount: 2
 
 image:
-  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy
+  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-proxy
   pullPolicy: IfNotPresent
-  tag: "dev"
+  tag: "prod-v1.0.106"
 
 nameOverride: ""
 fullnameOverride: "redteam-proxy"
@@ -11,8 +11,7 @@ fullnameOverride: "redteam-proxy"
 podAnnotations:
   reloader.stakater.com/auto: "true"
 
-podLabels:
-  app: redteam-proxy
+podLabels: {}
 
 strategy:
   type: RollingUpdate

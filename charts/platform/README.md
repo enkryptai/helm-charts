@@ -29,6 +29,7 @@ Complete platform infrastructure stack
 | openfga.repository | string | `"onprem/postgresql"` |  |
 | openfga.tag | string | `"17.4-8"` |  |
 | opensearch.dashboards.image | string | `"vpcdeployment.azurecr.io/onprem/opensearch-dashboards:3.2.0"` |  |
+| opensearch.dashboards.credentialsSecret | string | `"opensearch-cred"` | Secret with the username and password Dashboards logs in with |
 | opensearch.general.image | string | `"vpcdeployment.azurecr.io/onprem/opensearch:3.2.0"` |  |
 | opensearch.initHelper.image | string | `"vpcdeployment.azurecr.io/onprem/busybox:latest"` |  |
 | opensearch.security | string | `nil` |  |

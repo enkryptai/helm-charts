@@ -12,10 +12,7 @@ spec:
       {{- include "litellm.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "litellm-gateway-env-cm.yaml" "secret.yaml") "annotations" .Values.podAnnotations) | nindent 6 }}
       labels:
         {{- include "litellm.labels" . | nindent 8 }}
         {{- with .Values.labels }}
@@ -32,13 +29,16 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 name: {{ .Values.secrets.name }}
             - configMapRef:
                 name: litellm-gateway-env-cm
-          {{- if .Values.env }}
+          {{- $proxyEnv := include "enkryptai-stack.proxy.env" $ }}
+          {{- if or .Values.env $proxyEnv }}
           env:
-            {{- toYaml .Values.env | nindent 12 }}
+            {{- with $proxyEnv }}{{ . | nindent 12 }}{{ end }}
+            {{- with .Values.env }}{{ toYaml . | nindent 12 }}{{ end }}
           {{- end }}
           {{- with .Values.startupProbe }}
           {{- if .enabled }}
@@ -62,6 +62,14 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          volumeMounts:
+            {{- . | nindent 12 }}
+          {{- end }}
+      {{- with include "enkryptai-stack.trustedCA.volume" $ }}
+      volumes:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- with (include "litellm.serviceAccountName" .) }}
       serviceAccountName: {{ . | quote }}
       {{- end }}

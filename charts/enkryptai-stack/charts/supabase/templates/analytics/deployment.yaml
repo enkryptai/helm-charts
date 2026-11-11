@@ -14,10 +14,7 @@ spec:
       {{- include "supabase.analytics.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.analytics.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "secrets/analytics.yaml" "secrets/db.yaml") "annotations" .Values.analytics.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.analytics.selectorLabels" . | nindent 8 }}
     spec:
@@ -66,6 +63,7 @@ spec:
           image: "{{ .Values.analytics.image.repository }}:{{ .Values.analytics.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.analytics.image.pullPolicy }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.analytics.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}
@@ -148,8 +146,14 @@ spec:
           ports:
             - containerPort: {{ .Values.analytics.service.port }}
               protocol: TCP
-          {{- if or (.Values.analytics.bigQuery.enabled) (.Values.analytics.volumes) }}
+          {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}
+          envFrom:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- $caMount := include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          {{- if or (.Values.analytics.bigQuery.enabled) (.Values.analytics.volumes) $caMount }}
           volumeMounts:
+            {{- with $caMount }}{{ . | nindent 12 }}{{ end }}
             {{- with .Values.analytics.volumeMounts }}
               {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -163,8 +167,10 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- if or (.Values.analytics.bigQuery.enabled) (.Values.analytics.volumes) }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or (.Values.analytics.bigQuery.enabled) (.Values.analytics.volumes) $caVolume }}
       volumes:
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
         {{- with .Values.analytics.volumes }}
           {{- toYaml . | nindent 8 }}
         {{- end }}

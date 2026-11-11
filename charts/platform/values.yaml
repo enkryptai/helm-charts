@@ -1,7 +1,17 @@
 global:
   platform: azure
+  trustedCA:
+    # ConfigMap with the full PEM bundle (public CAs plus the private CA) in redteam-jobs; empty changes nothing. See docs/trusted-ca.md.
+    configMapName: ""
+    key: ca.crt
   registry: vpcdeployment.azurecr.io
   imagePullSecrets: []
+  proxy:
+    # Outbound proxy URLs for the red team Workflow pods (docs/outbound-proxy.md); both empty changes nothing.
+    httpProxy: ""
+    httpsProxy: ""
+    # Extra comma-separated NO_PROXY entries, added to the in-cluster defaults: add the pod, Service and node CIDRs.
+    noProxy: ""
 aws:
   region: "us-west-2"
 # Backups are off by default and left to the customer. For each CNPG Cluster,
@@ -30,7 +40,7 @@ migrationjob:
   tag: 18.3-alpine3.22
 sensor:
   natsURL: "nats://nats.enkryptai-stack:4222"
-  jobversion: "prod-v1.0.98"
+  jobversion: "prod-v1.0.106"
   jobImage: vpcdeployment.azurecr.io/enkryptai-prod/redteam-job
   env:
     - name: WORKER_TYPE
@@ -58,6 +68,8 @@ opensearch:
     image: "vpcdeployment.azurecr.io/onprem/opensearch:3.2.0"
   dashboards:
     image: "vpcdeployment.azurecr.io/onprem/opensearch-dashboards:3.2.0"
+    # Secret with the username and password Dashboards logs in with.
+    credentialsSecret: opensearch-cred
   initHelper:
     image: "vpcdeployment.azurecr.io/onprem/busybox:uclibc"
   security:
@@ -381,7 +393,7 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
         repository: onprem/argocli
-        tag: "v4.0.4"
+        tag: "v4.0.15"
       deploymentAnnotations: {}
       podAnnotations: {}
       podLabels: {}
@@ -409,7 +421,7 @@ platform-core:
       image:
         registry: vpcdeployment.azurecr.io
         repository: onprem/workflow-controller
-        tag: "v4.0.4"
+        tag: "v4.0.15"
       namespaceParallelism: "10"
       retentionPolicy:
         completed: 10

@@ -1,47 +1,73 @@
-## Pre-Installation Step: Set Your Domain URLs
+## Pre-Installation Step: Set Your Domain
 
-Before installing the **EnkryptAI Stack**, set the following URLs to your **custom domain values** in your `enkryptai-stack` values file (for example `values/enkryptai-stack.yaml`).
+Before installing the **EnkryptAI Stack**, set `global.domain` in your `enkryptai-stack` values file (for example `values/enkryptai-stack.yaml`). Every Ingress host and every public URL in the chart derives from it.
 
-These values are required for proper configuration of the **Frontend**, **Auth**, and **API** components.
+```yaml
+global:
+  domain: company.com
+```
 
 > **Do not put these URLs in Kubernetes Secrets.** Each component loads its Secret first and the chart's ConfigMap after it, and the ConfigMap always contains these keys. A URL set in a Secret is silently replaced by the ConfigMap value. Secrets are for credentials (keys, passwords, tokens) and the per-install OpenFGA IDs below.
 
 ---
 
-### 1. Frontend
+### 1. Hosts
 
-**Values key:** `frontend.configMap.data`
+| Host | Values key | Component |
+|------|------------|-----------|
+| `app.<domain>` | `frontend.ingress` | Frontend (web app) |
+| `api.<domain>` | `gateway-kong.ingress` | API gateway |
+| `auth.<domain>` | `supabase.ingress` | Auth (Supabase) |
+| `compliance-scan.<domain>` | `compliance-scan.ingress` | Compliance scan (off by default) |
+| `leaderboard.<domain>` | `leaderboard-client.ingress` | Leaderboard (off by default) |
+| `leaderboard-server.<domain>` | `leaderboard-server.ingress` | Leaderboard API (off by default) |
+| `mcpscanner.<domain>` | `mcp-scanner.ingress` | MCP scanner (off by default) |
+| `skill-scanner.<domain>` | `skill-scanner.ingress` | Skill scanner (off by default) |
+| `mcp.<domain>` | `secure-mcp-gateway.ingress` | Secure MCP gateway (off by default) |
 
-| Key | Description | Example Value |
-|-----|--------------|----------------|
-| `NEXT_PUBLIC_APIAAS_KONG_URL` | API Gateway endpoint | `https://api.<domain.com>` |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase (Auth) endpoint | `https://auth.<domain.com>` |
-| `NEXT_PUBLIC_URL` | Frontend endpoint | `https://app.<domain.com>` |
-
----
-
-### 2. Auth (Supabase GoTrue)
-
-**Values key:** `supabase.configMap.data`
-
-| Key | Description | Example Value |
-|-----|--------------|----------------|
-| `API_EXTERNAL_URL` | External API endpoint | `https://app.<domain.com>` |
-| `GOTRUE_ADDITIONAL_REDIRECT_URLS` | Allowed redirect URLs | `http://localhost:3000/red-teaming, http://localhost:3000/**, https://app.<domain.com>/**` |
-| `GOTRUE_EXTERNAL_REDIRECT_URLS` | Auth redirect callback URLs | `http://localhost:3000/api/auth/callback, https://auth.<domain.com>/api/auth/callback` |
-| `GOTRUE_MAILER_EXTERNAL_HOSTS` | Hosts allowed in email links | `auth.<domain.com>,app.<domain.com>` |
-| `GOTRUE_SITE_URL` | Primary site URL | `https://app.<domain.com>/` |
-| `SUPABASE_PUBLIC_URL` | Supabase public endpoint | `https://auth.<domain.com>` |
+Each Ingress uses the host in both `hosts` and `tls`. Ingresses are off by default; turn on the ones you expose with `<component>.ingress.enabled: true`.
 
 ---
 
-### 3. Red Team Proxy
+### 2. URLs in the ConfigMaps
 
-**Values key:** `redteam-proxy.configMap.data` (the chart writes this ConfigMap to both `enkryptai-stack` and `redteam-jobs`)
+| Values key | Keys | Default |
+|------------|------|---------|
+| `frontend.configMap` | `NEXT_PUBLIC_URL`, `NEXT_PUBLIC_APIAAS_KONG_URL`, `NEXT_PUBLIC_SUPABASE_URL` | `https://app.<domain>`, `https://api.<domain>`, `https://auth.<domain>` |
+| `supabase.configMap` | `API_EXTERNAL_URL`, `GOTRUE_SITE_URL` | `https://app.<domain>` |
+| `supabase.configMap` | `SUPABASE_PUBLIC_URL` | `https://auth.<domain>` |
+| `supabase.configMap` | `GOTRUE_EXTERNAL_REDIRECT_URLS`, `GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI` | callback URLs on `auth.<domain>` |
+| `supabase.configMap` | `GOTRUE_ADDITIONAL_REDIRECT_URLS`, `GOTRUE_MAILER_EXTERNAL_HOSTS` | `app.<domain>` and `auth.<domain>` entries |
+| `redteam-proxy.configMap` | `SUPABASE_URL` | `https://auth.<domain>` (the chart writes this ConfigMap to both `enkryptai-stack` and `redteam-jobs`) |
+| `compliance-scan.configMap` | `SUPABASE_URL` | `https://auth.<domain>` |
 
-| Key | Description | Example Value |
-|-----|--------------|----------------|
-| `SUPABASE_URL` | Supabase Auth endpoint | `https://auth.<domain.com>` |
+---
+
+### 3. Use a different host or URL for one component
+
+An explicit value wins over the derived one. Ingress hosts and the ConfigMap values above go through `tpl`, so an override can still use `{{ .Values.global.domain }}`:
+
+```yaml
+frontend:
+  ingress:
+    hosts:
+      - host: portal.company.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - portal.company.com
+        secretName: frontend-cert
+  configMap:
+    NEXT_PUBLIC_URL: "https://portal.company.com"
+
+supabase:
+  configMap:
+    GOTRUE_SITE_URL: "https://portal.{{ .Values.global.domain }}"
+```
+
+A list such as `ingress.hosts` replaces the default list, so give the whole list. Because these values go through `tpl`, a literal `{{` in them must be escaped.
 
 ---
 
@@ -58,39 +84,10 @@ Both components must use the same store and model. Restart `frontend` and `gatew
 
 ---
 
-### Example
-
-```yaml
-frontend:
-  configMap:
-    data:
-      NEXT_PUBLIC_URL: "https://app.<domain.com>"
-      NEXT_PUBLIC_APIAAS_KONG_URL: "https://api.<domain.com>"
-      NEXT_PUBLIC_SUPABASE_URL: "https://auth.<domain.com>"
-
-supabase:
-  configMap:
-    data:
-      API_EXTERNAL_URL: https://app.<domain.com>
-      GOTRUE_SITE_URL: https://app.<domain.com>
-      SUPABASE_PUBLIC_URL: https://auth.<domain.com>
-      GOTRUE_EXTERNAL_REDIRECT_URLS: http://localhost:3000/api/auth/callback,https://auth.<domain.com>/api/auth/callback
-      GOTRUE_ADDITIONAL_REDIRECT_URLS: http://localhost:3000/red-teaming, http://localhost:3000/**, https://app.<domain.com>/**
-      GOTRUE_MAILER_EXTERNAL_HOSTS: auth.<domain.com>,app.<domain.com>
-
-redteam-proxy:
-  configMap:
-    data:
-      SUPABASE_URL: "https://auth.<domain.com>"
-```
-
----
-
 ### Important Notes
 
-- Replace all occurrences of `<domain.com>` with your actual base domain (e.g., `enkryptai.io` or `example.com`).
-- Set these values **before deploying** the EnkryptAI Helm charts. To change them later, update the values file and run `helm upgrade`.
-- If using AWS ALB, make sure ACM certificates are valid for:
-  - `app.<domain.com>`
-  - `auth.<domain.com>`
-  - `api.<domain.com>`
+- Set `global.domain` **before deploying** the EnkryptAI Helm charts. To change it later, update the values file and run `helm upgrade`.
+- Create DNS records and TLS certificates for every host you expose. If using AWS ALB, make sure ACM certificates are valid for:
+  - `app.<domain>`
+  - `auth.<domain>`
+  - `api.<domain>`

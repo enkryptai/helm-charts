@@ -14,10 +14,7 @@ spec:
       {{- include "supabase.db.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.db.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "db/initdb.config.yaml" "db/migration.config.yaml" "secrets/db.yaml") "annotations" .Values.db.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.db.selectorLabels" . | nindent 8 }}
     spec:
@@ -59,6 +56,7 @@ spec:
           image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.db.image.pullPolicy }}
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.db.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}
@@ -135,7 +133,12 @@ spec:
             - name: http
               containerPort: 9999
               protocol: TCP
+          {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}
+          envFrom:
+            {{- . | nindent 12 }}
+          {{- end }}
           volumeMounts:
+            {{- with include "enkryptai-stack.trustedCA.volumeMount" $ }}{{ . | nindent 12 }}{{ end }}
             - mountPath: /docker-entrypoint-initdb.d
               name: initdb-scripts-data
             {{- with .Values.db.volumeMounts }}
@@ -151,6 +154,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
+        {{- with include "enkryptai-stack.trustedCA.volume" $ }}{{ . | nindent 8 }}{{ end }}
         - name: initdb-scripts-data
           emptyDir:
             medium: ""

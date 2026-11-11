@@ -27,6 +27,7 @@ the `index.yaml` entry.
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 | browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
 | `gateway-kong` ships its decK config in the chart instead of fetching it from GitHub at install | [#134](https://github.com/enkryptai/helm-charts/pull/134) |
+| `supabase` test images move to eMudhra-clean rebuilds: `onprem/curljq:latest-emudhra-20261105`, `onprem/postgres:15-alpine-emudhra-20261105` | [#171](https://github.com/enkryptai/helm-charts/pull/171) |
 | `litellm.serviceAccount` for workload identity (off by default) | [#147](https://github.com/enkryptai/helm-charts/pull/147) |
 
 ### Upgrading from 1.2.1
@@ -146,6 +147,12 @@ package and the `index.yaml` entry.
   Secret, so only the `init` and `wait` containers get it. The
   `redteam-jobs-binding-events` and `redteam-jobs-binding-workflow`
   ClusterRoleBindings are removed.
+- **platform-stack:** `argocli` and `workflow-controller` move from v4.0.4 to
+  v4.0.15, whose images no longer trust the compromised eMudhra intermediates
+  (the v4.0.4 bundle accepts all 12 published forged chains).
+- **platform-stack:** the red team job image moves from `prod-v1.0.98` to
+  `prod-v1.0.106`, whose botocore, certifi, grpcio and bundled Node no longer
+  trust the compromised eMudhra intermediates.
 
 ## 2026-10-29 — On-prem review fixes (`platform-stack`)
 
@@ -506,6 +513,7 @@ Do these before `helm upgrade` of an existing `platform-stack` release:
 | ----------------- | ----------------- | ------------------------------------------------------------ |
 | `enkryptai-stack` | 1.1.23 → 1.1.24   | [#118](https://github.com/enkryptai/helm-charts/pull/118)    |
 | `platform-stack`  | 1.1.32 → 1.1.33   | [#118](https://github.com/enkryptai/helm-charts/pull/118)    |
+| Every Enkrypt image default is a pinned build that rejects the eMudhra forged chains (no `main`/`dev` tags, no `enkryptai-dev` repositories); `guardrail-multimodal` moves to `a5698ab`, which no longer bakes in `HF_TOKEN` | [#173](https://github.com/enkryptai/helm-charts/pull/173) |
 
 ### Added
 

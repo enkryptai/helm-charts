@@ -24,6 +24,7 @@ the `index.yaml` entry.
 
 | Change | Pull request |
 | ------ | ------------ |
+| `guardrails` API default resources 500m / 500Mi to request 500m / 1Gi, limit 2 CPU / 3Gi; `prodgr-v0.0.48` was OOM-killed at boot | [#179](https://github.com/enkryptai/helm-charts/pull/179) |
 | In-cluster URLs from the release name and namespace; no SaaS endpoints by default; OpenFGA IDs only from Secrets | [#138](https://github.com/enkryptai/helm-charts/pull/138) |
 | browser-use telemetry and `litellm` metering off by default | [#146](https://github.com/enkryptai/helm-charts/pull/146) |
 | `gateway-kong` ships its decK config in the chart instead of fetching it from GitHub at install | [#134](https://github.com/enkryptai/helm-charts/pull/134) |

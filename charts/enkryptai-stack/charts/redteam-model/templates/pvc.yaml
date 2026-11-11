@@ -1,0 +1,24 @@
+{{- with .Values.persistence }}
+{{- if and $.Values.enabled .enabled (not .existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "redteam-model.fullname" $ }}-cache
+  labels:
+    {{- include "redteam-model.labels" (dict "context" $ "labels" .labels) | nindent 4 }}
+  {{- $annotations := .annotations | default dict }}
+  {{- if .keep }}
+  {{- $annotations = merge (dict "helm.sh/resource-policy" "keep") $annotations }}
+  {{- end }}
+  {{- include "redteam-model.annotations" (dict "context" $ "annotations" $annotations "indent" 2) }}
+spec:
+  {{- with (.storageClass | default ($.Values.global).storageClass) }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  accessModes:
+    {{- toYaml .accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .size | quote }}
+{{- end }}
+{{- end }}

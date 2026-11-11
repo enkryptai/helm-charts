@@ -104,6 +104,21 @@ If applicable, update IAM roles to allow image pulls from the required sources.
 | DCGM Exporter | `nvcr.io/nvidia/k8s/dcgm-exporter` | `3.3.8-3.6.0-ubuntu22.04` |
 | Device Plugin | `nvcr.io/nvidia/k8s-device-plugin` | `v0.17.0-ubi9` |
 
+### 8.1 GPU Model Images (`enkryptai-stack`, optional)
+
+| Component | Image Repository | Tag |
+|------------|------------------|-----|
+| Red Team Model (`redteam-model`) | `vpcdeployment.azurecr.io/enkryptai-prod/redteam-model` | TBC (not published yet) |
+
+- Off by default (`redteam-model.enabled: false`). Mirror it only if you turn it on.
+- Needs one 80GB GPU (A100 or H100 80GB) and the NVIDIA GPU Operator images above.
+- On start it downloads its two models (about 55GB) from `huggingface.co`, so allow
+  `huggingface.co` and the download hosts it redirects to through your firewall or
+  proxy (see `docs/outbound-proxy.md`).
+- The repository starts with a registry host, so `global.imageRegistry` does not
+  rewrite it. To pull from your own registry, mirror the image there and set
+  `redteam-model.image.repository`.
+
 ---
 
 ## 9. NATS.io Images

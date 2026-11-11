@@ -74,9 +74,12 @@ spec:
           envFrom:
             {{- tpl (toYaml .) $ | nindent 12 }}
           {{- end }}
-          {{- with .Values.env }}
+          {{- /* Outbound proxy (global.proxy) first, same as the other charts; the models download from Hugging Face through it. */}}
+          {{- $proxyEnv := include "enkryptai-stack.proxy.env" $ }}
+          {{- if or .Values.env $proxyEnv }}
           env:
-            {{- tpl (toYaml .) $ | nindent 12 }}
+            {{- with $proxyEnv }}{{ . | nindent 12 }}{{ end }}
+            {{- with .Values.env }}{{ tpl (toYaml .) $ | nindent 12 }}{{ end }}
           {{- end }}
           {{- with .Values.startupProbe }}
           {{- if .enabled }}
@@ -100,12 +103,21 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- $mounts := concat (include "enkryptai-stack.trustedCA.volumeMount" $ | fromYamlArray) (.Values.volumeMounts | default list) }}
+          {{- $mounts := include "enkryptai-stack.trustedCA.volumeMount" $ | fromYamlArray }}
+          {{- if .Values.persistence.enabled }}
+          {{- $mounts = append $mounts (dict "name" "model-cache" "mountPath" .Values.persistence.mountPath) }}
+          {{- end }}
+          {{- $mounts = concat $mounts (.Values.volumeMounts | default list) }}
           {{- with $mounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- $volumes := concat (include "enkryptai-stack.trustedCA.volume" $ | fromYamlArray) (.Values.volumes | default list) }}
+      {{- $volumes := include "enkryptai-stack.trustedCA.volume" $ | fromYamlArray }}
+      {{- if .Values.persistence.enabled }}
+      {{- $claim := .Values.persistence.existingClaim | default (printf "%s-cache" (include "redteam-model.fullname" .)) }}
+      {{- $volumes = append $volumes (dict "name" "model-cache" "persistentVolumeClaim" (dict "claimName" $claim)) }}
+      {{- end }}
+      {{- $volumes = concat $volumes (.Values.volumes | default list) }}
       {{- with $volumes }}
       volumes:
         {{- tpl (toYaml .) $ | nindent 8 }}

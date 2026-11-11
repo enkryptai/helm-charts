@@ -27,13 +27,16 @@ deployment:
   labels: {}
   annotations: {}
 podLabels: {}
-podAnnotations:
-  secret.reloader.stakater.com/reload: ""
+# No Reloader annotation here. Reloader goes on the Deployment through the
+# named lists in enkryptai-stack.reloadAnnotations once #169 lands.
+podAnnotations: {}
 
 # vLLM image serving two models on one GPU (see the Dockerfile):
 #   judge    -> gpt-oss-20b (mxfp4)        on :8000
 #   attacker -> gpt-oss-20b-ablit (bf16)   on :8001
 image:
+  # Starts with a registry host, so global.imageRegistry doesn't rewrite it: to use
+  # your own registry, mirror the image and set this (docs/images-requirement.md 8.1).
   repository: vpcdeployment.azurecr.io/enkryptai-prod/redteam-model
   pullPolicy: IfNotPresent
   # TODO: set the real image tag (empty falls back to the chart appVersion)
@@ -59,27 +62,28 @@ service:
     - name: attacker
       containerPort: 8001
 
-# ConfigMap and Secret: redteam-model loads redteam-proxy's env
-# (redteam-proxy-env-cm and redteam-proxy-env-secret) through envFrom.
-# redteam-proxy owns both: it creates the ConfigMap (in its
-# configMapNamespaces) and the Secret (secrets.enabled or its ExternalSecret),
-# so create is false here. Set create: true and another name to give
-# redteam-model its own ConfigMap/Secret instead (keys from data/stringData;
-# values go through tpl).
+# The model pod's own ConfigMap, off by default: everything vLLM needs is in
+# env below, and the pod doesn't depend on any other chart's ConfigMap. If the
+# settings grow, set create: true and envFrom: true and put the keys in data
+# (values go through tpl).
 configMap:
   create: false
-  name: redteam-proxy-env-cm
-  envFrom: true
-  # true lets the pod start when the ConfigMap is missing (e.g. redteam-proxy off).
+  name: redteam-model-env-cm
+  envFrom: false
+  # true lets the pod start when the ConfigMap is missing.
   optional: false
   labels: {}
   annotations: {}
   data: {}
 
+# The model pod's own Secret. vLLM only needs HF_TOKEN (and only for private
+# Hugging Face models), read through secretKeyRef in env below, so the whole
+# Secret is not loaded through envFrom. It comes from externalSecrets below,
+# or set create: true and put HF_TOKEN in stringData.
 secret:
   create: false
-  name: redteam-proxy-env-secret
-  envFrom: true
+  name: redteam-model-secret
+  envFrom: false
   optional: true
   type: Opaque
   labels: {}
@@ -89,7 +93,7 @@ secret:
 # More envFrom sources, appended after the ConfigMap and Secret above.
 extraEnvFrom: []
 # Tuning for the two vLLM servers (the image's own defaults). env wins over
-# envFrom, so these apply even if the redteam-proxy ConfigMap has the same keys.
+# envFrom, so these apply even if configMap/extraEnvFrom has the same keys.
 env:
   - name: JUDGE_GPU_UTIL
     value: "0.26"
@@ -99,6 +103,13 @@ env:
     value: "0.60"
   - name: ATTACKER_MAX_LEN
     value: "16384"
+  # Optional: the pod starts without it (public models need no token).
+  - name: HF_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: "{{ .Values.secret.name }}"
+        key: HF_TOKEN
+        optional: true
 
 # Probes: each is rendered as-is when enabled (any probe type and field).
 # The attacker model only starts after the judge is healthy, and both models
@@ -172,20 +183,42 @@ initContainers: []
 # REQUESTS_CA_BUNDLE and AWS_CA_BUNDLE (the Hugging Face download uses
 # REQUESTS_CA_BUNDLE). The CA mount and volume come before volumes and
 # volumeMounts below.
-# Optional extra volumes, e.g. a PVC on /root/.cache/huggingface so the
-# models (~55GB) are not downloaded again on every pod restart.
+# Extra volumes and mounts, after the trusted CA and the model cache.
 volumes: []
 volumeMounts: []
 
-# redteam-proxy's ExternalSecret already creates redteam-proxy-env-secret, so
-# none here (a second ExternalSecret with that name would fight over it).
-# Add entries only when secret.name points at a redteam-model-only Secret.
-# redteam-proxy's ExternalSecret already creates redteam-proxy-env-secret, so
-# none here (a second ExternalSecret with that name would fight over it).
-# Add entries only when secret.name points at a redteam-model-only Secret.
+# Model cache: a PVC on the Hugging Face cache, so the two models (~55GB) are
+# downloaded once, not on every restart (Recreate, node drain, upgrade, OOM).
+# Needs a StorageClass: storageClass, else global.storageClass, else the
+# cluster default; without one the PVC stays Pending and so does the pod.
+# keep: true adds helm.sh/resource-policy: keep, so helm uninstall leaves the
+# PVC (and the models) in place; delete it by hand to free the space.
+# Air-gapped installs: pre-fill a PVC with the models, set existingClaim to it
+# (no PVC is created then) and add HF_HUB_OFFLINE=1 to env.
+persistence:
+  enabled: true
+  existingClaim: ""
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 100Gi
+  mountPath: /root/.cache/huggingface
+  keep: true
+  labels: {}
+  annotations: {}
+
+# redteam-model-secret from the secret store (needs global.externalSecrets
+# too). The store entry holds HF_TOKEN.
 externalSecrets:
   enabled: false
-  secrets: []
+  secrets:
+    - name: redteam-model-secret
+      target:
+        name: redteam-model-secret
+      refreshInterval: 15m
+      dataFrom:
+        - extract:
+            key: enkryptaivpc-redteam-model-secret
 
 nodeSelector: {}
 tolerations: []

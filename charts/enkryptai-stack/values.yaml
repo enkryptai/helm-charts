@@ -994,11 +994,8 @@ redteam-model:
   # Container name; empty means the chart name (or nameOverride).
   containerName: ""
 
-  # Used for the Deployment selector, the Service selector and the pod labels.
-  # Immutable on a Deployment after the first install.
-  selectorLabels:
-    app.kubernetes.io/name: redteam-model
-    app.kubernetes.io/instance: "{{ .Release.Name }}"
+  # Selector labels (app.kubernetes.io/name, app.kubernetes.io/instance) are fixed in
+  # _helpers.tpl and added to every resource; they can't be set here.
   # Labels on every resource (Deployment, pods, Service, ConfigMap, Secret, HPA).
   labels:
     app: redteam-model
@@ -1020,10 +1017,9 @@ redteam-model:
   image:
     # Starts with a registry host, so global.imageRegistry doesn't rewrite it: to use
     # your own registry, mirror the image and set this (docs/images-requirement.md 8.1).
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/redteam-model
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-model
     pullPolicy: IfNotPresent
-    # TODO: set the real image tag (empty falls back to the chart appVersion)
-    tag: ""
+    tag: "fix-hf-token-build-secret-1793349589"
     # Pull Secret names, merged with global.imagePullSecrets.
     pullSecrets: []
   strategy:

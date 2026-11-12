@@ -42,23 +42,23 @@ Usage: include "redteam-model.renderMap" (dict "context" $ "maps" (list .Values.
 {{- end }}
 
 {{/*
-Labels of a resource: labels, then the resource's own labels, then
-selectorLabels (last, so they can't be overridden and the selector always matches).
+Labels of a resource: labels, then the resource's own labels, then the
+selector labels (last, so they can't be overridden and the selector always matches).
 Usage: include "redteam-model.labels" (dict "context" $ "labels" .Values.service.labels)
 */}}
 {{- define "redteam-model.labels" -}}
-{{- include "redteam-model.renderMap" (dict "context" .context "maps" (list .context.Values.labels .labels .context.Values.selectorLabels)) | trim }}
+{{- $selector := dict "app.kubernetes.io/name" (include "redteam-model.name" .context) "app.kubernetes.io/instance" .context.Release.Name -}}
+{{- include "redteam-model.renderMap" (dict "context" .context "maps" (list .context.Values.labels .labels $selector)) | trim }}
 {{- end }}
 
 {{/*
-Selector labels (Deployment selector, Service selector). Immutable on a
-Deployment once installed.
+Selector labels (Deployment selector, Service selector). Fixed on purpose, not
+taken from values: a Deployment's spec.selector can't change after install, so an
+override would fail the next upgrade.
 */}}
 {{- define "redteam-model.selectorLabels" -}}
-{{- if not .Values.selectorLabels }}
-{{- fail "redteam-model.selectorLabels must not be empty" }}
-{{- end }}
-{{- include "redteam-model.renderMap" (dict "context" . "maps" (list .Values.selectorLabels)) | trim }}
+app.kubernetes.io/name: {{ include "redteam-model.name" . | quote }}
+app.kubernetes.io/instance: {{ .Release.Name | quote }}
 {{- end }}
 
 {{/*

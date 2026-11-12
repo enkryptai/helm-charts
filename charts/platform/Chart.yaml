@@ -4,7 +4,7 @@ dependencies:
   - alias: platform-core
     name: platform-core
     repository: https://enkryptai.github.io/helm-charts
-    version: 1.3.0
+    version: 1.4.0
     condition: platform-core.enabled
 
   - alias: otel

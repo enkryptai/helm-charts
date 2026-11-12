@@ -553,7 +553,8 @@ kong:
     KONG_LOG_LEVEL: warn
   ingress:
     enabled: false
-    className: "nginx"
+    # Empty: global.ingress.className (enkryptai-stack), else the cluster default.
+    className: ""
     annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /
     tls: []

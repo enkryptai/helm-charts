@@ -14,6 +14,19 @@ global:
 
   # Ingress hosts and public URLs below derive from it (app., api., auth. and so on).
   domain: "example.com"
+
+  ingress:
+    # IngressClass for every Ingress in this chart whose own
+    # `<component>.ingress.className` is empty. Empty (the default): no
+    # `ingressClassName`, so the cluster's default IngressClass is used. The
+    # platform-stack Traefik (`traefik-stack.enabled: true`) is the default
+    # class, named `<platform release>-traefik` (for example
+    # `platform-traefik`); installs from `full-stack-override-values.yaml` or
+    # the `manifests` umbrella name it `traefik` (`traefik.ingressClass.name`).
+    # Set a name to pin one controller, for example `platform-traefik` or `nginx`.
+    # The upstream openfga chart doesn't read this: set
+    # `openfga.ingress.className` if you turn its Ingress on.
+    className: ""
   
   registry: vpcdeployment.azurecr.io
 
@@ -70,7 +83,8 @@ frontend:
 
   ingress:
     enabled: false
-    className: nginx
+    # Empty: global.ingress.className.
+    className: ""
     annotations:
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
@@ -193,7 +207,8 @@ gateway-kong:
 
   ingress:
     enabled: false
-    className: nginx
+    # Empty: global.ingress.className.
+    className: ""
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
@@ -543,7 +558,8 @@ supabase:
     # - name: example-registry
   ingress:
     enabled: false
-    className: nginx
+    # Empty: global.ingress.className.
+    className: ""
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
@@ -1044,7 +1060,8 @@ compliance-scan:
   # ingresses sends all supabase traffic to compliance-scan, which breaks its own startup.
   ingress:
     enabled: false
-    className: nginx
+    # Empty: global.ingress.className.
+    className: ""
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/proxy-buffer-size: "200m"
@@ -1110,7 +1127,8 @@ leaderboard-client:
     tag: "main-1792756943"
   ingress:
     enabled: false
-    className: nginx
+    # Empty: global.ingress.className.
+    className: ""
     hosts:
       - host: "leaderboard.{{ .Values.global.domain }}"
         paths:
@@ -1187,7 +1205,8 @@ mcp-scanner:
     tag: "main-1793621450"
   ingress:
     enabled: false
-    className: nginx
+    # Empty: global.ingress.className.
+    className: ""
     hosts:
       - host: "mcpscanner.{{ .Values.global.domain }}"
         paths:
@@ -1229,7 +1248,8 @@ skill-scanner:
     tag: "main"
   ingress:
     enabled: false
-    className: nginx
+    # Empty: global.ingress.className.
+    className: ""
     hosts:
       - host: "skill-scanner.{{ .Values.global.domain }}"
         paths:
@@ -1278,7 +1298,8 @@ secure-mcp-gateway:
     tag: "main-1793683323"
   ingress:
     enabled: false
-    className: nginx
+    # Empty: global.ingress.className.
+    className: ""
     hosts:
       - host: "mcp.{{ .Values.global.domain }}"
         paths:

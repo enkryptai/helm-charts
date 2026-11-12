@@ -42,7 +42,8 @@ service:
 
 ingress:
   enabled: false
-  className: nginx
+  # Empty: global.ingress.className (enkryptai-stack), else the cluster default.
+  className: ""
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:

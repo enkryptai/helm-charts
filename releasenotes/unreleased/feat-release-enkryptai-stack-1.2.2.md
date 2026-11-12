@@ -1,0 +1,2 @@
+- **enkryptai-stack:** 1.2.2 publishes the enkryptai-stack changes merged since 1.2.1 (#134–#136, #138, #139, #143, #144, #146–#152, #154, #156, #157, #159–#162, #164, #166–#168, #171–#173, #178–#180). On upgrade, follow "Upgrading from 1.2.1" in the On-prem review fixes entry, and add `OPENROUTER_API_KEY` to `litellm-gateway-env-secret` (#180).
+- **repo:** `index.yaml` lists enkryptai-stack 1.2.2, platform-stack 1.3.0 ([#182](https://github.com/enkryptai/helm-charts/pull/182)) and platform-core 1.4.0 ([#181](https://github.com/enkryptai/helm-charts/pull/181)).

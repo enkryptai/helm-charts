@@ -104,6 +104,38 @@ If applicable, update IAM roles to allow image pulls from the required sources.
 | DCGM Exporter | `nvcr.io/nvidia/k8s/dcgm-exporter` | `3.3.8-3.6.0-ubuntu22.04` |
 | Device Plugin | `nvcr.io/nvidia/k8s-device-plugin` | `v0.17.0-ubi9` |
 
+### 8.1 GPU Model Images (`enkryptai-stack`, optional)
+
+| Component | Image Repository | Tag |
+|------------|------------------|-----|
+| Red Team Model (`redteam-model`) | `188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-model` | `fix-hf-token-build-secret-1793349589` |
+
+- Off by default (`redteam-model.enabled: false`). Mirror it only if you turn it on.
+- Needs one 80GB GPU (A100 or H100 80GB) and the NVIDIA GPU Operator images above.
+- `tolerations` is empty by default. If your GPU nodes are tainted (most GPU node pools
+  are, for example `nvidia.com/gpu:NoSchedule`), set `redteam-model.tolerations` or the
+  pod stays Pending. `guardrails-model.tolerations` needs the same. For example:
+
+  ```yaml
+  redteam-model:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+  ```
+- On start it downloads its two models (about 55GB) from `huggingface.co`, so allow
+  `huggingface.co` and the download hosts it redirects to through your firewall or
+  proxy (see `docs/outbound-proxy.md`).
+- The repository starts with a registry host, so `global.imageRegistry` does not
+  rewrite it. To pull from your own registry, mirror the image there and set
+  `redteam-model.image.repository`.
+- Gateway routing is a follow-up. Enabling this chart only deploys the models: the
+  Service serves the judge on `:8000/v1` and the attacker on `:8001/v1`, but the
+  LiteLLM gateway does not call them yet. It keeps `RT_MODELS_MODE: "remote"`, and its
+  local mode reads a single `RT_LOCAL_VLLM_URL` and `RT_LOCAL_MODEL` for every red team
+  task, so it can't split judge and attacker across two ports. Sending each task to its
+  own port needs a gateway change; the `litellm` values will be added once that ships.
+
 ---
 
 ## 9. NATS.io Images

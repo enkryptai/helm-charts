@@ -35,7 +35,7 @@ and volumes, so the two never edit the same lines.
 {{/* Short Service names the components call without a domain; NO_PROXY cannot match them by suffix. Add new Services here. */}}
 {{- define "enkryptai-stack.proxy.serviceHosts" -}}
 {{- $names := list "frontend" "gateway-kong" "guardrails" "redteam-proxy" "openfga" "minio" "supabase-storage" "functions" "nats" "valkey" "enkryptai-opensearch-cluster" "nginx-html-service" "compliance-scan" "leaderboard-client" "leaderboard-server" "mcp-scanner" "skill-scanner" "secure-mcp-gateway-service" }}
-{{- range list "guardrails-model" "guardrails-multi-modal" "litellm" "supabase-analytics" "supabase-auth" "supabase-db" "supabase-functions" "supabase-imgproxy" "supabase-kong" "supabase-meta" "supabase-realtime" "supabase-rest" "supabase-studio" "supabase-vector" }}
+{{- range list "guardrails-model" "guardrails-multi-modal" "litellm" "redteam-model" "supabase-analytics" "supabase-auth" "supabase-db" "supabase-functions" "supabase-imgproxy" "supabase-kong" "supabase-meta" "supabase-realtime" "supabase-rest" "supabase-studio" "supabase-vector" }}
 {{- $names = append $names (printf "%s-%s" $.Release.Name .) }}
 {{- end }}
 {{- join "," $names }}

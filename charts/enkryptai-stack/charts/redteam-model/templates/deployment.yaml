@@ -1,0 +1,141 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "redteam-model.fullname" . }}
+  labels:
+    {{- include "redteam-model.labels" (dict "context" $ "labels" .Values.deployment.labels) | nindent 4 }}
+  {{- include "redteam-model.annotations" (dict "context" $ "annotations" .Values.deployment.annotations "indent" 2) }}
+spec:
+  {{- if not ((.Values.autoscaling).enabled) }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  {{- with .Values.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "redteam-model.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "redteam-model.labels" (dict "context" $ "labels" .Values.podLabels) | nindent 8 }}
+      {{- /* checksum/<name> for the chart's own ConfigMap and Secret (#162); podAnnotations still go through tpl */}}
+      {{- $podAnnotations := include "redteam-model.renderMap" (dict "context" $ "maps" (list .Values.podAnnotations)) | fromYaml }}
+      {{- with include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secret.yaml") "annotations" $podAnnotations) }}
+      {{- . | trim | nindent 6 }}
+      {{- end }}
+    spec:
+      {{- include "redteam-model.imagePullSecrets" . | nindent 6 }}
+      {{- with .Values.serviceAccountName }}
+      serviceAccountName: {{ . }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.initContainers }}
+      initContainers:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.containerName | default (include "redteam-model.name" .) }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          {{- with .Values.image.pullPolicy }}
+          imagePullPolicy: {{ . }}
+          {{- end }}
+          {{- with .Values.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            {{- range .Values.service.ports }}
+            - name: {{ .name }}
+              containerPort: {{ .containerPort }}
+              {{- with .protocol }}
+              protocol: {{ . }}
+              {{- end }}
+            {{- end }}
+          {{- /* Trusted CA (global.trustedCA) first, so the chart's own ConfigMap, Secret and env win. */}}
+          {{- $envFrom := include "enkryptai-stack.trustedCA.envFrom" $ | fromYamlArray }}
+          {{- if and .Values.configMap.envFrom .Values.configMap.name }}
+          {{- $envFrom = append $envFrom (dict "configMapRef" (dict "name" (tpl .Values.configMap.name $) "optional" (.Values.configMap.optional | default false))) }}
+          {{- end }}
+          {{- if and .Values.secret.envFrom .Values.secret.name }}
+          {{- $envFrom = append $envFrom (dict "secretRef" (dict "name" (tpl .Values.secret.name $) "optional" (.Values.secret.optional | default false))) }}
+          {{- end }}
+          {{- $envFrom = concat $envFrom (.Values.extraEnvFrom | default list) }}
+          {{- with $envFrom }}
+          envFrom:
+            {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
+          {{- /* Outbound proxy (global.proxy) first, same as the other charts; the models download from Hugging Face through it. */}}
+          {{- $proxyEnv := include "enkryptai-stack.proxy.env" $ }}
+          {{- if or .Values.env $proxyEnv }}
+          env:
+            {{- with $proxyEnv }}{{ . | nindent 12 }}{{ end }}
+            {{- with .Values.env }}{{ tpl (toYaml .) $ | nindent 12 }}{{ end }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          {{- if .enabled }}
+          startupProbe:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          {{- if .enabled }}
+          livenessProbe:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          {{- if .enabled }}
+          readinessProbe:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- $mounts := include "enkryptai-stack.trustedCA.volumeMount" $ | fromYamlArray }}
+          {{- if .Values.persistence.enabled }}
+          {{- $mounts = append $mounts (dict "name" "model-cache" "mountPath" .Values.persistence.mountPath) }}
+          {{- end }}
+          {{- $mounts = concat $mounts (.Values.volumeMounts | default list) }}
+          {{- with $mounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- $volumes := include "enkryptai-stack.trustedCA.volume" $ | fromYamlArray }}
+      {{- if .Values.persistence.enabled }}
+      {{- $claim := .Values.persistence.existingClaim | default (printf "%s-cache" (include "redteam-model.fullname" .)) }}
+      {{- $volumes = append $volumes (dict "name" "model-cache" "persistentVolumeClaim" (dict "claimName" $claim)) }}
+      {{- end }}
+      {{- $volumes = concat $volumes (.Values.volumes | default list) }}
+      {{- with $volumes }}
+      volumes:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

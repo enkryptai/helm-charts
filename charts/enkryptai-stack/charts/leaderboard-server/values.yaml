@@ -5,7 +5,7 @@ replicaCount: 1
 image:
   repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-server
   pullPolicy: IfNotPresent
-  tag: "main"
+  tag: "main-1793361115"
 
 nameOverride: ""
 fullnameOverride: "leaderboard-server"
@@ -42,18 +42,19 @@ service:
 # Not exposed publicly by default; leaderboard-client reaches it in-cluster.
 ingress:
   enabled: false
-  className: nginx
+  # Empty: global.ingress.className (enkryptai-stack), else the cluster default.
+  className: ""
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
-    - host: leaderboard-server.example.com
+    - host: "leaderboard-server.{{ .Values.global.domain }}"
       paths:
         - path: /
           pathType: Prefix
   tls:
     - secretName: leaderboard-server-tls
       hosts:
-        - leaderboard-server.example.com
+        - "leaderboard-server.{{ .Values.global.domain }}"
 
 resources:
   limits:

@@ -1,0 +1,1 @@
+- **repo:** release notes now come from one file per pull request under `releasenotes/unreleased/`, collected by `utils/release-notes.sh` at release time ([releasenotes/README.md](releasenotes/README.md)).

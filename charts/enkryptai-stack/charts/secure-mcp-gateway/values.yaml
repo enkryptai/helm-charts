@@ -5,7 +5,7 @@ replicaCount: 1
 image:
   repository: vpcdeployment.azurecr.io/enkryptai-prod/secure-mcp-gateway
   pullPolicy: IfNotPresent
-  tag: "main"
+  tag: "main-1793683323"
 
 nameOverride: ""
 fullnameOverride: "secure-mcp-gateway"
@@ -88,7 +88,8 @@ service:
 
 ingress:
   enabled: false
-  className: nginx
+  # Empty: global.ingress.className (enkryptai-stack), else the cluster default.
+  className: ""
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-body-size: "200m"

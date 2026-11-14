@@ -15,11 +15,7 @@ spec:
       {{- include "supabase.auth.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      annotations:
-        checksum/onprem: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- with .Values.auth.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secrets/db.yaml" "secrets/jwt.yaml" "secrets/smtp.yaml") "annotations" .Values.auth.podAnnotations) | nindent 6 }}
       labels:
         {{- include "supabase.auth.selectorLabels" . | nindent 8 }}
     spec:
@@ -54,11 +50,13 @@ spec:
           image: "{{ .Values.global.registry }}/{{ .Values.auth.image.repository }}:{{ .Values.auth.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.auth.image.pullPolicy }}
           envFrom:
+            {{- with include "enkryptai-stack.trustedCA.envFrom" $ }}{{ . | nindent 12 }}{{ end }}
             - secretRef:
                 name: {{ .Values.secret.onprem.name }}
             - configMapRef:
                 name: onprem
           env:
+            {{- with include "enkryptai-stack.proxy.env" $ }}{{ . | nindent 12 }}{{ end }}
             {{- range $key, $value := .Values.auth.environment }}
             - name: {{ $key }}
               value: {{ $value | quote }}
@@ -133,13 +131,21 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.auth.volumeMounts }}
+          {{- $caMount := include "enkryptai-stack.trustedCA.volumeMount" $ }}
+          {{- if or .Values.auth.volumeMounts $caMount }}
           volumeMounts:
+            {{- with .Values.auth.volumeMounts }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with $caMount }}{{ . | nindent 12 }}{{ end }}
           {{- end }}
-      {{- with .Values.auth.volumes }}
+      {{- $caVolume := include "enkryptai-stack.trustedCA.volume" $ }}
+      {{- if or .Values.auth.volumes $caVolume }}
       volumes:
+        {{- with .Values.auth.volumes }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with $caVolume }}{{ . | nindent 8 }}{{ end }}
       {{- end }}
       {{- with .Values.auth.nodeSelector }}
       nodeSelector:

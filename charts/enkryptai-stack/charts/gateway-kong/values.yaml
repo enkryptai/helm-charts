@@ -3,11 +3,11 @@ replicaCount: 2
 image:
   gateway:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
-    tag: "ec1a9d9"
+    tag: "main-1793361115"
     pullPolicy: IfNotPresent
   sync:
     repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
-    tag: "ec1a9d9"
+    tag: "main-1793252843"
     pullPolicy: IfNotPresent
   fluentBit:
     repository: fluent/fluent-bit
@@ -44,7 +44,8 @@ service:
 
 ingress:
   enabled: true
-  className: nginx
+  # Empty: global.ingress.className (enkryptai-stack), else the cluster default.
+  className: ""
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"

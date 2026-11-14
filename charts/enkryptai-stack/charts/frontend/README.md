@@ -26,7 +26,7 @@ A Helm chart for EnkryptAI Frontend application
 | image.tag | string | `"vpc"` |  |
 | ingress.annotations."cert-manager.io/cluster-issuer" | string | `"letsencrypt-prod"` |  |
 | ingress.annotations."nginx.ingress.kubernetes.io/proxy-buffer-size" | string | `"128k"` |  |
-| ingress.className | string | `"nginx"` |  |
+| ingress.className | string | `""` | Empty: `global.ingress.className` (enkryptai-stack), else the cluster default IngressClass |
 | ingress.enabled | bool | `true` |  |
 | ingress.hosts[0].host | string | `"example.com"` |  |
 | ingress.hosts[0].paths[0].path | string | `"/"` |  |

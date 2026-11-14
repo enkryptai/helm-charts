@@ -17,7 +17,8 @@ podAnnotations:
 podLabels: {}
 
 env:
-  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+  # "0" skips TLS verification; trust a private CA with global.trustedCA instead.
+  NODE_TLS_REJECT_UNAUTHORIZED: "1"
 
 service:
   type: ClusterIP
@@ -27,7 +28,8 @@ service:
 
 ingress:
   enabled: true
-  className: nginx
+  # Empty: global.ingress.className (enkryptai-stack), else the cluster default.
+  className: ""
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"

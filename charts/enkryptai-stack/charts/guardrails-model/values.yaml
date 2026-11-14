@@ -3,9 +3,9 @@ podAnnotations: {}
 labels:
   app: guardrails-model
 image:
-  repository: enkryptai-dev/guardrail-model
+  repository: enkryptai-prod/guardrail-model
   pullPolicy: IfNotPresent
-  tag: "main-1771906796"
+  tag: "main-1793357797"
 strategy:
   type: Recreate
 imagePullSecrets: []

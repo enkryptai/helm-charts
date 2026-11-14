@@ -6,6 +6,9 @@ enkryptai:
     imagePullPolicy: "IfNotPresent"
     domain: "djj.enkryptai.com"
     registry: vpcdeployment.azurecr.io
+    ingress:
+      # IngressClass for every Ingress whose own ingress.className is empty.
+      className: traefik
 
     externalSecrets:
       enabled: false
@@ -59,7 +62,7 @@ enkryptai:
 
     ingress:
       enabled: false
-      className: traefik
+      className: ""   # empty: global.ingress.className
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
         traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"
@@ -182,7 +185,7 @@ enkryptai:
 
     ingress:
       enabled: false
-      className: traefik
+      className: ""   # empty: global.ingress.className
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
         traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"
@@ -507,7 +510,7 @@ enkryptai:
         # - name: replicated-registry
     ingress:
       enabled: false
-      className: traefik
+      className: ""   # empty: global.ingress.className
       annotations:
         cert-manager.io/cluster-issuer: "letsencrypt-prod"
         traefik.ingress.kubernetes.io/buffering-maxRequestBodyBytes: "209715200"
@@ -1338,7 +1341,7 @@ platform:
         image:
           registry: vpcdeployment.azurecr.io
           repository: onprem/argocli
-          tag: "v4.0.4"
+          tag: "v4.0.15"
         deploymentAnnotations: {}
         podAnnotations: {}
         podLabels: {}
@@ -1366,7 +1369,7 @@ platform:
         image:
           registry: vpcdeployment.azurecr.io
           repository: onprem/workflow-controller
-          tag: "v4.0.4"
+          tag: "v4.0.15"
         namespaceParallelism: "10"
         retentionPolicy:
           completed: 10

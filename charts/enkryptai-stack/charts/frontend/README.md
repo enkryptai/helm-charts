@@ -41,7 +41,6 @@ A Helm chart for EnkryptAI Frontend application
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
 | podAnnotations."instrumentation.opentelemetry.io/inject-nodejs" | string | `"true"` |  |
-| podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
 | podLabels.app | string | `"frontend"` |  |
 | readinessProbe.enabled | bool | `true` |  |
 | readinessProbe.failureThreshold | int | `3` |  |

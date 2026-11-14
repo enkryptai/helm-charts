@@ -8,8 +8,7 @@ image:
 nameOverride: ""
 fullnameOverride: "guardrails"
 
-podAnnotations:
-  reloader.stakater.com/auto: "true"
+podAnnotations: {}
 
 podLabels: {}
 

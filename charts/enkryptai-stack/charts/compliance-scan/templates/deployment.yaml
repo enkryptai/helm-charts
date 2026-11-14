@@ -3,10 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "compliance-scan.fullname" . }}
-  {{- with .Values.podAnnotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+  {{- with include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "Deployment" "name" (include "compliance-scan.fullname" .) "annotations" .Values.podAnnotations) }}{{ . | nindent 2 }}{{- end }}
   labels:
     {{- include "compliance-scan.labels" . | nindent 4 }}
 spec:

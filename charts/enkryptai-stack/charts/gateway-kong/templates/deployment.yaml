@@ -2,12 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "gateway-kong.fullname" . }}
+  {{- with include "enkryptai-stack.reloadAnnotations" (dict "ctx" $ "kind" "Deployment" "name" (include "gateway-kong.fullname" .) "annotations" .Values.annotations) }}{{ . | nindent 2 }}{{- end }}
   labels:
     {{- include "gateway-kong.labels" . | nindent 4 }}
-  {{- with .Values.annotations }}
-  annotations:
-  {{ toYaml . | nindent 4 }}
-  {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}

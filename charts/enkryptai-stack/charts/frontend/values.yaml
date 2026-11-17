@@ -98,7 +98,7 @@ affinity: {}
 configMap:
 
   APIAAS_KONG_URL: http://gateway-kong
-  DEFAULT_ENTERPRISE: "false"
+  DEFAULT_ENTERPRISE: "true"
   FGA_API_URL: http://openfga:8080
   MCP_POD_URL: ""
   NEXT_PUBLIC_API_URL: http://0.0.0.0:3000
@@ -111,8 +111,9 @@ configMap:
   NEXT_PUBLIC_POSTHOG_HOST: ""
   NEXT_PUBLIC_SUPABASE_URL: https://auth.example.com/
   NEXT_PUBLIC_URL: https://app.example.com
+  NEXT_PUBLIC_VPC_FORCE_ORG_MODE: "true"
+  ON_PREM: "true"
   SAMPLE_REPORTS_USER_ID: f29bdc64-9700-4268-95e0-450737b626cd
-  DEFAULT_ENTERPRISE: "false"
 
 externalSecrets:
   enabled: false

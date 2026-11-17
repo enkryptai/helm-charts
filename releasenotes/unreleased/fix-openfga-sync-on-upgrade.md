@@ -1,0 +1,1 @@
+- **enkryptai-stack:** the `openfga-sync` hook Job now runs on `helm upgrade` as well as on install, as its `post-install,post-upgrade` annotation already said, so an upgrade recreates a missing OpenFGA store ([#184](https://github.com/enkryptai/helm-charts/pull/184)). An upgrade now waits for OpenFGA to be healthy.

@@ -73,6 +73,8 @@ services:
       vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
       keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
       cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      owner_assertion_private_key: "{vault://env/enkrypt-owner-assertion-key}"
+      owner_assertion_key_id: "{vault://env/enkrypt-owner-assertion-key-id}"
       cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
       initial_sample_model_password: '${{ env "DECK_INITIAL_SAMPLE_MODEL_PASSWORD" }}'
     protocols:
@@ -738,6 +740,8 @@ services:
       vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
       keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
       cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      owner_assertion_private_key: "{vault://env/enkrypt-owner-assertion-key}"
+      owner_assertion_key_id: "{vault://env/enkrypt-owner-assertion-key-id}"
       cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
       sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
     protocols:
@@ -1282,6 +1286,8 @@ services:
       vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
       keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
       cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      owner_assertion_private_key: "{vault://env/enkrypt-owner-assertion-key}"
+      owner_assertion_key_id: "{vault://env/enkrypt-owner-assertion-key-id}"
       cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
       sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
     protocols:

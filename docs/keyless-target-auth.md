@@ -2,7 +2,7 @@
 
 Use this when red team targets on AWS (for example Bedrock) must use an IAM role that the customer owns, not access keys. EnkryptAI runs as one IAM role of your own, the red team role, and assumes the customer's role from it. The customer's role trusts the red team role and requires the tenant external ID that the dashboard shows.
 
-This works on EKS only, through IRSA. Gate G4 decides the route for AKS and other clusters. Until then, leave the value empty there.
+This works on EKS only, through IRSA. Support for AKS and other clusters is not decided yet. Until then, leave the value empty there.
 
 ## Steps
 

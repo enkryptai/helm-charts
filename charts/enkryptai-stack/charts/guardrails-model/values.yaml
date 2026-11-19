@@ -1,6 +1,5 @@
 replicaCount: 1
-podAnnotations:
-  secret.reloader.stakater.com/reload: ""
+podAnnotations: {}
 labels:
   app: guardrails-model
 image:

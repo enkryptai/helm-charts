@@ -28,7 +28,7 @@ A Helm chart for EnkryptAI Guardrails service
 | livenessProbe.timeoutSeconds | int | `10` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
-| podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| podAnnotations | object | `{}` |  |
 | podLabels.app | string | `"guardrails"` |  |
 | readinessProbe.enabled | bool | `true` |  |
 | readinessProbe.httpGet.path | string | `"/health"` |  |

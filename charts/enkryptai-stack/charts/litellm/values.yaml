@@ -4,8 +4,7 @@ replicaCount: 1
 labels:
   app: litellm-gateway
 
-podAnnotations:
-  secret.reloader.stakater.com/reload: ""
+podAnnotations: {}
 
 image:
   repository: enkryptai-prod/litellm-gateway

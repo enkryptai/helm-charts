@@ -45,7 +45,7 @@ A Helm chart for Kubernetes
 | frontend.livenessProbe.initialDelaySeconds | int | `120` |  |
 | frontend.livenessProbe.timeoutSeconds | int | `10` |  |
 | frontend.nodeSelector | object | `{}` |  |
-| frontend.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| frontend.podAnnotations | object | `{}` |  |
 | frontend.podLabels.app | string | `"frontend"` |  |
 | frontend.readinessProbe.enabled | bool | `true` |  |
 | frontend.readinessProbe.failureThreshold | int | `3` |  |
@@ -140,6 +140,7 @@ A Helm chart for Kubernetes
 | global.imagePullPolicy | string | `"IfNotPresent"` |  |
 | global.ingress.className | string | `""` | IngressClass for every Ingress whose own `ingress.className` is empty. Empty: the cluster default IngressClass (the platform-stack Traefik is the default, named `<platform release>-traefik`, or `traefik` when installed with `full-stack-override-values.yaml` or `manifests`) |
 | global.registry | string | `"vpcdeployment.azurecr.io"` |  |
+| global.reloadSecrets | object | `{}` | Reloader named lists for Secrets no chart renders, keyed by "<Kind>/<name>" of the workload (templates/_reloader.tpl); empty adds nothing. |
 | global.storageClass | string | `""` |  |
 | guardrails.affinity | object | `{}` |  |
 | guardrails.autoscaling.enabled | bool | `true` |  |
@@ -162,7 +163,7 @@ A Helm chart for Kubernetes
 | guardrails.livenessProbe.timeoutSeconds | int | `10` |  |
 | guardrails.nameOverride | string | `""` |  |
 | guardrails.nodeSelector | object | `{}` |  |
-| guardrails.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| guardrails.podAnnotations | object | `{}` |  |
 | guardrails.podLabels.app | string | `"guardrails"` |  |
 | guardrails.readinessProbe.enabled | bool | `true` |  |
 | guardrails.readinessProbe.httpGet.path | string | `"/health"` |  |
@@ -410,7 +411,7 @@ A Helm chart for Kubernetes
 | redteam-proxy.livenessProbe.timeoutSeconds | int | `10` |  |
 | redteam-proxy.nameOverride | string | `""` |  |
 | redteam-proxy.nodeSelector | object | `{}` |  |
-| redteam-proxy.podAnnotations."reloader.stakater.com/auto" | string | `"true"` |  |
+| redteam-proxy.podAnnotations | object | `{}` |  |
 | redteam-proxy.podLabels.app | string | `"redteam-proxy"` |  |
 | redteam-proxy.readinessProbe.enabled | bool | `true` |  |
 | redteam-proxy.readinessProbe.httpGet.path | string | `"/health"` |  |

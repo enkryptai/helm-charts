@@ -12,7 +12,6 @@ serviceAccount:
   create: false
 
 podAnnotations:
-  reloader.stakater.com/auto: "true"
   instrumentation.opentelemetry.io/inject-nodejs: "true"
 
 podLabels: {}

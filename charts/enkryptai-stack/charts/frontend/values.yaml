@@ -99,6 +99,7 @@ configMap:
 
   APIAAS_KONG_URL: http://gateway-kong
   DEFAULT_ENTERPRISE: "true"
+  ENKRYPT_REDTEAM_AWS_ROLE_ARN: '{{ ((.Values.global).redteam).awsRoleArn | default "" }}'
   FGA_API_URL: http://openfga:8080
   MCP_POD_URL: ""
   NEXT_PUBLIC_API_URL: http://0.0.0.0:3000

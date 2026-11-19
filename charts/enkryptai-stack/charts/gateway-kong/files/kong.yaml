@@ -109,6 +109,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-enkrypt-initial-sample-model-password: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
@@ -590,6 +591,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil
@@ -772,6 +774,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil
@@ -1337,6 +1340,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil
@@ -1764,6 +1768,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil
@@ -1968,6 +1973,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil

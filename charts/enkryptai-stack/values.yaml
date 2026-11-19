@@ -3,7 +3,7 @@ global:
   storageClass: ""
 
   redteam:
-    # IAM role the red team pods run as (IRSA) and the role customers trust for keyless Bedrock targets; empty hides the dashboard's trust panel.
+    # Red team IAM role (docs/keyless-target-auth.md): redteam-proxy IRSA and the dashboard trust panel; EKS IRSA only until AKS support is decided.
     awsRoleArn: ""
 
   proxy:

@@ -21,13 +21,19 @@ spec:
   {{- end }}
   template:
     metadata:
-      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secret.yaml")) | nindent 6 }}
+      {{- /* IRSA injects the role env only at pod creation, so a new role ARN must roll the pods. */}}
+      {{- $irsa := dict }}
+      {{- with ((.Values.global).redteam).awsRoleArn }}
+      {{- $irsa = dict "checksum/aws-role-arn" (sha256sum .) }}
+      {{- end }}
+      {{- include "enkryptai-stack.podAnnotations" (dict "ctx" $ "templates" (list "configmap.yaml" "secret.yaml") "annotations" $irsa) | nindent 6 }}
       labels:
         {{- include "redteam-proxy.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      serviceAccountName: {{ include "redteam-proxy.fullname" . }}
       {{- include "redteam-proxy.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: {{ .Chart.Name }}

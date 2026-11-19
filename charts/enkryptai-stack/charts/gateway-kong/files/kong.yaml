@@ -73,6 +73,8 @@ services:
       vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
       keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
       cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      owner_assertion_private_key: "{vault://env/enkrypt-owner-assertion-key}"
+      owner_assertion_key_id: "{vault://env/enkrypt-owner-assertion-key-id}"
       cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
       initial_sample_model_password: '${{ env "DECK_INITIAL_SAMPLE_MODEL_PASSWORD" }}'
     protocols:
@@ -107,6 +109,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-enkrypt-initial-sample-model-password: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
@@ -588,6 +591,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil
@@ -738,6 +742,8 @@ services:
       vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
       keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
       cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      owner_assertion_private_key: "{vault://env/enkrypt-owner-assertion-key}"
+      owner_assertion_key_id: "{vault://env/enkrypt-owner-assertion-key-id}"
       cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
       sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
     protocols:
@@ -768,6 +774,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil
@@ -1282,6 +1289,8 @@ services:
       vercel_protection_auth: ${{ env "DECK_VERCEL_PROTECTION_AUTH" }}
       keydb_domain: ${{ env "DECK_KEYDB_HOST" }}
       cache_encryption_key: "{vault://env/enkrypt-cache-encryption-key}"
+      owner_assertion_private_key: "{vault://env/enkrypt-owner-assertion-key}"
+      owner_assertion_key_id: "{vault://env/enkrypt-owner-assertion-key-id}"
       cache_encryption_enabled: "{vault://env/enkrypt-cache-encryption-enabled}"
       sample_model_real_apikey: ${{ env "DECK_SAMPLE_MODEL_REAL_APIKEY" }}
     protocols:
@@ -1331,6 +1340,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil
@@ -1758,6 +1768,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil
@@ -1962,6 +1973,7 @@ services:
         request.headers.api_key: return nil
         request.headers.apikey: return nil
         request.headers.authorization: return nil
+        request.headers.x-enkrypt-owner-assertion: return nil
         request.headers.x-consumer-custom-id: return nil
         request.headers.x-consumer-id: return nil
         request.headers.x-consumer-username: return nil

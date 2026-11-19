@@ -2,6 +2,10 @@ global:
   
   storageClass: ""
 
+  redteam:
+    # Red team IAM role (docs/keyless-target-auth.md): redteam-proxy IRSA and the dashboard trust panel; EKS IRSA only until AKS support is decided.
+    awsRoleArn: ""
+
   proxy:
     # Outbound proxy URLs for every pod (docs/outbound-proxy.md); both empty changes nothing.
     httpProxy: ""

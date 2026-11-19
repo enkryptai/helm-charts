@@ -28,6 +28,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      serviceAccountName: {{ include "redteam-proxy.fullname" . }}
       {{- include "redteam-proxy.imagePullSecrets" . | nindent 6 }}
       containers:
         - name: {{ .Chart.Name }}

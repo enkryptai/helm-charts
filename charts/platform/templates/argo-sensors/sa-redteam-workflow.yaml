@@ -6,6 +6,10 @@ kind: ServiceAccount
 metadata:
   name: redteam-workflow
   namespace: redteam-jobs
+  {{- with ((.Values.global).redteam).awsRoleArn }}
+  annotations:
+    eks.amazonaws.com/role-arn: {{ . | quote }}
+  {{- end }}
 automountServiceAccountToken: false
 {{- with .Values.global.imagePullSecrets }}
 imagePullSecrets:

@@ -1,5 +1,8 @@
 global:
   platform: azure
+  redteam:
+    # Same value as enkryptai-stack global.redteam.awsRoleArn: the IRSA role of the redteam-workflow pods.
+    awsRoleArn: ""
   trustedCA:
     # ConfigMap with the full PEM bundle (public CAs plus the private CA) in redteam-jobs; empty changes nothing. See docs/trusted-ca.md.
     configMapName: ""

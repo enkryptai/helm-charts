@@ -2,6 +2,10 @@ global:
   
   storageClass: ""
 
+  redteam:
+    # IAM role the red team pods run as (IRSA) and the role customers trust for keyless Bedrock targets; empty hides the dashboard's trust panel.
+    awsRoleArn: ""
+
   proxy:
     # Outbound proxy URLs for every pod (docs/outbound-proxy.md); both empty changes nothing.
     httpProxy: ""

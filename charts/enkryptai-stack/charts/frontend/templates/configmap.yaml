@@ -11,4 +11,7 @@ data:
   {{- range $key, $value := .Values.configMap }}
   {{ $key }}: {{ tpl (toString $value) $ | quote }}
   {{- end }}
+  {{- if not (hasKey .Values.configMap "ENKRYPT_REDTEAM_AWS_ROLE_ARN") }}
+  ENKRYPT_REDTEAM_AWS_ROLE_ARN: {{ ((.Values.global).redteam).awsRoleArn | default "" | quote }}
+  {{- end }}
 {{- end }}

@@ -206,7 +206,7 @@ fluentBit:
 configMap:
   gatewayEnv:
     DECK_APP_DASHBOARD_DOMAIN: frontend
-    DECK_APP_DASHBOARD_DOMAIN_URL: http://frontend:3000
+    DECK_APP_DASHBOARD_DOMAIN_URL: http://frontend.{{ .Release.Namespace }}:3000
     DECK_APP_DASHBOARD_PORT: '3000'
     DECK_APP_DASHBOARD_SCHEME: http
     DECK_ELASTIC_HOST: enkryptai-opensearch-cluster

@@ -132,3 +132,4 @@ configMap:
   RELAY_DB_LOG: "true"  
   RELAY_ENDPOINT: http://redteam-proxy.{{ .Release.Namespace }}:9091/relay
   RELAY_REDIS_URL: redis://valkey.{{ .Release.Namespace }}:6379/3
+  REDTEAM_CALLBACK_BASE_URL: http://frontend.{{ .Release.Namespace }}:3000

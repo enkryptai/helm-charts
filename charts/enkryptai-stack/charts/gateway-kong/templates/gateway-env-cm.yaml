@@ -7,5 +7,5 @@ metadata:
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
 data:
-{{- toYaml .Values.configMap.gatewayEnv | nindent 2 }}
+{{- tpl (toYaml .Values.configMap.gatewayEnv) . | nindent 2 }}
 {{- end }}

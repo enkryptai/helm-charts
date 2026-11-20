@@ -3,7 +3,7 @@ enabled: false
 replicaCount: 1
 
 image:
-  repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-client
+  repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/leaderboard-client
   pullPolicy: IfNotPresent
   tag: "main-1792756943"
 

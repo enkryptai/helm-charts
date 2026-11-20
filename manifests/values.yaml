@@ -5,7 +5,7 @@ enkryptai:
     storageClass: ""
     imagePullPolicy: "IfNotPresent"
     domain: "djj.enkryptai.com"
-    registry: vpcdeployment.azurecr.io
+    registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
     ingress:
       # IngressClass for every Ingress whose own ingress.className is empty.
       className: traefik
@@ -42,7 +42,7 @@ enkryptai:
   frontend:
     enabled: true
     image:
-      repository: vpcdeployment.azurecr.io/enkryptai-dev/frontend
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/frontend
       pullPolicy: IfNotPresent
       tag: "dev-1774339362"
 
@@ -144,15 +144,15 @@ enkryptai:
     replicaCount: 2
     image:
       gateway:
-        repository: vpcdeployment.azurecr.io/enkryptai-dev/gateway
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway
         tag: "dev-1774424218"
         pullPolicy: IfNotPresent
       sync:
-        repository: vpcdeployment.azurecr.io/enkryptai-dev/gateway-sync
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/gateway-sync
         tag: "dev"
         pullPolicy: IfNotPresent
       fluentBit:
-        repository: vpcdeployment.azurecr.io/onprem/fluent-bit
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/fluent-bit
         tag: "3.2.1"
         pullPolicy: IfNotPresent
 
@@ -292,7 +292,7 @@ enkryptai:
     replicaCount: 2
 
     image:
-      repository: vpcdeployment.azurecr.io/enkryptai-dev/redteam-proxy
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/redteam-proxy
       pullPolicy: IfNotPresent
       tag: "63bb5e4"
 
@@ -388,7 +388,7 @@ enkryptai:
     enabled: false
     replicaCount: 1
     image:
-      repository: vpcdeployment.azurecr.io/enkryptai-dev/guardrails
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/guardrails
       pullPolicy: IfNotPresent
       tag: "devgr-v0.0.48-1774275843"
 
@@ -490,7 +490,7 @@ enkryptai:
     storage:
       enabled: true
       image:
-        repository: vpcdeployment.azurecr.io/onprem/storage-api
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/storage-api
         pullPolicy: IfNotPresent
         tag: "v1.19.1"
       imagePullSecrets: []
@@ -503,7 +503,7 @@ enkryptai:
     minio:
       enabled: true
       image:
-        repository: vpcdeployment.azurecr.io/onprem/minio
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/minio
         pullPolicy: IfNotPresent
         tag: "latest"
       imagePullSecrets: []
@@ -541,7 +541,7 @@ enkryptai:
   openfga:
     replicaCount: 1
     image:
-      repository: vpcdeployment.azurecr.io/onprem/openfga
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/openfga
       pullPolicy: Always
       tag: "v1.8.9"
     annotations:
@@ -603,7 +603,7 @@ enkryptai:
     securityContext: {}
 
     initContainer:
-      repository: vpcdeployment.azurecr.io/onprem/k8s-wait-for
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
       tag: "v2.0"
       pullPolicy: IfNotPresent
 
@@ -684,7 +684,7 @@ enkryptai:
       migrations:
         resources: {}
         image:
-          repository: vpcdeployment.azurecr.io/onprem/k8s-wait-for
+          repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
           pullPolicy: Always
           tag: "v2.0"
 
@@ -808,7 +808,7 @@ enkryptai:
 
     # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
     image:
-      repository: vpcdeployment.azurecr.io/enkryptai-dev/litellm-gateway
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/litellm-gateway
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: "1772775747"
@@ -870,7 +870,7 @@ enkryptai:
     labels:
       app: guardrails-model
     image:
-      repository: vpcdeployment.azurecr.io/enkryptai-dev/guardrail-model
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-dev/guardrail-model
       pullPolicy: IfNotPresent
       tag: "1776402715"
     strategy:
@@ -938,7 +938,7 @@ enkryptai:
     labels:
       app: guardrails-multi-modal
     image:
-      repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-multimodal
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrail-multimodal
       pullPolicy: IfNotPresent
       tag: "1773124434"
     strategy:
@@ -991,7 +991,7 @@ enkryptai:
 platform:
   global:
     platform: azure
-    registry: vpcdeployment.azurecr.io
+    registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
     imagePullSecrets: []
     # - name: replicated-registry
   aws:
@@ -1016,7 +1016,7 @@ platform:
   sensor:
     natsURL: "nats://nats.enkryptai-stack:4222"
     jobversion: "prod-v1.0.68"
-    jobImage: vpcdeployment.azurecr.io/enkryptai-prod/redteam-job
+    jobImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/redteam-job
   env:
     - name: WORKER_TYPE
       value: "combined"
@@ -1037,11 +1037,11 @@ platform:
   clustername: "enkryptai-opensearch"
   opensearch:
     general:
-      image: "vpcdeployment.azurecr.io/onprem/opensearch:3.2.0"
+      image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch:3.2.0"
     dashboards:
-      image: "vpcdeployment.azurecr.io/onprem/opensearch-dashboards:3.2.0"
+      image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch-dashboards:3.2.0"
     initHelper:
-      image: "vpcdeployment.azurecr.io/onprem/busybox:latest"
+      image: "188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/busybox:latest"
     security:
     securityconfig: false
     users:
@@ -1062,20 +1062,20 @@ platform:
     cloudnative-pg:
       enabled: true
       image:
-        repository: vpcdeployment.azurecr.io/onprem/cloudnative-pg
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/cloudnative-pg
         tag: "1.29.1"
       imagePullSecrets: [] 
       # - name: replicated-registry
     opensearch-operator:
       manager:
         image:
-          repository: vpcdeployment.azurecr.io/onprem/opensearch-operator
+          repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/opensearch-operator
           tag: "2.8.0"
         imagePullSecrets :
         # - name: replicated-registry
       kubeRbacProxy:
         image:
-          repository: vpcdeployment.azurecr.io/onprem/kube-rbac-proxy
+          repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/kube-rbac-proxy
           tag: "v0.21.2"
     gpu-operator:
       daemonsets:
@@ -1089,18 +1089,18 @@ platform:
             effect: NoSchedule
       operator: 
         runtimeClass: nvidia-container-runtime
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator
         version: v26.3.0
         initContainer:
-          repository: vpcdeployment.azurecr.io
+          repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
           image: onprem/gpu-operator-init
           version: v26.3.0
         imagePullSecrets: []
         # - replicated-registry
       node-feature-discovery:
         image:
-          repository: vpcdeployment.azurecr.io/onprem/node-feature-discovery
+          repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/node-feature-discovery
           tag: v0.18.3
         imagePullSecrets: [] 
         # - name: replicated-registry
@@ -1111,106 +1111,106 @@ platform:
               value: gpu
               effect: NoSchedule
       validator:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator-validator
         version: v26.3.0
         imagePullSecrets: []
         # - replicated-registry
       toolkit:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/container-toolkit
         version: v1.19.0
         imagePullSecrets: []
         # - replicated-registry
       dcgm:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/dcgm
         version: 4.5.2-1-ubuntu22.04
       gfd:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/k8s-device-plugin
         version: v0.19.0
         imagePullSecrets: []
         # - replicated-registry
       driver:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/nvidia-driver
         version: 580.126.20
         manager:
-          repository: vpcdeployment.azurecr.io
+          repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
           image: onprem/k8s-driver-manager
           version: "v0.7.0"
         imagePullSecrets: []
         # - replicated-registry
       vgpuManager:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/vgpu-manager
         driverManager:
-          repository: vpcdeployment.azurecr.io
+          repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
           image: onprem/k8s-driver-manager
           version: v0.10.0
         imagePullSecrets: []
         # - replicated-registry
       kataManager:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/k8s-kata-manager
         version: "v0.2.2"
         imagePullSecrets: []
         # - replicated-registry
       vfioManager:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/cuda
         version: "v0.10.0"
         imagePullSecrets: []
         # - replicated-registry
       vgpuDeviceManager:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/vgpu-device-manager
         version: v0.4.2
         imagePullSecrets: []
         # - replicated-registry
       ccManager:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/k8s-cc-manager
         version: v0.3.0
         imagePullSecrets: []
         # - replicated-registry
       devicePlugin:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/k8s-device-plugin
         version: v0.19.0
         imagePullSecrets: []
         # - replicated-registry
       dcgmExporter:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/dcgm-exporter
         version: 4.5.1-4.8.0-distroless
       migManager:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/k8s-mig-manager
         version: v0.14.0
         imagePullSecrets: []
         # - replicated-registry
       nodeStatusExporter:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gpu-operator-validator
         version: "v26.3.0"
         imagePullSecrets: []
         # - replicated-registry
       gdrcopy:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/gdrdrv
         version: "v2.5.1"
         imagePullSecrets: []
         # - replicated-registry
       sandboxDevicePlugin:
-        repository: vpcdeployment.azurecr.io
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         image: onprem/kubevirt-gpu-device-plugin
         version: "v1.5.0"
         imagePullSecrets: []
         # - replicated-registry
     keydb:
-      imageRepository: vpcdeployment.azurecr.io/onprem/keydb
+      imageRepository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/keydb
       imageTag: x86_64_v6.3.2
       imagePullSecrets: []
       # - name: replicated-registry
@@ -1234,7 +1234,7 @@ platform:
           tag: 2.12.6-alpine
       global:
         image:
-          registry: vpcdeployment.azurecr.io
+          registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
     nack:
       imagePullSecrets: [] 
       # - name: replicated-registry
@@ -1244,7 +1244,7 @@ platform:
         image:
           repository: onprem/jetstream-controller
           tag: 0.22.2
-          registry: vpcdeployment.azurecr.io
+          registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
         nats:
           url: nats://nats:4222
     argo-events:
@@ -1312,18 +1312,18 @@ platform:
               configReloaderImage: natsio/nats-server-config-reloader:0.7.0
               startCommand: /nats-server
             - version: 2.10.10
-              natsImage: vpcdeployment.azurecr.io/onprem/nats:2.10.10
-              metricsExporterImage: vpcdeployment.azurecr.io/onprem/prometheus-nats-exporter:0.14.0
-              configReloaderImage: vpcdeployment.azurecr.io/onprem/nats-server-config-reloader:0.14.0
+              natsImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats:2.10.10
+              metricsExporterImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/prometheus-nats-exporter:0.14.0
+              configReloaderImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats-server-config-reloader:0.14.0
               startCommand: /nats-server
             - version: 2.12.6
-              natsImage: vpcdeployment.azurecr.io/onprem/nats:2.12.6
-              metricsExporterImage: vpcdeployment.azurecr.io/onprem/prometheus-nats-exporter:0.19.2
-              configReloaderImage: vpcdeployment.azurecr.io/onprem/nats-server-config-reloader:0.21.1
+              natsImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats:2.12.6
+              metricsExporterImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/prometheus-nats-exporter:0.19.2
+              configReloaderImage: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/nats-server-config-reloader:0.21.1
               startCommand: /nats-server
       global:
         image:
-          repository: vpcdeployment.azurecr.io/onprem/argo-events
+          repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/argo-events
           tag: "v1.9.10"
           imagePullPolicy: IfNotPresent
         imagePullSecrets: []
@@ -1339,7 +1339,7 @@ platform:
         enabled: true
         baseHref: /
         image:
-          registry: vpcdeployment.azurecr.io
+          registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
           repository: onprem/argocli
           tag: "v4.0.15"
         deploymentAnnotations: {}
@@ -1357,7 +1357,7 @@ platform:
               - ALL
       executor:
         image:
-          registry: vpcdeployment.azurecr.io
+          registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
           repository: onprem/argoexec
           tag: "v3.6.14"
           pullPolicy: ""
@@ -1367,7 +1367,7 @@ platform:
         securityContext: {}
       controller:
         image:
-          registry: vpcdeployment.azurecr.io
+          registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
           repository: onprem/workflow-controller
           tag: "v4.0.15"
         namespaceParallelism: "10"
@@ -1483,7 +1483,7 @@ platform:
     enabled: false
   traefik:
     image:
-      registry: vpcdeployment.azurecr.io
+      registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
       repository: onprem/traefik
       tag: v3.6.7
       pullPolicy: IfNotPresent

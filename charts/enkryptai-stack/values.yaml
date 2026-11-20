@@ -28,7 +28,7 @@ global:
     # `openfga.ingress.className` if you turn its Ingress on.
     className: ""
   
-  registry: vpcdeployment.azurecr.io
+  registry: 188451452903.dkr.ecr.us-east-1.amazonaws.com
 
   externalSecrets:
     enabled: false
@@ -66,7 +66,7 @@ busybox:
 frontend:
   enabled: true
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/frontend
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/frontend
     pullPolicy: IfNotPresent
     tag: "main-1793361114"
   serviceAccount:
@@ -166,15 +166,15 @@ gateway-kong:
   replicaCount: 2
   image:
     gateway:
-      repository: vpcdeployment.azurecr.io/enkryptai-prod/gateway
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway
       tag: "main-1793361115"
       pullPolicy: IfNotPresent
     sync:
-      repository: vpcdeployment.azurecr.io/enkryptai-prod/gateway-sync
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/gateway-sync
       tag: "main-1793252843"
       pullPolicy: IfNotPresent
     fluentBit:
-      repository: vpcdeployment.azurecr.io/onprem/fluent-bit
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/fluent-bit
       tag: "3.2.1"
       pullPolicy: IfNotPresent
       envFrom:
@@ -313,9 +313,9 @@ redteam-proxy:
   replicaCount: 2
 
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/redteam-proxy
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-onprem/redteam-proxy
     pullPolicy: IfNotPresent
-    tag: "prod-v1.0.106"
+    tag: "generic-v1.0.111"
 
   nameOverride: ""
   fullnameOverride: "redteam-proxy"
@@ -417,7 +417,7 @@ guardrails:
   enabled: false
   replicaCount: 1
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrails
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrails
     pullPolicy: IfNotPresent
     tag: "prodgr-v0.0.48"
 
@@ -538,7 +538,7 @@ supabase:
   storage:
     enabled: true
     image:
-      repository: vpcdeployment.azurecr.io/onprem/storage-api
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/storage-api
       pullPolicy: IfNotPresent
       tag: "v1.19.1"
     imagePullSecrets: []
@@ -551,7 +551,7 @@ supabase:
   minio:
     enabled: true
     image:
-      repository: vpcdeployment.azurecr.io/onprem/minio
+      repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/minio
       pullPolicy: IfNotPresent
       tag: "latest"
     imagePullSecrets: []
@@ -587,7 +587,7 @@ supabase:
 openfga:
   replicaCount: 1
   image:
-    repository: vpcdeployment.azurecr.io/onprem/openfga
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/openfga
     pullPolicy: Always
     tag: "v1.8.9"
   imagePullSecrets: []
@@ -651,7 +651,7 @@ openfga:
   securityContext: {}
 
   initContainer:
-    repository: vpcdeployment.azurecr.io/onprem/k8s-wait-for
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
     tag: "v2.0"
     pullPolicy: IfNotPresent
 
@@ -733,7 +733,7 @@ openfga:
     migrations:
       resources: {}
       image:
-        repository: vpcdeployment.azurecr.io/onprem/k8s-wait-for
+        repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/onprem/k8s-wait-for
         pullPolicy: Always
         tag: "v2.0"
 
@@ -855,7 +855,7 @@ litellm:
 
   # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/litellm-gateway
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/litellm-gateway
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: "main-1793357334"
@@ -934,7 +934,7 @@ guardrails-model:
   labels:
     app: guardrails-model
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-model
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrail-model
     pullPolicy: IfNotPresent
     tag: "main-1793357797"
   strategy:
@@ -1002,7 +1002,7 @@ guardrails-multi-modal:
   labels:
     app: guardrails-multi-modal
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/guardrail-multimodal
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/guardrail-multimodal
     pullPolicy: IfNotPresent
     tag: "a5698ab"
   strategy:
@@ -1053,7 +1053,7 @@ guardrails-multi-modal:
 compliance-scan:
   enabled: false
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/compliance-scan
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/compliance-scan
     pullPolicy: IfNotPresent
     tag: "main-1792752754"
   # Internal service: it must not share a host with supabase (auth.*). The same host and path on two
@@ -1122,7 +1122,7 @@ compliance-scan:
 leaderboard-client:
   enabled: false
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-client
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/leaderboard-client
     pullPolicy: IfNotPresent
     tag: "main-1792756943"
   ingress:
@@ -1168,7 +1168,7 @@ leaderboard-client:
 leaderboard-server:
   enabled: false
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/leaderboard-server
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/leaderboard-server
     pullPolicy: IfNotPresent
     tag: "main-1793361115"
   ingress:
@@ -1200,7 +1200,7 @@ leaderboard-server:
 mcp-scanner:
   enabled: false
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/mcp-scanner
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/mcp-scanner
     pullPolicy: IfNotPresent
     tag: "main-1793621450"
   ingress:
@@ -1243,7 +1243,7 @@ mcp-scanner:
 skill-scanner:
   enabled: false
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/skill-scanner
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/skill-scanner
     pullPolicy: IfNotPresent
     tag: "main"
   ingress:
@@ -1293,7 +1293,7 @@ skill-scanner:
 secure-mcp-gateway:
   enabled: false
   image:
-    repository: vpcdeployment.azurecr.io/enkryptai-prod/secure-mcp-gateway
+    repository: 188451452903.dkr.ecr.us-east-1.amazonaws.com/enkryptai-prod/secure-mcp-gateway
     pullPolicy: IfNotPresent
     tag: "main-1793683323"
   ingress:

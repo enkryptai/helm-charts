@@ -1,0 +1,9 @@
+apiVersion: v2
+name: redteam-model
+description: Redteam model (GPU) service for EnkryptAI
+type: application
+version: 1.0.0
+appVersion: "dev"
+maintainers:
+  - name: Enkrypt AI
+    email: dev@enkryptai.com

@@ -1,0 +1,15 @@
+{{- if and .Values.enabled .Values.configMap.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ tpl (required "redteam-model.configMap.name is required" .Values.configMap.name) $ }}
+  labels:
+    {{- include "redteam-model.labels" (dict "context" $ "labels" .Values.configMap.labels) | nindent 4 }}
+  {{- include "redteam-model.annotations" (dict "context" $ "annotations" .Values.configMap.annotations "indent" 2) }}
+{{- with .Values.configMap.data }}
+data:
+  {{- range $key, $value := . }}
+  {{ $key }}: {{ tpl (toString $value) $ | quote }}
+  {{- end }}
+{{- end }}
+{{- end }}

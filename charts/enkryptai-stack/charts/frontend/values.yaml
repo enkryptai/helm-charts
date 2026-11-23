@@ -122,3 +122,16 @@ externalSecrets:
 secrets:
   name: frontend-env-secret
   enabled: false
+
+# WorkOS directory-sync (SCIM) event poll. Off by default: it needs
+# ENKRYPT_INTERNAL_ADMIN_SECRET present in the secret above, and an install with no SCIM
+# links has nothing to poll. See docs/claude/scim-sso-workos.md in enkryptai-apiaas.
+scimEventPoll:
+  # -- Poll the WorkOS Events API for directory-sync changes. Needs ENKRYPT_INTERNAL_ADMIN_SECRET in the secret above.
+  enabled: false
+  schedule: "* * * * *"
+  image:
+    # -- Mirror this into the install's own registry for an air-gapped deployment.
+    repository: curlimages/curl
+    tag: "8.11.1"
+    pullPolicy: IfNotPresent

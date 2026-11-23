@@ -577,8 +577,8 @@ Core dependency components for platform helm chart
 | nack.jetstream.image.registry | string | `"188451452903.dkr.ecr.us-east-1.amazonaws.com"` |  |
 | nack.jetstream.image.repository | string | `"onprem/jetstream-controller"` |  |
 | nack.jetstream.image.tag | string | `"0.19.1"` |  |
+| nack.jetstream.nats.url | string | `"nats://nats:4222"` | The nack chart reads the NATS URL at jetstream.nats.url (not nack.nats.url). |
 | nack.jetstream.tls.enabled | bool | `false` |  |
-| nack.nats.url | string | `"nats://nats:4222"` |  |
 | namespaces[0].labels.name | string | `"argo-events"` |  |
 | namespaces[0].name | string | `"argo-events"` |  |
 | nats.config.cluster.enabled | bool | `false` |  |

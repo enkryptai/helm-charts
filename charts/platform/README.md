@@ -205,7 +205,7 @@ Complete platform infrastructure stack
 | platform-core.nack.jetstream.image.registry | string | `"vpcdeployment.azurecr.io"` |  |
 | platform-core.nack.jetstream.image.repository | string | `"onprem/jetstream-controller"` |  |
 | platform-core.nack.jetstream.image.tag | string | `"0.19.1"` |  |
-| platform-core.nack.nats.url | string | `"nats://nats:4222"` |  |
+| platform-core.nack.jetstream.nats.url | string | `"nats://nats:4222"` | The nack chart reads the NATS URL at jetstream.nats.url (not nack.nats.url). |
 | platform-core.namespaces[0].labels.name | string | `"argo-events"` |  |
 | platform-core.namespaces[0].name | string | `"argo-events"` |  |
 | platform-core.nats.container.image.repository | string | `"onprem/nats"` |  |

@@ -44,7 +44,8 @@ elif [ "$checkInternalUserResponse" -eq 200 ]; then
   CheckInternalUserBasicAuth=true
   echo "The internal Kong admin user already exists."
 else
-  echo "An error occurred while checking the internal Kong admin user. Please check the issue and rerun the script."
+  echo "An error occurred while checking the internal Kong admin user. HTTP code: $checkInternalUserResponse"
+  exit 1
 fi
 
 if [ "$CheckInternalUserBasicAuth" = true ]; then
@@ -146,7 +147,8 @@ elif [ "$checkLeaderboardUserResponse" -eq 200 ]; then
   CheckLeaderboardUserKeyAuth=true
   echo "The public Leaderboard user already exists."
 else
-  echo "An error occurred while checking the public Leaderboard user. Please check the issue and rerun the script."
+  echo "An error occurred while checking the public Leaderboard user. HTTP code: $checkLeaderboardUserResponse"
+  exit 1
 fi
 
 if [ "$CheckLeaderboardUserKeyAuth" = true ]; then
@@ -266,4 +268,6 @@ else
 fi
 
 echo "---------------------------------------------"
-exit $?
+# Exit with the sync result, not the status of the echo above, so a failed
+# sync is not reported as success.
+exit $SYNC_EXIT_CODE

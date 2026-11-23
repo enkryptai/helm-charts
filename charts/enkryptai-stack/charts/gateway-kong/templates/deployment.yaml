@@ -129,13 +129,20 @@ spec:
                 sleep 5
               done
 
-              /mnt/deck/kong-deck.sh
+              # A failed first sync stops the container, so the pod never
+              # becomes Ready and `helm upgrade --wait` fails instead of
+              # reporting success with Kong half configured.
+              if ! /mnt/deck/kong-deck.sh; then
+                echo "Initial Kong configuration sync failed, exiting."
+                exit 1
+              fi
 
-              # Keep the container running after sync
+              # Re-sync every hour. A failed re-sync is logged but does not stop
+              # the container: that would take a serving gateway pod out of the
+              # Service. The next run retries.
               while true; do
                 sleep 3600  # Sleep for 1 hour
-                #  we can add periodic sync here
-                /mnt/deck/kong-deck.sh
+                /mnt/deck/kong-deck.sh || echo "Periodic Kong configuration sync failed (exit $?), retrying in 1 hour."
               done
           {{- with .Values.sync.startupProbe }}
           {{- if .enabled }}

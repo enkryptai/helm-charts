@@ -44,7 +44,8 @@ elif [ "$checkInternalUserResponse" -eq 200 ]; then
   CheckInternalUserBasicAuth=true
   echo "The internal Kong admin user already exists."
 else
-  echo "An error occurred while checking the internal Kong admin user. Please check the issue and rerun the script."
+  echo "An error occurred while checking the internal Kong admin user. HTTP code: $checkInternalUserResponse"
+  exit 1
 fi
 
 if [ "$CheckInternalUserBasicAuth" = true ]; then
@@ -146,7 +147,8 @@ elif [ "$checkLeaderboardUserResponse" -eq 200 ]; then
   CheckLeaderboardUserKeyAuth=true
   echo "The public Leaderboard user already exists."
 else
-  echo "An error occurred while checking the public Leaderboard user. Please check the issue and rerun the script."
+  echo "An error occurred while checking the public Leaderboard user. HTTP code: $checkLeaderboardUserResponse"
+  exit 1
 fi
 
 if [ "$CheckLeaderboardUserKeyAuth" = true ]; then
@@ -216,6 +218,20 @@ fi
 # Deck sync Kong configuration
 # ---------------------------------------------------------
 
+# The enkrypt-* plugins require the OpenFGA store and model IDs. On a first
+# install they don't exist yet: the openfga-sync Job creates them after the
+# install (a post-install hook), and they are copied into gateway-env-secret
+# afterwards (docs/secrets.md, "OpenFGA Store and Model IDs"). Kong would reject
+# every enkrypt-* plugin, so skip the sync and exit 0: failing here would keep
+# the pod from becoming Ready, and `helm install --wait` would then never run
+# the hook that creates the IDs.
+if [ -z "$DECK_OPENFGA_STORE_ID" ] || [ -z "$DECK_OPENFGA_AUTHORIZATION_MODEL_ID" ]; then
+  echo "WARNING: DECK_OPENFGA_STORE_ID or DECK_OPENFGA_AUTHORIZATION_MODEL_ID is empty, so the Kong configuration was NOT synced."
+  echo "WARNING: This is expected on a first install. Set both in gateway-env-secret (utils/post-installation.sh does it), then restart gateway-kong."
+  echo "---------------------------------------------"
+  exit 0
+fi
+
 echo "Syncing the Kong configuration..."
 
 # Pre-sync: verify deck can read Kong's current state.
@@ -254,8 +270,10 @@ SYNC_EXIT_CODE=$?
 if [ $SYNC_EXIT_CODE -ne 0 ]; then
   echo "Initial sync failed (exit code: $SYNC_EXIT_CODE). Retrying in 15 seconds..."
   sleep 15
-  echo "Retrying deck sync with verbose logging..."
-  deck gateway sync /mnt/deck/kong*.yaml --skip-consumers --parallelism 1 --verbose 1
+  echo "Retrying deck sync..."
+  # --verbose 1 would print every request body, including the plugin
+  # credentials from gateway-env-secret, so the retry stays at --verbose 0.
+  deck gateway sync /mnt/deck/kong*.yaml --skip-consumers --parallelism 1 --verbose 0
   SYNC_EXIT_CODE=$?
 fi
 
@@ -266,4 +284,6 @@ else
 fi
 
 echo "---------------------------------------------"
-exit $?
+# Exit with the sync result, not the status of the echo above, so a failed
+# sync is not reported as success.
+exit $SYNC_EXIT_CODE

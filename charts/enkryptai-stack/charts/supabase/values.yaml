@@ -380,7 +380,7 @@ storage:
     pullPolicy: IfNotPresent
     tag: "v1.19.1"
   miniomc:
-    image: onprem/mc:lastest
+    image: onprem/mc:latest
   imagePullSecrets: []
   replicaCount: 1
   nameOverride: "supabase-storage"

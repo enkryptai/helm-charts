@@ -1,0 +1,1 @@
+- **enkryptai-stack:** supabase subchart: the storage `init-bucket` image default is `onprem/mc:latest`, not `onprem/mc:lastest`, a tag that does not exist. The stack's own values already set `latest`, so only installs of the subchart defaults were affected (split out of [#137](https://github.com/enkryptai/helm-charts/pull/137)).

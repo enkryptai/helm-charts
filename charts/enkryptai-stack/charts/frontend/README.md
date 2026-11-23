@@ -57,6 +57,11 @@ A Helm chart for EnkryptAI Frontend application
 | resources.limits.memory | string | `"4Gi"` |  |
 | resources.requests.cpu | string | `"200m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
+| scimEventPoll.enabled | bool | `false` | Poll the WorkOS Events API for directory-sync changes. Needs ENKRYPT_INTERNAL_ADMIN_SECRET in the secret above. |
+| scimEventPoll.image.pullPolicy | string | `"IfNotPresent"` |  |
+| scimEventPoll.image.repository | string | `"curlimages/curl"` | Mirror this into the install's own registry for an air-gapped deployment. |
+| scimEventPoll.image.tag | string | `"8.11.1"` |  |
+| scimEventPoll.schedule | string | `"* * * * *"` |  |
 | service.name | string | `"http"` |  |
 | service.port | int | `3000` |  |
 | service.targetPort | int | `3000` |  |

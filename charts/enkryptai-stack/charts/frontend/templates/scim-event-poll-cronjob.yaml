@@ -1,0 +1,60 @@
+{{- if .Values.scimEventPoll.enabled }}
+# Pulls WorkOS directory-sync events for every linked project. Polling, not a webhook: in a
+# WorkOS environment shared with a partner a webhook would deliver every other customer's
+# events to us. Design: docs/claude/scim-sso-workos.md in enkryptai-apiaas.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "frontend.fullname" . }}-scim-event-poll
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.scimEventPoll.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 300
+      template:
+        # Deliberately no pod labels: frontend.selectorLabels is the Service's selector, so
+        # labelling this pod would make the frontend Service route requests into the poller.
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          {{- with include "frontend.imagePullSecrets" . }}{{ . | nindent 10 }}{{ end }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            runAsGroup: 101
+          containers:
+            - name: poll
+              image: "{{ .Values.scimEventPoll.image.repository }}:{{ .Values.scimEventPoll.image.tag }}"
+              imagePullPolicy: {{ .Values.scimEventPoll.image.pullPolicy }}
+              securityContext:
+                allowPrivilegeEscalation: false
+              env:
+                - name: ENKRYPT_INTERNAL_ADMIN_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      # Same secret the Deployment reads, so the two cannot drift apart.
+                      name: {{ if .Values.useEnvFrom }}{{ .Values.externalSecret.secretName }}{{ else }}{{ .Values.secrets.name }}{{ end }}
+                      key: ENKRYPT_INTERNAL_ADMIN_SECRET
+              command: ["/bin/sh", "-c"]
+              args:
+                # --retry-connrefused because a refused connection is not retryable by default; a
+                # frontend rollout refuses connections for a few seconds.
+                # ~60s of cover: retry count x delay binds before --retry-max-time, so both are set.
+                # A longer outage still fails the run on purpose — it is harmless, the next poll
+                # resumes from events_cursor, and it is the only signal that the frontend went away.
+                # Not --retry-all-errors: a slow but working poll must never be retried.
+                # --max-time is per attempt, so the worst case is 60s + one 200s attempt < activeDeadlineSeconds.
+                - >-
+                  curl -fsS --max-time 200
+                  --retry 10 --retry-delay 6 --retry-connrefused --retry-max-time 60
+                  -X POST http://{{ include "frontend.fullname" . }}:{{ .Values.service.port }}/api/admin/scim
+                  -H "Authorization: Bearer ${ENKRYPT_INTERNAL_ADMIN_SECRET}"
+                  -H "Content-Type: application/json"
+                  -d '{"action":"poll"}'
+{{- end }}

@@ -426,6 +426,9 @@ nats:
 nack:
   enabled: true
   jetstream:
+    # The nack chart reads the NATS URL at jetstream.nats.url (not nack.nats.url).
+    nats:
+      url: nats://nats:4222
     enabled: true
     image:
       repository: onprem/jetstream-controller
@@ -433,8 +436,6 @@ nack:
       registry: vpcdeployment.azurecr.io
     tls:
       enabled: false
-  nats:
-    url: nats://nats:4222
 
   imagePullSecrets: []
   nameOverride: nack

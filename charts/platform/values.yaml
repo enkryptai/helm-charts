@@ -286,13 +286,14 @@ platform-core:
     # - name: example-registry
     nameOverride: nack
     jetstream:
+      # The nack chart reads the NATS URL at jetstream.nats.url (not nack.nats.url).
+      nats:
+        url: nats://nats:4222
       enabled: true
       image:
         repository: onprem/jetstream-controller
         tag: 0.22.2
         registry: vpcdeployment.azurecr.io
-    nats:
-      url: nats://nats:4222
   argo-events:
     namespaceOverride: "enkryptai-stack"
     configs:
